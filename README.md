@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Public-Facing Pages:
 
-## Getting Started
+Main Careers Page (/careers)
 
-First, run the development server:
+List of open positions
+Filter by department/location
+Company culture section
+Basic company info
+Clean, branded design
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Individual Job Posting (/careers/[job-id])
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Detailed job description
+Requirements/qualifications
+Benefits information
+Application form
+"Apply Now" button
+Share job buttons
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Internal Management Pages:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Job Management Dashboard (/dashboard/jobs)
 
-## Learn More
+List of all jobs (active/inactive)
+Create new job button
+Quick stats (views, applications, etc.)
+Bulk actions
 
-To learn more about Next.js, take a look at the following resources:
+Create/Edit Job Form (/dashboard/jobs/new or /dashboard/jobs/[id]/edit)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Job details
+Description editor
+Screening questions
+Internal notes
+Publishing settings
+Team assignments
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Job Analytics (/dashboard/jobs/[id]/analytics)
 
-## Deploy on Vercel
+Application sources
+Conversion rates
+Time to fill
+Cost per hire
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For a comprehensive job posting, you should definitely add more fields. Here's what I recommend adding:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Basic Job Information
+
+Employment Type (Full-time, Part-time, Contract, etc.)
+Location Type (Remote, On-site, Hybrid)
+Location/Region (if applicable)
+Salary Range
+Department/Team
+
+Requirements
+
+Years of Experience
+Education Level
+Required Skills/Technologies
+Required Certifications (if any)
+Essential Qualifications
+Preferred Qualifications
+
+Company & Role Details
+
+Team Size
+Reporting Structure (who they report to)
+Travel Requirements (if any)
+
+Benefits & Perks
+
+Healthcare Coverage
+Retirement Plans
+PTO/Vacation Policy
+Professional Development
+Other Benefits
+
+Application Process
+
+Required Documents (resume, portfolio, etc.)
+Application Deadline (if any)
+Expected Timeline
+Contact Information
+
+Would you like me to help you implement any of these sections? We can use various form components like:
+
+Select dropdowns for predefined options
+Multi-select for skills/technologies
+Text inputs for specific requirements
+Radio buttons for binary choices
+Number inputs for experience/team size
+Date picker for deadlines
+
+Let me know which sections you'd like to tackle first!

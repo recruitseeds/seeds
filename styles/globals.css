@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Radix Gray Scale */
+    --gray-1: 0 0% 99%;
+    --gray-2: 0 0% 97.3%;
+    --gray-3: 0 0% 95.1%;
+    --gray-4: 0 0% 93%;
+    --gray-5: 0 0% 90.9%;
+    --gray-6: 0 0% 88.7%;
+    --gray-7: 0 0% 85.8%;
+    --gray-8: 0 0% 78%;
+    --gray-9: 0 0% 56.1%;
+    --gray-10: 0 0% 52.3%;
+    --gray-11: 0 0% 43.5%;
+    --gray-12: 0 0% 9%;
+
+    /* Radix Green Scale */
+    --green-1: 160 21% 98%; /* #f8fbfa */
+    --green-2: 164 41% 96%; /* #f0f8f5 */
+    --green-3: 165 53% 92%; /* #e1f4ec */
+    --green-4: 165 59% 88%; /* #d0eee3 */
+    --green-5: 165 51% 82%; /* #bee6d7 */
+    --green-6: 165 46% 75%; /* #a7dac8 */
+    --green-7: 165 47% 66%; /* #86cab3 */
+    --green-8: 165 54% 52%; /* #54b698 */
+    --green-9: 165 60% 40%; /* #29a383 */
+    --green-10: 165 64% 36%; /* #209677 */
+    --green-11: 170 100% 25%; /* #007c5f */
+    --green-12: 165 34% 17%; /* #1d3b31 */
+
+    /* Additional Green values */
+    --green-contrast: 0 0% 100%; /* #fff */
+    --green-surface: 165 30% 95% / 0.8; /* #eef6f4cc */
+    --green-indicator: 165 60% 40%; /* #29a383 */
+    --green-track: 165 60% 40%; /* #29a383 */
+
+    /* Semantic Tokens - Light */
+    --background: var(--gray-1);
+    --foreground: var(--gray-12);
+    --card: var(--gray-1);
+    --card-foreground: var(--gray-12);
+    --popover: var(--gray-1);
+    --popover-foreground: var(--gray-12);
+    --primary: var(--gray-2);
+    --primary-foreground: var(--gray-12);
+    --secondary: var(--gray-3);
+    --secondary-foreground: var(--gray-12);
+    --muted: var(--gray-3);
+    --muted-foreground: var(--gray-11);
+    --accent: var(--green-9);
+    --accent-foreground: var(--gray-1);
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: var(--gray-6);
+    --input: var(--gray-6);
+    --ring: var(--green-8);
+
+    /* Chart Colors */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    --sidebar-background: var(--gray-1);
+    --sidebar-foreground: var(--gray-12);
+    --sidebar-primary: var(--gray-5);
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: var(--gray-3);
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: var(--gray-6);
+    --sidebar-ring: var(--green-8);
+  }
+
+  .dark {
+    /* Radix Gray Scale - Dark */
+    --gray-1: 0 0% 7%;
+    --gray-2: 0 0% 9%;
+    --gray-3: 0 0% 11%;
+    --gray-4: 0 0% 13%;
+    --gray-5: 0 0% 16%;
+    --gray-6: 0 0% 20%;
+    --gray-7: 0 0% 24%;
+    --gray-8: 0 0% 31%;
+    --gray-9: 0 0% 43.5%;
+    --gray-10: 0 0% 49%;
+    --gray-11: 0 0% 69%;
+    --gray-12: 0 0% 93%;
+
+    /* Radix Green Scale - Dark */
+    --green-1: 165 39% 4%;
+    --green-2: 165 50% 7%;
+    --green-3: 165 50% 12%;
+    --green-4: 165 50% 16%;
+    --green-5: 165 50% 21%;
+    --green-6: 165 50% 26%;
+    --green-7: 165 50% 32%;
+    --green-8: 165 50% 38%;
+    --green-9: 165 70% 45%;
+    --green-10: 165 72% 36%;
+    --green-11: 165 100% 82%;
+    --green-12: 165 100% 93%;
+
+    /* Semantic Tokens - Dark */
+    --background: var(--gray-1);
+    --foreground: var(--gray-12);
+    --card: var(--gray-2);
+    --card-foreground: var(--gray-12);
+    --popover: var(--gray-2);
+    --popover-foreground: var(--gray-12);
+    --primary: var(--green-9);
+    --primary-foreground: var(--green-1);
+    --secondary: var(--gray-5);
+    --secondary-foreground: var(--gray-12);
+    --muted: var(--gray-3);
+    --muted-foreground: var(--gray-11);
+    --accent: var(--green-9);
+    --accent-foreground: var(--gray-1);
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: var(--gray-6);
+    --input: var(--gray-6);
+    --ring: var(--green-8);
+
+    /* Chart Colors - Dark */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --sidebar-background: var(--gray-1);
+    --sidebar-foreground: var(--gray-12);
+    --sidebar-primary: var(--gray-5);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--gray-3);
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: var(--gray-6);
+    --sidebar-ring: var(--green-8);
+  }
+}
+
+h1 {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+}
+
+h2 {
+  @apply scroll-m-20 pb-2 text-3xl font-semibold tracking-tight;
+}
+
+.bullet-list {
+  @apply ml-6 list-disc [&>li]:mt-2;
+}
+
+.ordered-list {
+  @apply ml-6 list-decimal [&>li]:mt-2;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
