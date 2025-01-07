@@ -10,7 +10,7 @@ import { EditorMenuBar } from './editor-menu-bar'
 
 const TEMPLATES = {
   companyInfo: `
-    <h2>About My Company</h2>
+    <h2 class='testings'>About My Company</h2>
     <p>We are a leader in our industry, committed to delivering high-quality services and fostering innovation.</p>
     <h3>Responsibilities</h3>
     <ul>

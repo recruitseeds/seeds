@@ -18,9 +18,6 @@ export default function Page() {
           Create new job posting
         </h2>
         <NewJobForm />
-        {/* <div className="grid w-full items-center gap-1.5">
-          <Editor />
-        </div> */}
       </div>
     </div>
   )

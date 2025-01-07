@@ -23,12 +23,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en'>
+    <html lang="en">
       {/* <head>
         <script src='https://unpkg.com/react-scan/dist/auto.global.js' async />
       </head> */}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}>
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         {children}
       </body>
     </html>

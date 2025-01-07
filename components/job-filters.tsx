@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -7,8 +7,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import Link from "next/link";
+} from '@/components/ui/select'
+import Link from 'next/link'
 
 export function JobFilter() {
   return (
@@ -42,14 +42,14 @@ export function JobFilter() {
           </SelectGroup>
         </SelectContent>
       </Select>
-      <Button asChild>
+      <Button variant="accent" asChild>
         <Link href="/dashboard/jobs/create">
           Create job posting
           <Plus />
         </Link>
       </Button>
     </div>
-  );
+  )
 }
 
 const Plus = () => (
@@ -63,9 +63,10 @@ const Plus = () => (
   >
     <path
       d="M5 12H12M19 12H12M12 12V5M12 12V19"
+      stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
   </svg>
-);
+)

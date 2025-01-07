@@ -110,7 +110,7 @@
     /* Semantic Tokens - Dark */
     --background: var(--gray-1);
     --foreground: var(--gray-12);
-    --card: var(--gray-2);
+    --card: var(--gray-3);
     --card-foreground: var(--gray-12);
     --popover: var(--gray-2);
     --popover-foreground: var(--gray-12);
@@ -139,7 +139,7 @@
     --sidebar-foreground: var(--gray-12);
     --sidebar-primary: var(--gray-5);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: var(--gray-3);
+    --sidebar-accent: var(--gray-7);
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: var(--gray-6);
     --sidebar-ring: var(--green-8);
@@ -154,12 +154,20 @@ h2 {
   @apply scroll-m-20 pb-2 text-3xl font-semibold tracking-tight;
 }
 
+h4 {
+  @apply scroll-m-20 text-xl font-semibold tracking-tight;
+}
+
 .bullet-list {
   @apply ml-6 list-disc [&>li]:mt-2;
 }
 
 .ordered-list {
   @apply ml-6 list-decimal [&>li]:mt-2;
+}
+
+.testings {
+  @apply text-center;
 }
 
 @layer base {

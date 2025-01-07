@@ -11,18 +11,18 @@ import {
   AlignCenter,
   AlignLeft,
   AlignRight,
-  Bold as BoldIcon,
   ChevronDown,
-  Code,
   Heading1,
   Heading2,
   Heading3,
-  Italic,
   List,
   ListOrdered,
-  Strikethrough,
-  Underline as UnderlineIcon,
 } from 'lucide-react'
+import { Bold as BoldIcon } from './icons/bold'
+import { Code } from './icons/code'
+import { Italic } from './icons/italic'
+import { Strikethrough } from './icons/strikethrough'
+import { Underline as UnderlineIcon } from './icons/underline'
 
 export function EditorMenuBar({
   editor,
@@ -46,7 +46,7 @@ export function EditorMenuBar({
     editor.isActive(type, options)
 
   return (
-    <div className="mb-2 mt-5 flex items-stretch overflow-hidden rounded-lg border">
+    <div className="mb-2 mt-5 flex items-stretch overflow-x-scroll rounded-lg border">
       {/* Text Styles Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex w-[128px] items-center justify-between gap-3 border-r px-3 hover:bg-secondary">
@@ -100,7 +100,7 @@ export function EditorMenuBar({
           isActive('bold') ? 'bg-white/10' : ''
         }`}
       >
-        <BoldIcon className="h-4 w-4" />
+        <BoldIcon className="size-4" />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -108,7 +108,7 @@ export function EditorMenuBar({
           isActive('italic') ? 'bg-white/10' : ''
         }`}
       >
-        <Italic className="h-4 w-4" />
+        <Italic className="size-4" />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleUnderline().run()}
