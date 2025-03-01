@@ -7,8 +7,9 @@ import { useRef, useState } from 'react'
 import { Button } from '../ui/button'
 import { EditorMenuBar } from './editor-menu-bar'
 import { ContentItemMenu } from './menus'
-import { LinkMenu } from './menus/link-menu'
-import { TextMenu } from './menus/text-menu/text-menu'
+// import { LinkMenu } from './menus/link-menu'
+// import { TextMenu } from './menus/text-menu/text-menu'
+import { EditorBubbleMenu } from '../bubble-menu/bubble-menu'
 
 export const BlockEditor = () => {
   const [isEditable, setIsEditable] = useState(true)
@@ -39,8 +40,9 @@ export const BlockEditor = () => {
       </div>
       <ContentItemMenu editor={editor} isEditable={isEditable} />
       {/* <SlashCommand editor={editor} /> */}
-      <LinkMenu editor={editor} appendTo={menuContainerRef} />
-      <TextMenu editor={editor} />
+      {/* <LinkMenu editor={editor} appendTo={menuContainerRef} /> */}
+      {/* <TextMenu editor={editor} /> */}
+      <EditorBubbleMenu editor={editor} />
       <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
       <ImageBlockMenu editor={editor} appendTo={menuContainerRef} />
       {editor ? (
