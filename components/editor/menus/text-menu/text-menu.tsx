@@ -23,10 +23,9 @@ const MemoContentTypePicker = memo(ContentTypePicker)
 
 export type TextMenuProps = {
   editor: Editor
-  editorContainerRef?: React.RefObject<HTMLElement>
 }
 
-export const TextMenu = ({ editor, editorContainerRef }: TextMenuProps) => {
+export const TextMenu = ({ editor }: TextMenuProps) => {
   const [selecting, setSelecting] = useState(false)
   const commands = useTextmenuCommands(editor)
   const states = useTextmenuStates(editor)
@@ -35,19 +34,23 @@ export const TextMenu = ({ editor, editorContainerRef }: TextMenuProps) => {
   useEffect(() => {
     const controller = new AbortController()
     let selectionTimeout: number
+
     document.addEventListener(
       'selectionchange',
       () => {
         setSelecting(true)
+
         if (selectionTimeout) {
           window.clearTimeout(selectionTimeout)
         }
+
         selectionTimeout = window.setTimeout(() => {
           setSelecting(false)
         }, 500)
       },
       { signal: controller.signal }
     )
+
     return () => {
       controller.abort()
     }
@@ -55,37 +58,23 @@ export const TextMenu = ({ editor, editorContainerRef }: TextMenuProps) => {
 
   return (
     <BubbleMenu
-      className='z-50'
+      // TODO: Figure out a way to make the menu less jumpy
+      // className={selecting ? 'hidden' : ''}
       tippyOptions={{
         popperOptions: {
-          placement: 'top',
+          placement: 'top-start',
           modifiers: [
             {
               name: 'preventOverflow',
               options: {
-                boundary: editorContainerRef?.current || 'viewport',
+                boundary: 'viewport',
                 padding: 8,
-                altAxis: true,
-                mainAxis: true,
-              },
-            },
-            {
-              name: 'computeStyles',
-              options: {
-                gpuAcceleration: false,
               },
             },
           ],
         },
         offset: [0, 8],
-        maxWidth: editorContainerRef?.current
-          ? `${editorContainerRef.current.clientWidth - 32}px`
-          : 'calc(100vw - 16px)',
-        appendTo: () => editorContainerRef?.current || document.body,
-        zIndex: 99999,
-        interactive: true,
-        hideOnClick: false,
-        duration: [200, 0],
+        maxWidth: 'calc(100vw - 16px)',
       }}
       editor={editor}
       pluginKey='textMenu'

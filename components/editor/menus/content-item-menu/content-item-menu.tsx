@@ -76,7 +76,6 @@ export const ContentItemMenu = ({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant='destructive'
-                // className='bg-destructive-hover'
                 onClick={actions.deleteNode}>
                 <Icon name='Trash2' />
                 Delete

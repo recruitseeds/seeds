@@ -28,6 +28,7 @@ export type ContentPickerOptions = Array<
 
 export type ContentTypePickerProps = {
   options: ContentPickerOptions
+  onOpenChange?: (open: boolean) => void
 }
 
 const isOption = (
@@ -37,15 +38,24 @@ const isCategory = (
   option: ContentTypePickerOption | ContentTypePickerCategory
 ): option is ContentTypePickerCategory => option.type === 'category'
 
-export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
+export const ContentTypePicker = ({
+  options,
+  onOpenChange,
+}: ContentTypePickerProps) => {
   const activeItem = useMemo(
     () =>
       options.find((option) => option.type === 'option' && option.isActive()),
     [options]
   )
 
+  const handleOpenChange = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open)
+    }
+  }
+
   return (
-    <Dropdown.Root>
+    <Dropdown.Root onOpenChange={handleOpenChange}>
       <Dropdown.Trigger asChild>
         <Toolbar.Button
           active={activeItem?.id !== 'paragraph' && !!activeItem?.type}>
@@ -62,10 +72,7 @@ export const ContentTypePicker = ({ options }: ContentTypePickerProps) => {
           {options.map((option) => {
             if (isOption(option)) {
               return (
-                <DropdownButton
-                  key={option.id}
-                  onClick={option.onClick}
-                  isActive={option.isActive()}>
+                <DropdownButton key={option.id} isActive={option.isActive()}>
                   <Icon name={option.icon} className='w-4 h-4 mr-1' />
                   {option.label}
                 </DropdownButton>
