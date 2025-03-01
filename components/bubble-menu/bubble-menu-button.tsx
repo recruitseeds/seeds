@@ -1,0 +1,68 @@
+import { cn } from '@/lib/utils'
+import { ChevronDown as ChevronDownIcon } from 'lucide-react'
+import { forwardRef, MouseEvent } from 'react'
+import { ConditionalWrap } from '../../lib/conditional-wrap'
+import { Button } from '../ui/button'
+import { UIText } from '../ui/text'
+import { Tooltip } from '../ui/tippy'
+
+type BubbleMenuButtonElement = React.ElementRef<'button'>
+interface BubbleMenuProps extends React.ComponentPropsWithRef<'button'> {
+  onClick?: (evt: MouseEvent) => void
+  isActive?: boolean
+  icon: React.ReactNode
+  title?: string
+  tooltip?: string
+  shortcut?: string
+  dropdown?: boolean
+}
+
+export const BubbleMenuButton = forwardRef<
+  BubbleMenuButtonElement,
+  BubbleMenuProps
+>(function BubbleMenuButton(
+  {
+    icon,
+    isActive = false,
+    onClick,
+    title,
+    tooltip,
+    shortcut,
+    dropdown,
+    ...props
+  }: BubbleMenuProps,
+  ref
+) {
+  return (
+    <ConditionalWrap
+      condition={!!tooltip}
+      wrap={(children) => (
+        <Tooltip label={tooltip} shortcut={shortcut} sideOffset={8}>
+          {children}
+        </Tooltip>
+      )}>
+      <Button
+        {...props}
+        ref={ref}
+        type='button'
+        onClick={onClick}
+        variant='ghost'
+        className={cn('', {
+          'bg-important hover:bg-important-hover active:bg-important-active':
+            isActive,
+        })}>
+        {icon}
+        {title && (
+          <UIText weight='font-medium' size='text-sm'>
+            {title}
+          </UIText>
+        )}
+        {dropdown && (
+          <span className='text-muted group-hover:text-muted-foreground -ml-1'>
+            <ChevronDownIcon strokeWidth='2' size={16} />
+          </span>
+        )}
+      </Button>
+    </ConditionalWrap>
+  )
+})

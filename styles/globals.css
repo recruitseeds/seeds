@@ -17,8 +17,11 @@
   --card-foreground: oklch(24.4% 0.0064 164.7);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(24.4% 0.0064 164.7);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(94.7% 0.0028 156.9);
+
+  --primary: oklch(20.5% 0 0);
+  --primary-foreground: oklch(98.5% 0.0011 164.7);
+  --primary-hover: oklch(30.3% 0 0);
+  --primary-active: oklch(30.3% 0 0 / 0.9);
 
   --secondary: oklch(94.6% 0.0043 164.7);
   --secondary-foreground: oklch(0.205 0 0);
@@ -58,6 +61,13 @@
   --success-foreground: oklch(51.5% 0.2183 150);
   --success-border: oklch(84.6% 0.1202 150);
 
+  --important: oklch(70.5% 0.213 47.6);
+  --important-hover: oklch(66.8% 0.2167 47.6);
+  --important-active: oklch(73.3% 0.1473 47.6);
+  --important-subtle: oklch(94.8% 0.041 47.6);
+  --important-vibrant: oklch(58% 0.2074 47.6);
+  --important-border: oklch(84.6% 0.1226 47.6);
+
   --border: oklch(87.4% 0.007 164.7);
 
   --input: oklch(87.4% 0.007 164.7);
@@ -85,8 +95,11 @@
   --card-foreground: oklch(94.7% 0.0028 156.9);
   --popover: oklch(18% 0.0045 174.5);
   --popover-foreground: oklch(94.7% 0.0028 156.9);
-  --primary: oklch(94.7% 0.0028 156.9);
-  --primary-foreground: oklch(0.205 0 0);
+
+  --primary: oklch(94.7% 0.003 157);
+  --primary-foreground: oklch(18% 0.0038 157);
+  --primary-hover: oklch(76.6% 0.0045 157);
+  --primary-active: oklch(48.8% 0.0045 157);
 
   --brand: oklch(65.2% 0.1101 196.3);
   --brand-foreground: #ffffff;
@@ -127,6 +140,13 @@
   --success-foreground: oklch(78% 0.219 150);
   --success-border: oklch(41.5% 0.1109 150);
 
+  --important: oklch(70.5% 0.1867 47.6);
+  --important-hover: oklch(66.8% 0.1867 47.6);
+  --important-active: oklch(54% 0.1135 47.6);
+  --important-subtle: oklch(25.7% 0.0442 47.6);
+  --important-vibrant: oklch(79.9% 0.1594 47.6);
+  --important-border: oklch(38.6% 0.0849 47.6);
+
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
@@ -152,8 +172,11 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
 
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -193,6 +216,13 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-border: var(--success-border);
+
+  --color-important: var(--important);
+  --color-important-hover: var(--important-hover);
+  --color-important-active: var(--important-active);
+  --color-important-subtle: var(--importan-subtle);
+  --color-important-vibrant: var(--important-vibrant);
+  --color-important-border: var(--important-border);
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -234,6 +264,10 @@
     :where([class~='not-prose'], [class~='not-prose'] *)
   )::marker {
   @apply text-muted-foreground;
+}
+
+.prose :where(a):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  @apply text-brand;
 }
 
 @layer base {
