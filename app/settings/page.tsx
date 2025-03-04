@@ -1,14 +1,17 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { ProfileForm } from '@/components/settings/profile-form'
+import { Separator } from '@/components/ui/separator'
 
-export default function Page() {
+export default function SettingsProfilePage() {
   return (
-    <div className='w-full h-screen'>
-      <h1>Proposed theme colors</h1>
-      <div className='flex items-center justify-center h-full gap-2'>
-        <Button variant='brand'>Button</Button>
-        <Badge variant='brand'>Badge</Badge>
+    <div className='space-y-6'>
+      <div>
+        <h3 className='text-lg font-medium'>Profile</h3>
+        <p className='text-sm text-muted-foreground'>
+          This is how others will see you on the site.
+        </p>
       </div>
+      <Separator />
+      <ProfileForm />
     </div>
   )
 }

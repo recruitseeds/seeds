@@ -3,7 +3,6 @@
 import { HocuspocusProvider } from '@hocuspocus/provider'
 
 import { API } from '@/lib/api'
-
 import { BlockquoteFigure } from './blockquote-figure'
 import { CodeBlock } from './code-block'
 import { Document } from './document'
@@ -18,6 +17,7 @@ import { Column } from './multi-column'
 import { Columns } from './multi-column/columns'
 import { Selection } from './selection'
 import { SlashCommand } from './slash-command'
+import { SplitNearHardBreaks } from './split-near-hard-breaks'
 import { TrailingNode } from './trailing-node'
 
 import {
@@ -62,6 +62,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Document,
   Columns,
   TaskList,
+  SplitNearHardBreaks,
   TaskItem.configure({
     nested: true,
   }),
