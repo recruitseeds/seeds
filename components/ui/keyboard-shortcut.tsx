@@ -65,7 +65,7 @@ export function KeyboardShortcut({
               'font-[emoji]': emoji,
               'font-mono': !emoji,
             },
-            'text-secondary-foreground'
+            'text-foreground'
           )}>
           {text}
         </UIText>
@@ -76,7 +76,7 @@ export function KeyboardShortcut({
   if (isMobile) return null
 
   return (
-    <div className='text-foreground flex items-baseline justify-center gap-1 rounded bg-secondary px-1.5 py-0.5 align-middle text-[10px] dark:shadow-[inset_0_0.5px_0_rgba(255,255,255,0.12)]'>
+    <div className='text-foreground flex items-baseline justify-center gap-1 rounded bg-secondary px-1.5 py-0.5 align-middle text-[10px] dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)] shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]'>
       {components}
     </div>
   )

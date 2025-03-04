@@ -31,7 +31,6 @@ import {
   CalendarClock,
   ChartPie,
   CircleHelp,
-  CircleUserRound,
   Clipboard,
   Home,
   LogOut,
@@ -153,74 +152,78 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <p className='text-xs text-muted-foreground'>
                 Read more about maximizing your stuff in our docs.
               </p>
-              <Button size='sm' className='w-full bg-[#f97316]'>
+              <Button
+                size='sm'
+                className='w-full bg-important hover:bg-important-hover active:bg-important-active'>
                 Enable notifications
               </Button>
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className='flex justify-between items-center'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant='ghost'
-                className='hover:bg-transparent size-6'
-                size='icon'>
-                <Avatar className='size-6'>
-                  <AvatarImage
-                    src='https://github.com/alexwhitmore.png'
-                    alt='alexwhitmore'
-                  />
-                  <AvatarFallback>AW</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className='w-56 ml-2'>
-              <DropdownMenuGroup>
-                <DropdownMenuItem>
-                  <CircleUserRound className='size-4 text-muted-foreground' />
-                  My profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className='size-4 text-muted-foreground' />
-                  Account settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <MessageCircleQuestion className='size-4 text-muted-foreground' />
-                  Support
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <CalendarClock className='size-4 text-muted-foreground' />
-                  Changelog
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <CircleHelp className='size-4 text-muted-foreground' />
-                  Share feedback
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Blocks className='size-4 text-muted-foreground' />
-                Integrations
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className='group focus:bg-destructive focus:text-white focus:shadow-none'>
-                <LogOut className='size-4 text-muted-foreground group-focus:text-white' />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <div>
-            <Button size='icon' variant='ghost' className='size-6'>
-              <CalendarClock className='size-4' />
-            </Button>
-            <Button size='icon' variant='ghost' className='size-6'>
-              <CircleHelp className='size-4' />
-            </Button>
-          </div>
-        </div>
+        <SidebarSettingsDropdown />
       </SidebarFooter>
     </Sidebar>
   )
 }
+
+const SidebarSettingsDropdown = () => (
+  <div className='flex justify-between items-center'>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant='ghost'
+          className='hover:bg-transparent size-6'
+          size='icon'>
+          <Avatar className='size-6'>
+            <AvatarImage
+              src='https://github.com/alexwhitmore.png'
+              alt='alexwhitmore'
+            />
+            <AvatarFallback>AW</AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className='w-56 ml-2'>
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <a href='/settings'>
+              <Settings className='size-4 text-muted-foreground' />
+              Account settings
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>
+            <MessageCircleQuestion className='size-4 text-muted-foreground' />
+            Support
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <CalendarClock className='size-4 text-muted-foreground' />
+            Changelog
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <CircleHelp className='size-4 text-muted-foreground' />
+            Share feedback
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <Blocks className='size-4 text-muted-foreground' />
+          Integrations
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant='destructive'>
+          <LogOut className='size-4 text-muted-foreground group-focus:text-white' />
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+    <div>
+      <Button size='icon' variant='ghost' className='size-6'>
+        <CalendarClock className='size-4' />
+      </Button>
+      <Button size='icon' variant='ghost' className='size-6'>
+        <CircleHelp className='size-4' />
+      </Button>
+    </div>
+  </div>
+)

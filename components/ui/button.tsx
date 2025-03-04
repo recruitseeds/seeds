@@ -15,7 +15,7 @@ const buttonVariants = cva(
     'cursor-pointer relative select-none transform-gpu',
     // Focus styles
     'focus:!outline-none focus:!ring-0 active:!outline-none active:!ring-0',
-    'after:pointer-events-none after:absolute after:-inset-[3px] after:rounded-[8px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand',
+    'after:pointer-events-none after:absolute after:-inset-[3px] after:rounded-[9px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand',
     // Hover gradient effect container
     'before:pointer-events-none before:absolute before:inset-0 before:z-[1] before:rounded before:opacity-0 before:transition-opacity before:bg-gradient-to-b before:from-white/[0.12]',
   ],
@@ -23,8 +23,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: [
-          'bg-primary text-primary-foreground',
-          'hover:bg-primary-hover, active:bg-primary-active',
+          'bg-primary text-primary-foreground hover:bg-[var(--primary-hover)] active:bg-primary-active',
         ],
         destructive: [
           'bg-destructive text-destructive-foreground',

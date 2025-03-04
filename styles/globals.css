@@ -99,7 +99,7 @@
   --primary: oklch(94.7% 0.003 157);
   --primary-foreground: oklch(18% 0.0038 157);
   --primary-hover: oklch(76.6% 0.0045 157);
-  --primary-active: oklch(48.8% 0.0045 157);
+  --primary-active: oklch(76.6% 0.0045 157 /0.9);
 
   --brand: oklch(65.2% 0.1101 196.3);
   --brand-foreground: #ffffff;
@@ -142,7 +142,7 @@
 
   --important: oklch(70.5% 0.1867 47.6);
   --important-hover: oklch(66.8% 0.1867 47.6);
-  --important-active: oklch(54% 0.1135 47.6);
+  --important-active: oklch(66.8% 0.1867 47.6 / 0.9);
   --important-subtle: oklch(25.7% 0.0442 47.6);
   --important-vibrant: oklch(79.9% 0.1594 47.6);
   --important-border: oklch(38.6% 0.0849 47.6);
@@ -269,6 +269,24 @@
 .prose :where(a):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-brand;
 }
+
+.prose
+  :where(strong):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  @apply text-foreground;
+}
+
+/* [data-slot='button'],
+[data-slot='input'],
+[data-slot='switch'],
+[data-slot='select-trigger'],
+a {
+  @apply relative outline-none;
+  @apply after:pointer-events-none after:absolute after:-inset-[3px] after:rounded-[8px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand;
+}
+
+[data-slot='switch'] {
+  @apply after:rounded-full;
+} */
 
 @layer base {
   * {
