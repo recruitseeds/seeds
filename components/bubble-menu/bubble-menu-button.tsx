@@ -48,7 +48,7 @@ export const BubbleMenuButton = forwardRef<
         onClick={onClick}
         variant='ghost'
         className={cn('', {
-          'bg-important hover:bg-important-hover active:bg-important-active':
+          'bg-important hover:bg-important-hover active:bg-important-active !text-white':
             isActive,
         })}>
         {icon}
@@ -58,8 +58,8 @@ export const BubbleMenuButton = forwardRef<
           </UIText>
         )}
         {dropdown && (
-          <span className='text-muted group-hover:text-muted-foreground -ml-1'>
-            <ChevronDownIcon strokeWidth='2' size={16} />
+          <span className='text-muted-foreground group-hover:text-foreground -ml-1'>
+            <ChevronDownIcon />
           </span>
         )}
       </Button>
