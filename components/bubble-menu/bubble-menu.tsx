@@ -21,7 +21,7 @@ import { AnyEvent, LinkEditor } from '../ui/link-editor'
 import { Tooltip } from '../ui/tippy'
 
 // import { buildMenuItems } from '@campsite/ui/Menu'
-import { DropdownMenu } from '@radix-ui/react-dropdown-menu'
+// import { DropdownMenu } from '@radix-ui/react-dropdown-menu'
 import {
   Bold as BoldIcon,
   CheckSquare as ChecklistIcon,
@@ -42,6 +42,7 @@ import {
   Underline as UnderlineIcon,
   List as UnorderedListIcon,
 } from 'lucide-react'
+import { DropdownMenu } from '../ui/desktop-dropdown'
 
 import { useForceUpdate } from '../../hooks/use-force-update'
 import { BubbleMenuSeparator } from './bubble-menu-separator'
@@ -328,7 +329,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
         }}>
         <div
           ref={containerRef}
-          className='text-foreground bg-background flex cursor-default items-center gap-1 rounded-lg p-1 shadow-lg dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]'>
+          className='text-foreground bg-background flex cursor-default items-center gap-1 rounded-lg p-1 shadow-lg border dark:border-none dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]'>
           {linkEditorOpen ? (
             <LinkEditor
               url={url}
