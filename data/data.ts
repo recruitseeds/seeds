@@ -6,53 +6,57 @@ export const sidebarData = {
       items: [
         {
           title: 'Home',
-          url: '/dashboard',
+          url: '/home',
           isActive: false,
           icon: 'Home',
         },
         {
           title: 'Jobs',
-          url: '/dashboard/jobs',
+          url: '/jobs',
           isActive: false,
           icon: 'Briefcase',
           subItems: [
             {
               title: 'Create',
-              url: '/dashboard/jobs/create',
+              url: '/jobs/create',
+            },
+            {
+              title: 'Pipelines',
+              url: '/jobs/pipelines',
             },
             {
               title: 'Settings',
-              url: '/dashboard/jobs/settings',
+              url: '/jobs/settings',
             },
           ],
         },
         {
           title: 'Templates',
-          url: '/dashboard/templates',
+          url: '/templates',
           isActive: false,
           icon: 'Clipboard',
           subItems: [
             {
               title: 'Create',
-              url: '/dashboard/templates/create',
+              url: '/templates/create',
             },
           ],
         },
         {
           title: 'Drafts',
-          url: '/dashboard/drafts',
+          url: '/drafts',
           isActive: false,
           icon: 'UserRoundPen',
         },
         {
           title: 'Messages',
-          url: '/dashboard/messages',
+          url: '/messages',
           isActive: false,
           icon: 'MessageCircle',
         },
         {
           title: 'Analytics',
-          url: '/dashboard/analytics',
+          url: '/analytics',
           isActive: false,
           icon: 'ChartPie',
         },
