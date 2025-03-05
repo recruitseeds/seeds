@@ -63,7 +63,7 @@
 
   --important: oklch(70.5% 0.213 47.6);
   --important-hover: oklch(66.8% 0.2167 47.6);
-  --important-active: oklch(73.3% 0.1473 47.6);
+  --important-active: oklch(66.8% 0.2167 47.6 / 0.9);
   --important-subtle: oklch(94.8% 0.041 47.6);
   --important-vibrant: oklch(58% 0.2074 47.6);
   --important-border: oklch(84.6% 0.1226 47.6);
