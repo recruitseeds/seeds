@@ -35,7 +35,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
   }
 
   return (
-    <div className='h-12 border-y-1 flex items-center px-4 justify-between'>
+    <div className='h-12 border-b-1 border-dashed flex items-center px-4 justify-between'>
       <div className='flex items-center flex-1 md:flex-none  border rounded-[7px]'>
         <Button
           size='icon'
