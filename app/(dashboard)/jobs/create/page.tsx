@@ -1,11 +1,18 @@
 'use client'
 
-import { BlockEditor } from '../../../../components/editor/block-editor'
+import { BlockEditor } from '@/components/editor/block-editor'
+import { RightAppSidebar } from '@/components/right-sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 export default function Page() {
   return (
-    <section>
-      <BlockEditor />
-    </section>
+    <SidebarProvider>
+      <SidebarInset>
+        <BlockEditor />
+      </SidebarInset>
+      <aside className='hidden lg:flex'>
+        <RightAppSidebar side='right' />
+      </aside>
+    </SidebarProvider>
   )
 }

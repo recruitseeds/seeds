@@ -1,10 +1,4 @@
-import {
-  BubbleMenu,
-  Editor,
-  findParentNode,
-  isList,
-  isTextSelection,
-} from '@tiptap/react'
+import { BubbleMenu, Editor, isTextSelection } from '@tiptap/react'
 import Link from 'next/link'
 import {
   memo,
@@ -20,8 +14,6 @@ import { Button } from '../ui/button'
 import { AnyEvent, LinkEditor } from '../ui/link-editor'
 import { Tooltip } from '../ui/tippy'
 
-// import { buildMenuItems } from '@campsite/ui/Menu'
-// import { DropdownMenu } from '@radix-ui/react-dropdown-menu'
 import {
   Bold as BoldIcon,
   CheckSquare as ChecklistIcon,
@@ -89,8 +81,6 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
   canComment = false,
   enableHeaders = true,
   enableLists = true,
-  enableBlockquote = true,
-  enableUnderline = true,
   enableCodeBlock = true,
   tippyAppendTo,
 }: Props) {
@@ -160,7 +150,6 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
       }
     }
 
-    // update the URL anytime the selection changes
     const updateUrl = () => setUrl(editor?.getAttributes('link').href ?? '')
 
     container.addEventListener('keydown', keydown, { capture: true })
@@ -257,16 +246,6 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
       },
       kbd: 'mod+shift+8',
     },
-    {
-      type: 'item',
-      label: 'Checklist',
-      leftSlot: <ChecklistIcon />,
-      onSelect: (e) => {
-        e.stopPropagation()
-        editor.chain().toggleTaskList().focus().run()
-      },
-      kbd: 'mod+shift+9',
-    },
   ])
 
   const parentContainer = tippyAppendTo?.() ?? undefined
@@ -339,152 +318,127 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
             />
           ) : (
             <>
-              {editor.isEditable && (
-                <>
-                  {enableHeaders && (
-                    <DropdownMenu
-                      align='start'
-                      items={paragraphItems}
-                      trigger={
-                        <BubbleMenuButton
-                          onClick={blurEditor}
-                          icon={paragraphIcon(editor)}
-                          tooltip='Paragraph'
-                          dropdown
-                        />
-                      }
-                      desktop={{
-                        container: containerRef.current,
-                        width: 'w-50',
-                      }}
-                    />
-                  )}
-                  <BubbleMenuButton
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      editor.chain().toggleBold().focus().run()
-                    }}
-                    isActive={editor.isActive('bold')}
-                    icon={<BoldIcon className='size-4' />}
-                    tooltip='Bold'
-                    shortcut='mod+b'
-                  />
-                  <BubbleMenuButton
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      editor.chain().toggleItalic().focus().run()
-                    }}
-                    isActive={editor.isActive('italic')}
-                    icon={<ItalicIcon className='size-4' />}
-                    tooltip='Italic'
-                    shortcut='mod+i'
-                  />
-                  {enableUnderline && (
+              {enableHeaders && (
+                <DropdownMenu
+                  align='start'
+                  items={paragraphItems}
+                  trigger={
                     <BubbleMenuButton
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        editor.chain().toggleUnderline().focus().run()
-                      }}
-                      isActive={editor.isActive('underline')}
-                      icon={<UnderlineIcon className='size-4' />}
-                      tooltip='Underline'
-                      shortcut='mod+u'
+                      onClick={blurEditor}
+                      icon={paragraphIcon(editor)}
+                      tooltip='Paragraph'
+                      dropdown
                     />
-                  )}
-                  <BubbleMenuButton
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      editor.chain().toggleStrike().focus().run()
-                    }}
-                    isActive={editor.isActive('strike')}
-                    icon={<StrikeIcon className='size-4' />}
-                    tooltip='Strikethrough'
-                    shortcut='mod+shift+s'
-                  />
-                  <BubbleMenuSeparator />
-
-                  {enableBlockquote && (
-                    <BubbleMenuButton
-                      onClick={(e) => {
-                        e.stopPropagation()
-
-                        const selection = editor.state.selection
-                        const parentList = findParentNode((node) =>
-                          isList(
-                            node.type.name,
-                            editor.extensionManager.extensions
-                          )
-                        )(selection)
-                        let chain = editor.chain()
-
-                        // fully collapse nested lists
-                        if (parentList) {
-                          for (let i = 0; i < parentList.depth; i++) {
-                            chain = chain.liftListItem('listItem')
-                          }
-                        }
-
-                        chain.toggleBlockquote().focus().run()
-                      }}
-                      isActive={editor.isActive('blockquote')}
-                      icon={<QuoteIcon className='size-4' />}
-                      tooltip='Quote'
-                      shortcut='mod+shift+b'
-                    />
-                  )}
-                  {enableLists && (
-                    <DropdownMenu
-                      align='start'
-                      items={listItems}
-                      trigger={
-                        <BubbleMenuButton
-                          onClick={blurEditor}
-                          icon={listIcon(editor)}
-                          tooltip='List'
-                          dropdown
-                        />
-                      }
-                      desktop={{
-                        container: containerRef.current,
-                        width: 'w-50',
-                      }}
-                    />
-                  )}
-                  <BubbleMenuButton
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      editor.chain().toggleCode().focus().run()
-                    }}
-                    isActive={editor.isActive('code')}
-                    icon={<CodeIcon className='size-4' />}
-                    tooltip='Code'
-                    shortcut='mod+e'
-                  />
-
-                  {enableCodeBlock && (
-                    <BubbleMenuButton
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        editor.chain().toggleCodeBlock().focus().run()
-                      }}
-                      isActive={editor.isActive('codeBlock')}
-                      icon={<CodeBlockIcon className='size-4' />}
-                      tooltip='Code block'
-                      shortcut='mod+alt+c'
-                    />
-                  )}
-
-                  <BubbleMenuSeparator />
-
-                  <BubbleMenuButton
-                    onClick={openLinkEditor}
-                    isActive={editor.isActive('link')}
-                    icon={<LinkIcon className='size-4' />}
-                    tooltip='Link'
-                    shortcut='mod+k'
-                  />
-                </>
+                  }
+                  desktop={{
+                    container: containerRef.current,
+                    width: 'w-50',
+                  }}
+                />
               )}
+              <BubbleMenuButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  editor.chain().toggleBold().focus().run()
+                }}
+                isActive={editor.isActive('bold')}
+                icon={<BoldIcon className='size-4' />}
+                tooltip='Bold'
+                shortcut='mod+b'
+              />
+              <BubbleMenuButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  editor.chain().toggleItalic().focus().run()
+                }}
+                isActive={editor.isActive('italic')}
+                icon={<ItalicIcon className='size-4' />}
+                tooltip='Italic'
+                shortcut='mod+i'
+              />
+              <BubbleMenuButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  editor.chain().toggleUnderline().focus().run()
+                }}
+                isActive={editor.isActive('underline')}
+                icon={<UnderlineIcon className='size-4' />}
+                tooltip='Underline'
+                shortcut='mod+u'
+              />
+              <BubbleMenuButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  editor.chain().toggleStrike().focus().run()
+                }}
+                isActive={editor.isActive('strike')}
+                icon={<StrikeIcon className='size-4' />}
+                tooltip='Strikethrough'
+                shortcut='mod+shift+s'
+              />
+              <BubbleMenuSeparator />
+
+              <BubbleMenuButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  editor.chain().focus().setBlockquote().run()
+                }}
+                isActive={editor.isActive('blockquote')}
+                icon={<QuoteIcon className='size-4' />}
+                tooltip='Quote'
+                shortcut='mod+shift+b'
+              />
+              {enableLists && (
+                <DropdownMenu
+                  align='start'
+                  items={listItems}
+                  trigger={
+                    <BubbleMenuButton
+                      onClick={blurEditor}
+                      icon={listIcon(editor)}
+                      tooltip='List'
+                      dropdown
+                    />
+                  }
+                  desktop={{
+                    container: containerRef.current,
+                    width: 'w-50',
+                  }}
+                />
+              )}
+              <BubbleMenuButton
+                onClick={(e) => {
+                  e.stopPropagation()
+                  editor.chain().toggleCode().focus().run()
+                }}
+                isActive={editor.isActive('code')}
+                icon={<CodeIcon className='size-4' />}
+                tooltip='Code'
+                shortcut='mod+e'
+              />
+
+              {enableCodeBlock && (
+                <BubbleMenuButton
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    editor.chain().toggleCodeBlock().focus().run()
+                  }}
+                  isActive={editor.isActive('codeBlock')}
+                  icon={<CodeBlockIcon className='size-4' />}
+                  tooltip='Code block'
+                  shortcut='mod+alt+c'
+                />
+              )}
+
+              <BubbleMenuSeparator />
+
+              <BubbleMenuButton
+                onClick={openLinkEditor}
+                isActive={editor.isActive('link')}
+                icon={<LinkIcon className='size-4' />}
+                tooltip='Link'
+                shortcut='mod+k'
+              />
             </>
           )}
         </div>

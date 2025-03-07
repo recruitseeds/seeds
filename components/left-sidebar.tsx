@@ -154,7 +154,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </p>
               <Button
                 size='sm'
-                className='w-full bg-important hover:bg-important-hover active:bg-important-active'>
+                className='w-full bg-important hover:bg-important-hover active:bg-important-active shadow-shadow-accent
+'>
                 Enable notifications
               </Button>
             </div>

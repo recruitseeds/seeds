@@ -1,4 +1,4 @@
-import { DropdownButton } from '@/components/ui/dropdown'
+import { DropdownButton } from '@/components/ui/editor-dropdown'
 import { Icon } from '@/components/ui/icon'
 import { Surface } from '@/components/ui/surface'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
@@ -110,7 +110,7 @@ export const MenuList = React.forwardRef(function MenuList(
   return (
     <Surface
       ref={scrollContainer}
-      className='max-h-[min(80vh,24rem)] overflow-auto flex-wrap mb-8 p-2'>
+      className='max-h-[min(80vh,24rem)] min-w-[215px] overflow-auto flex-wrap mb-8 p-2'>
       <div className='grid grid-cols-1 gap-0.5'>
         {props.items.map((group, groupIndex) => (
           <React.Fragment key={`${group.title}-wrapper`}>

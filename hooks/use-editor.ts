@@ -33,7 +33,7 @@ export const useBlockEditor = (
         options.onCreate(ctx)
       }
     },
-    extensions: [...ExtensionKit({})].filter(
+    extensions: [...ExtensionKit()].filter(
       (e): e is AnyExtension => e !== undefined
     ),
     editorProps: {

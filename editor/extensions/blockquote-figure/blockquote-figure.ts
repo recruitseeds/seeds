@@ -1,6 +1,6 @@
 import { mergeAttributes } from '@tiptap/core'
 import { Figure } from '../figure'
-import { QuoteCaption } from './quote-caption'
+import { QuoteCaption } from './quote-caption/quote-caption'
 import { Quote } from './quote/quote'
 
 declare module '@tiptap/core' {
