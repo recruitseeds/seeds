@@ -50,7 +50,7 @@ const buttonVariants = cva(
         brand: [
           'bg-brand text-brand-foreground',
           'hover:before:opacity-100 active:bg-brand-active',
-          'shadow-button-brand dark:shadow-button-brand-dark',
+          'shadow-shadow-accent',
         ],
       },
       size: {

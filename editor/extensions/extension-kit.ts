@@ -1,7 +1,5 @@
 'use client'
 
-import { HocuspocusProvider } from '@hocuspocus/provider'
-
 import { API } from '@/lib/api'
 import { BlockquoteFigure } from './blockquote-figure'
 import { CodeBlock } from './code-block'
@@ -36,13 +34,6 @@ import {
   StarterKit,
   Subscript,
   Superscript,
-  // Table,
-  // TableCell,
-  // TableHeader,
-  // TableOfContents,
-  // TableRow,
-  TaskItem,
-  TaskList,
   TextAlign,
   TextStyle,
   Typography,
@@ -52,22 +43,13 @@ import {
 
 import { isChangeOrigin } from '@tiptap/extension-collaboration'
 import { ImageUpload } from './image-upload'
-// import { TableOfContentsNode } from './TableOfContentsNode'
 
-interface ExtensionKitProps {
-  provider?: HocuspocusProvider | null
-}
-
-export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
+export const ExtensionKit = () => [
   Document,
   Columns,
-  TaskList,
-  SplitNearHardBreaks,
-  TaskItem.configure({
-    nested: true,
-  }),
   Column,
   Selection,
+  SplitNearHardBreaks,
   Heading.configure({
     levels: [1, 2, 3, 4, 5, 6],
   }),
@@ -105,11 +87,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Highlight.configure({ multicolor: true }),
   Underline,
   CharacterCount.configure({ limit: 50000 }),
-  // TableOfContents,
-  // TableOfContentsNode,
-  ImageUpload.configure({
-    clientId: provider?.document?.clientID,
-  }),
+  ImageUpload,
   ImageBlock,
   FileHandler.configure({
     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
@@ -148,10 +126,6 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   Subscript,
   Superscript,
-  // Table,
-  // TableCell,
-  // TableHeader,
-  // TableRow,
   Typography,
   Placeholder.configure({
     includeChildren: true,
