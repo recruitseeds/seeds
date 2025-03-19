@@ -26,6 +26,8 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from 'sonner'
 
+// TODO: Figure out a way to apply the border-brand class to the checkbox
+
 const appearanceFormSchema = z.object({
   theme: z.enum(['light', 'dark'], {
     required_error: 'Please select a theme.',
@@ -103,7 +105,9 @@ export function AppearanceForm() {
                 defaultValue={field.value}
                 className='grid max-w-md grid-cols-2 gap-8 pt-2'>
                 <FormItem>
-                  <FormLabel className='[&:has([data-state=checked])>div>div]:border-brand'>
+                  <FormLabel
+                  // className='[&:has([data-state=checked])>div>div]:border-brand'
+                  >
                     <FormControl>
                       <RadioGroupItem
                         value='light'
@@ -135,7 +139,9 @@ export function AppearanceForm() {
                   </FormLabel>
                 </FormItem>
                 <FormItem>
-                  <FormLabel className='[&:has([data-state=checked])>div>div]:border-brand'>
+                  <FormLabel
+                  // className='[&:has([data-state=checked])>div>div]:border-brand'
+                  >
                     <FormControl>
                       <RadioGroupItem
                         value='dark'
