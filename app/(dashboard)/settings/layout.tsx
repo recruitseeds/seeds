@@ -41,7 +41,7 @@ interface SettingsLayoutProps {
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   return (
     <div className='space-y-6 p-10 pb-16 md:block'>
-      <Button asChild variant='link' className='pl-0'>
+      <Button asChild variant='link' className='pl-0 md:hidden'>
         <Link href='/'>
           <ArrowLeft className='size-3' />
           Back
