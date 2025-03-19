@@ -1,14 +1,7 @@
 'use client'
-
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -18,18 +11,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-} from '@/components/ui/sidebar'
-import { Expand } from 'lucide-react'
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { SquarePen } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
 
 const initialFormData = {
   jobTitle: '',
@@ -45,7 +37,6 @@ const initialFormData = {
 function JobDetailsForm({ formData, setFormData }) {
   return (
     <div className='space-y-4 px-1'>
-      {/* Job Title */}
       <div className='space-y-2'>
         <Label htmlFor='job-title'>Job Title</Label>
         <Input
@@ -57,8 +48,6 @@ function JobDetailsForm({ formData, setFormData }) {
           }
         />
       </div>
-
-      {/* Job Type */}
       <div className='space-y-2'>
         <Label>Job Type</Label>
         <Select
@@ -80,8 +69,6 @@ function JobDetailsForm({ formData, setFormData }) {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Salary Range */}
       <div className='space-y-2'>
         <Label>Salary Range</Label>
         <div className='flex gap-2'>
@@ -120,8 +107,6 @@ function JobDetailsForm({ formData, setFormData }) {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Hiring Manager */}
       <div className='space-y-2'>
         <Label>Hiring Manager</Label>
         <Select
@@ -141,8 +126,6 @@ function JobDetailsForm({ formData, setFormData }) {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Department */}
       <div className='space-y-2'>
         <Label>Department</Label>
         <Select
@@ -166,8 +149,6 @@ function JobDetailsForm({ formData, setFormData }) {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Experience Level */}
       <div className='space-y-2'>
         <Label>Experience Level</Label>
         <Select
@@ -192,43 +173,49 @@ function JobDetailsForm({ formData, setFormData }) {
   )
 }
 
-export function RightAppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+export function JobProfileSheet() {
   const [formData, setFormData] = useState(initialFormData)
+  const [open, setOpen] = useState(false)
+
+  const handleSave = () => {
+    console.log('Saving form data:', formData)
+    setOpen(false)
+  }
 
   return (
-    <Sidebar {...props}>
-      <SidebarHeader>
-        <SidebarMenu className='flex items-center justify-between'>
-          <div className='flex justify-between items-center w-full'>
-            <p className='text-sm ml-2 font-bold'>Job Details</p>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant='ghost' size='icon' className='size-6'>
-                  <Expand className='size-4' />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Job Details</DialogTitle>
-                </DialogHeader>
-                <JobDetailsForm formData={formData} setFormData={setFormData} />
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button type='submit'>Save</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent className='space-y-4 px-1'>
-            <JobDetailsForm formData={formData} setFormData={setFormData} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <div className='fixed bottom-6 right-6 z-50'>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant='default'
+            size='lg'
+            className='shadow-lg rounded-full px-6'>
+            Complete job profile
+            <SquarePen className='size-4' />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side='right'
+          className='sm:max-w-2xl w-full h-[100dvh] overflow-y-auto p-6'>
+          <SheetHeader className='mb-4'>
+            <SheetTitle>Job Details</SheetTitle>
+            <SheetDescription>
+              Enter the required information for this job posting.
+            </SheetDescription>
+          </SheetHeader>
+          <JobDetailsForm formData={formData} setFormData={setFormData} />
+          <SheetFooter className='mt-6 flex flex-col gap-2 p-0 px-1'>
+            <Button onClick={handleSave} className='w-full'>
+              Save
+            </Button>
+            <SheetClose asChild>
+              <Button variant='outline' className='w-full'>
+                Cancel
+              </Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </div>
   )
 }

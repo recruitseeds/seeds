@@ -1,7 +1,7 @@
 'use client'
 
 import { BlockEditor } from '@/components/editor/block-editor'
-import { RightAppSidebar } from '@/components/right-sidebar'
+import { JobProfileSheet } from '@/components/job-profile-sheet'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 export default function Page() {
@@ -10,9 +10,7 @@ export default function Page() {
       <SidebarInset>
         <BlockEditor />
       </SidebarInset>
-      <aside className='hidden lg:flex'>
-        <RightAppSidebar side='right' />
-      </aside>
+      <JobProfileSheet />
     </SidebarProvider>
   )
 }

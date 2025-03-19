@@ -5,19 +5,16 @@ import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
 
-// Keep the existing button variants
 const buttonVariants = cva(
   [
-    // Base styles
     'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium',
     'disabled:pointer-events-none disabled:opacity-50',
     "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
     'cursor-pointer relative select-none transform-gpu',
-    // Focus styles
     'focus:!outline-none focus:!ring-0 active:!outline-none active:!ring-0',
-    'after:pointer-events-none after:absolute after:-inset-[3px] after:rounded-[9px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand',
-    // Hover gradient effect container
-    'before:pointer-events-none before:absolute before:inset-0 before:z-[1] before:rounded before:opacity-0 before:transition-opacity before:bg-gradient-to-b before:from-white/[0.12]',
+    'after:pointer-events-none after:absolute after:-inset-[3px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand',
+    // Remove the fixed after:rounded style to allow dynamic application
+    'before:pointer-events-none before:absolute before:inset-0 before:z-[1] before:opacity-0 before:transition-opacity before:bg-gradient-to-b before:from-white/[0.12]',
   ],
   {
     variants: {
@@ -54,10 +51,10 @@ const buttonVariants = cva(
         ],
       },
       size: {
-        default: 'h-7.5 text-[14.01px] rounded-md px-2.5',
-        sm: 'h-6.5 text-[13.01px] rounded-md px-2',
-        lg: 'px-4.5 h-10 py-3 text-[15.01px] rounded-md',
-        icon: 'size-9 p-0 rounded-md',
+        default: ['h-7.5 text-[14.01px] rounded-md px-2.5'],
+        sm: ['h-6.5 text-[13.01px] rounded-md px-2'],
+        lg: ['px-4.5 h-10 py-3 text-[15.01px] rounded-md'],
+        icon: ['size-9 p-0 rounded-md'],
       },
     },
     defaultVariants: {
@@ -67,7 +64,6 @@ const buttonVariants = cva(
   }
 )
 
-// Create active state variants that match your design system
 const buttonActiveVariants = cva('', {
   variants: {
     variant: {
@@ -91,7 +87,6 @@ const buttonActiveVariants = cva('', {
   },
 })
 
-// Unified Button component that supports active state
 interface ButtonProps
   extends React.ComponentProps<'button'>,
     VariantProps<typeof buttonVariants> {
@@ -115,16 +110,56 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : 'button'
 
+    // Function to extract the border radius from className
+    const getButtonRadius = (className: string = '') => {
+      if (className.includes('rounded-full')) return 'rounded-full'
+      if (className.includes('rounded-xl')) return 'rounded-xl'
+      if (className.includes('rounded-lg')) return 'rounded-lg'
+      if (className.includes('rounded-md')) return 'rounded-md'
+      if (className.includes('rounded-sm')) return 'rounded-sm'
+      if (className.includes('rounded-none')) return 'rounded-none'
+
+      // Default radius based on size
+      if (size) {
+        // All sizes use rounded-md by default in your original code
+        return 'rounded-md'
+      }
+
+      return 'rounded-md' // Default fallback
+    }
+
+    // Get the appropriate radius for both the button and its focus state
+    const buttonRadius = getButtonRadius(className)
+
     return (
       <Comp
         ref={ref}
         data-slot='button'
         data-state={active ? 'active' : 'inactive'}
+        style={
+          {
+            '--button-radius':
+              buttonRadius === 'rounded-none'
+                ? '0'
+                : buttonRadius === 'rounded-sm'
+                ? '0.125rem'
+                : buttonRadius === 'rounded-md'
+                ? '9px'
+                : buttonRadius === 'rounded-lg'
+                ? '0.5rem'
+                : buttonRadius === 'rounded-xl'
+                ? '0.75rem'
+                : buttonRadius === 'rounded-full'
+                ? '9999px'
+                : '0.375rem',
+          } as React.CSSProperties
+        }
         className={cn(
           buttonVariants({ variant, size }),
-          // Apply active styles conditionally
           active && buttonActiveVariants({ variant }),
           active && activeClassName,
+          'after:rounded-[var(--button-radius)]',
+          'before:rounded-[var(--button-radius)]',
           className
         )}
         {...props}

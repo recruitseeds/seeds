@@ -35,7 +35,7 @@ export const DropdownMenu = ({
   header,
   desktop,
 }: DropdownMenuProps) => {
-  const isDesktop = useBreakpoint('lg')
+  const isDesktop = useBreakpoint('sm')
   const [_open, _setOpen] = useState(defaultOpen)
   const open = propsOpen ?? _open
   const setOpen = (open: boolean) => {

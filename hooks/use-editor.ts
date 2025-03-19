@@ -22,7 +22,7 @@ export const useBlockEditor = (
     ...options,
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
-    autofocus: true,
+    autofocus: false,
     onCreate: (ctx) => {
       if (ctx.editor.isEmpty) {
         ctx.editor.commands.setContent(initialContent)
@@ -42,7 +42,7 @@ export const useBlockEditor = (
         autocorrect: 'on',
         autocapitalize: 'off',
         class:
-          'prose outline-none focus:outline-none focus:ring-0 focus:shadow-none mb-15 mt-5 text-foreground min-h-[calc(100vh-160px)]',
+          'prose outline-none focus:outline-none focus:ring-0 focus:shadow-none md:mb-20 lg:mb-25 mt-5 text-foreground min-h-[calc(100vh-250px)]',
       },
     },
   })

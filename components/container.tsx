@@ -1,7 +1,7 @@
-export const Container = ({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) => {
-  return <section className='flex flex-1 p-4 pt-0 mt-10'>{children}</section>
+export function Container({ children }: { children: React.ReactNode }) {
+  return (
+    <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+      {children}
+    </div>
+  )
 }
