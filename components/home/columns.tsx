@@ -24,37 +24,31 @@ import { Calendar, Mail, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
 export function useInterviewColumns() {
-  // Shared state for the selected interview
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(
     null
   )
 
-  // Base columns - always visible
   const baseColumns: ColumnDef<Interview>[] = [
     {
       id: 'select',
       header: ({ table }) => (
-        <div className='hidden md:block'>
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && 'indeterminate')
-            }
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label='Select all'
-          />
-        </div>
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label='Select all'
+          className='border border-foreground'
+        />
       ),
       cell: ({ row }) => (
-        <div className='hidden md:block'>
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label='Select row'
-          />
-        </div>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label='Select row'
+          className='border border-foreground'
+        />
       ),
       enableSorting: false,
       enableHiding: false,
@@ -104,16 +98,15 @@ export function useInterviewColumns() {
         const type = row.getValue('type') as string
 
         return (
-          <Badge variant='outline' className='font-medium'>
+          <Badge
+            variant='outline'
+            className='font-medium dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)] shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24) border-none bg-secondary'>
             {type}
           </Badge>
         )
       },
       enableSorting: true,
       enableHiding: true,
-      meta: {
-        className: 'hidden md:table-cell',
-      },
     },
     {
       accessorKey: 'role',
@@ -121,13 +114,10 @@ export function useInterviewColumns() {
         <DataTableColumnHeader column={column} title='Your Role' />
       ),
       cell: ({ row }) => {
-        return <div className='hidden md:block'>{row.getValue('role')}</div>
+        return <div>{row.getValue('role')}</div>
       },
       enableSorting: true,
       enableHiding: true,
-      meta: {
-        className: 'hidden md:table-cell',
-      },
     },
     {
       accessorKey: 'status',
@@ -139,35 +129,32 @@ export function useInterviewColumns() {
 
         if (!status) return null
 
+        type BadgeVariant =
+          | 'default'
+          | 'destructive'
+          | 'outline'
+          | 'secondary'
+          | 'success'
+          | 'warning'
+          | 'info'
+
         const statusMap: Record<
           string,
-          {
-            label: string
-            variant:
-              | 'default'
-              | 'destructive'
-              | 'outline'
-              | 'secondary'
-              | 'success'
-              | 'warning'
-          }
+          { label: string; variant: BadgeVariant }
         > = {
-          scheduled: { label: 'Scheduled', variant: 'secondary' },
+          scheduled: { label: 'Scheduled', variant: 'info' },
           completed: { label: 'Completed', variant: 'success' },
           canceled: { label: 'Canceled', variant: 'warning' },
           'no-show': { label: 'No Show', variant: 'destructive' },
         }
 
-        const { label, variant } = statusMap[status] || {
-          label: status,
+        const { label, variant } = (status &&
+          statusMap[status as keyof typeof statusMap]) || {
+          label: status || 'Unknown',
           variant: 'outline',
         }
 
-        return (
-          <div>
-            <Badge variant={variant}>{label}</Badge>
-          </div>
-        )
+        return <Badge variant={variant}>{label}</Badge>
       },
       enableSorting: true,
       enableHiding: true,
@@ -178,54 +165,46 @@ export function useInterviewColumns() {
         const interview = row.original
 
         return (
-          <div className='hidden md:block'>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' className='h-8 w-8 p-0'>
-                  <span className='sr-only'>Open menu</span>
-                  <MoreHorizontal className='h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (interview.candidateEmail) {
-                      window.open(
-                        `mailto:${interview.candidateEmail}`,
-                        '_blank'
-                      )
-                    }
-                  }}
-                  disabled={!interview.candidateEmail}>
-                  <Mail className='mr-2 h-4 w-4' />
-                  Email candidate
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedInterview(interview)
-                  }}>
-                  View details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                  Reschedule
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                  Cancel interview
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='ghost' className='h-8 w-8 p-0'>
+                <span className='sr-only'>Open menu</span>
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (interview.candidateEmail) {
+                    window.open(`mailto:${interview.candidateEmail}`, '_blank')
+                  }
+                }}
+                disabled={!interview.candidateEmail}>
+                <Mail className='mr-2 h-4 w-4' />
+                Email candidate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedInterview(interview)
+                }}>
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                Reschedule
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                Cancel interview
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )
       },
       enableSorting: false,
       enableHiding: false,
-      meta: {
-        className: 'hidden md:table-cell',
-      },
     },
   ]
 
@@ -267,7 +246,6 @@ export function useInterviewColumns() {
                 {(() => {
                   const status = selectedInterview.status
 
-                  // Define the valid variant types
                   type BadgeVariant =
                     | 'default'
                     | 'secondary'
@@ -286,14 +264,11 @@ export function useInterviewColumns() {
                     'no-show': { label: 'No Show', variant: 'destructive' },
                   }
 
-                  const defaultValue = {
+                  const { label, variant } = (status &&
+                    statusMap[status as keyof typeof statusMap]) || {
                     label: status || 'Unknown',
-                    variant: 'outline' as BadgeVariant,
+                    variant: 'outline',
                   }
-
-                  const { label, variant } =
-                    (status && statusMap[status as keyof typeof statusMap]) ||
-                    defaultValue
 
                   return <Badge variant={variant}>{label}</Badge>
                 })()}

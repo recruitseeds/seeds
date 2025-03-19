@@ -11,7 +11,7 @@ export default function InterviewsPage() {
   const { columns, dialogComponent, handleRowClick } = useInterviewColumns()
 
   return (
-    <Container>
+    <Container className='w-full'>
       <div className='py-6'>
         <div className='flex flex-col sm:flex-row justify-between gap-4 sm:items-center mb-6'>
           <div>
@@ -26,13 +26,17 @@ export default function InterviewsPage() {
           </Button>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={interviews}
-          filterField='candidate'
-          filterPlaceholder='Search candidates...'
-          onRowClick={handleRowClick}
-        />
+        <div className='w-full relative'>
+          <div className='overflow-x-auto pb-2'>
+            <DataTable
+              columns={columns}
+              data={interviews}
+              filterField='candidate'
+              filterPlaceholder='Search candidates...'
+              onRowClick={handleRowClick}
+            />
+          </div>
+        </div>
 
         {dialogComponent}
       </div>
