@@ -100,23 +100,6 @@ function DropdownMenuItem({ item }: DropdownMenuItemProps) {
         )}
         {item.kbd && <KeyboardShortcut shortcut={item.kbd} />}
       </div>
-      {/* {item.url && (
-        <Link
-          href={item.url}
-          target={item.external ? '_blank' : '_self'}
-          onClick={async (e) => {
-            // @ts-expect-error
-            item.onSelect?.(e)
-
-            if (!item.url || !item.download_as) return
-            e.preventDefault()
-
-            await downloadFile(item.url, item.download_as)
-          }}
-          rel={item.external ? 'noopener noreferrer' : ''}
-          className='absolute inset-0 z-[1]'
-        />
-      )} */}
     </DropdownMenuPrimitive.Item>
   )
 }

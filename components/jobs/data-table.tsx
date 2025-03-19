@@ -26,7 +26,6 @@ import {
 import { useState } from 'react'
 import { Input } from '../ui/input'
 
-// Add types for the column meta
 declare module '@tanstack/table-core' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData, TValue> {
@@ -74,7 +73,7 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-4 min-w-full'>
       <div className='flex items-center justify-between'>
         {filterField && table.getColumn(filterField) && (
           <Input
@@ -85,13 +84,13 @@ export function DataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn(filterField)?.setFilterValue(event.target.value)
             }
-            className='max-w-sm'
+            className='max-w-sm ml-1 mt-1'
           />
         )}
         <DataTableViewOptions table={table} />
       </div>
-      <div className='rounded-md border overflow-x-auto'>
-        <Table>
+      <div className='rounded-md border w-full'>
+        <Table className='w-full min-w-[800px]'>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -120,7 +119,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onRowClick && onRowClick(row)}
                   className={
-                    onRowClick ? 'cursor-pointer hover:bg-muted/20' : ''
+                    onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''
                   }>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

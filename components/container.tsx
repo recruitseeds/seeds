@@ -1,6 +1,21 @@
-export function Container({ children }: { children: React.ReactNode }) {
+import { cn } from '@/lib/utils'
+
+export function Container({
+  children,
+  className,
+  fullWidth = false,
+}: {
+  children: React.ReactNode
+  className?: string
+  fullWidth?: boolean
+}) {
   return (
-    <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+    <div
+      className={cn(
+        'w-full px-4 sm:px-6 lg:px-8',
+        fullWidth ? 'max-w-full' : 'container mx-auto',
+        className
+      )}>
       {children}
     </div>
   )

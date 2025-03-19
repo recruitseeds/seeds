@@ -11,7 +11,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset className='overflow-x-hidden'>{children}</SidebarInset>
     </SidebarProvider>
   )
 }
