@@ -2,7 +2,7 @@
 
 import { useUploader } from '@/editor/extensions/image-upload/view/hooks'
 import { Editor } from '@tiptap/react'
-import { Heading1, Heading2, Heading3, Type } from 'lucide-react'
+import { Ellipsis, Heading1, Heading2, Heading3, Type } from 'lucide-react'
 import { ChangeEvent, memo, useRef } from 'react'
 import { isMobile } from 'react-device-detect'
 import { BubbleMenuButton } from '../bubble-menu/bubble-menu-button'
@@ -156,9 +156,29 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
     },
   ])
 
+  const actionItems = buildMenuItems([
+    {
+      type: 'item',
+      label: 'Save',
+      onSelect: (e) => {
+        e.stopPropagation()
+        // Add your save logic here if needed
+      },
+    },
+    {
+      type: 'item',
+      label: 'Cancel',
+      onSelect: (e) => {
+        e.stopPropagation()
+        // Add your cancel logic here if needed
+      },
+      className: 'font-normal',
+    },
+  ])
+
   return (
     <div className='h-14 border-b-1 border-dashed flex items-center xl:px-4 px-2 mx-auto justify-between'>
-      <div className='flex items-center border rounded-[7px] px-[5px] py-[3px]'>
+      <div className='flex items-center border rounded-[9px] px-[3px] py-[3px]'>
         <div className='flex items-center flex-1 gap-[2px]'>
           <DropdownMenu
             align='start'
@@ -295,13 +315,31 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
         </div>
       </div>
 
-      <div className='hidden lg:flex items-center gap-[2px] ml-1 justify-end'>
-        <Button variant='ghost' size='sm'>
-          Cancel
-        </Button>
-        <Button variant='brand' size='sm'>
-          Save
-        </Button>
+      <div className='flex items-center gap-2 ml-1 justify-end'>
+        <div className='menu-bar:hidden'>
+          <DropdownMenu
+            align='end'
+            items={actionItems}
+            trigger={
+              <Button variant='ghost' size='icon'>
+                <Ellipsis className='size-4' />
+              </Button>
+            }
+            desktop={{
+              container: containerRef.current,
+              width: 'w-32',
+            }}
+          />
+        </div>
+
+        <div className='hidden menu-bar:flex items-center gap-2'>
+          <Button variant='ghost' size='sm'>
+            Cancel
+          </Button>
+          <Button variant='brand' size='sm'>
+            Save
+          </Button>
+        </div>
       </div>
     </div>
   )

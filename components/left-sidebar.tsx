@@ -218,7 +218,7 @@ const SidebarSettingsDropdown = () => (
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-    <div>
+    <div className='flex gap-2'>
       <Button size='icon' variant='ghost' className='size-6'>
         <CalendarClock className='size-4' />
       </Button>

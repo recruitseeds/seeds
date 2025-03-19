@@ -1,10 +1,7 @@
-import { useState } from 'react'
-import { Drawer as DrawerPrimitive } from 'vaul'
-
-// import { downloadFile } from '../Button'
-// import { ChevronRightIcon } from '../Icons'
 import { cn } from '@/lib/utils'
 import { ChevronRight as ChevronRightIcon } from 'lucide-react'
+import { useState } from 'react'
+import { Drawer as DrawerPrimitive } from 'vaul'
 import { UIText } from '../text'
 import {
   MenuHeadingType,
@@ -51,7 +48,7 @@ function DrawerItem({ item, onClose }: DrawerItemProps) {
       disabled={item.disabled}
       onClick={(event) => {
         onClose()
-        // @ts-expect-error
+        // @ts-expect-error - event is not a valid argument for onSelect
         item.onSelect?.(event)
       }}
       className={cn(
@@ -67,21 +64,6 @@ function DrawerItem({ item, onClose }: DrawerItemProps) {
       {item.rightSlot && (
         <span className='flex flex-none'>{item.rightSlot}</span>
       )}
-
-      {/* {item.url && (
-        <Link
-          href={item.url}
-          target={item.external ? '_blank' : '_self'}
-          onClick={async (e) => {
-            if (!item.url || !item.download_as) return
-            e.preventDefault()
-
-            await downloadFile(item.url, item.download_as)
-          }}
-          rel={item.external ? 'noopener noreferrer' : ''}
-          className='absolute inset-0 z-[1]'
-        />
-      )} */}
     </button>
   )
 }
@@ -93,12 +75,10 @@ interface DrawerSubItemProps {
 
 function DrawerSubItem({ item, onClose }: DrawerSubItemProps) {
   const [open, onOpenChange] = useState(false)
-
   const handleClose = () => {
     onClose()
     onOpenChange(false)
   }
-
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DrawerPrimitive.Trigger
@@ -126,9 +106,15 @@ interface DrawerActionsProps {
   items: MenuItem[]
   onClose: () => void
   header?: React.ReactNode
+  title?: string
 }
 
-function DrawerActions({ items, onClose, header }: DrawerActionsProps) {
+function DrawerActions({
+  items,
+  onClose,
+  header,
+  title = 'Menu',
+}: DrawerActionsProps) {
   return (
     <DrawerPrimitive.Portal>
       <div className='relative isolate z-50'>
@@ -143,25 +129,22 @@ function DrawerActions({ items, onClose, header }: DrawerActionsProps) {
           <div className='flex w-full cursor-grab justify-center p-3 py-2'>
             <DrawerPrimitive.Handle className='!h-1 !w-8 !rounded-full !bg-muted-foreground/70' />
           </div>
-
+          {/* Add title here for accessibility */}
+          <DrawerPrimitive.Title className='sr-only'>
+            {title}
+          </DrawerPrimitive.Title>
           <div className='scrollbar-hide pb-safe-offset-1 relative overflow-y-auto overflow-x-hidden'>
             {header}
-
             {items.map((item, i) => {
               if ('separator' in item) return <DrawerSeparator key={i} />
-
               if (item.type === 'separator') return <DrawerSeparator key={i} />
-
               if (item.type === 'sub') {
                 return <DrawerSubItem key={i} item={item} onClose={onClose} />
               }
-
               if (item.type === 'heading')
                 return <DrawerHeading key={i} item={item} />
-
               if (item.type === 'text')
                 return <DrawerText key={i} item={item} />
-
               return <DrawerItem key={i} item={item} onClose={onClose} />
             })}
           </div>
@@ -177,7 +160,8 @@ interface MobileDrawerProps {
   trigger: React.ReactNode
   disabled?: boolean
   items: MenuItem[]
-  header: React.ReactNode
+  header?: React.ReactNode
+  title?: string
 }
 
 export function MobileDrawerMenu({
@@ -187,14 +171,15 @@ export function MobileDrawerMenu({
   disabled,
   items,
   header,
+  title = 'Menu',
 }: MobileDrawerProps) {
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DrawerPrimitive.Trigger asChild disabled={disabled}>
         {trigger}
       </DrawerPrimitive.Trigger>
-
       <DrawerActions
+        title={title}
         items={items}
         onClose={() => onOpenChange(false)}
         header={header}
