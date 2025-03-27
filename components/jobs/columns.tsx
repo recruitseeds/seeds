@@ -1,6 +1,6 @@
 'use client'
 
-import { Payment } from '@/data/jobs-posts'
+import { JobPost } from '@/data/jobs-posts'
 import { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
 
@@ -17,7 +17,7 @@ import {
 
 import { DataTableColumnHeader } from '@/components/data-table/column-header'
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<JobPost>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -41,42 +41,83 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: 'title',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Job Title' />
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: 'department',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Department' />
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: 'location',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Location' />
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
     accessorKey: 'status',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Status' />
     ),
+    cell: ({ row }) => {
+      const status = row.getValue('status') as string | undefined
+
+      // Check if status exists before trying to use toLowerCase()
+      if (!status) {
+        return <span className='status-badge unknown'>Unknown</span>
+      }
+
+      return (
+        <span className={`status-badge ${status.toLowerCase()}`}>{status}</span>
+      )
+    },
     enableSorting: true,
-    enableHiding: true,
+    meta: {
+      className: 'w-[100px]',
+    },
   },
   {
-    accessorKey: 'email',
+    accessorKey: 'datePosted',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Email' />
+      <DataTableColumnHeader column={column} title='Date Posted' />
     ),
     enableSorting: true,
     enableHiding: true,
   },
   {
-    accessorKey: 'amount',
+    accessorKey: 'applicants',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Amount' />
+      <DataTableColumnHeader column={column} title='Applicants' />
     ),
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('amount'))
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount)
-
-      return <div className='text-right font-medium'>{formatted}</div>
+      const applicants = row.getValue('applicants') as number
+      return <div>{applicants}</div>
     },
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: 'hiringManager',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Hiring Manager' />
+    ),
     enableSorting: true,
     enableHiding: true,
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const payment = row.original
+      const job = row.original
 
       return (
         <DropdownMenu>
@@ -89,12 +130,37 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}>
-              Copy payment ID
+              onClick={() => console.log(`Edit job: ${job.id}`)} // Placeholder for Edit Job action
+            >
+              Edit Job
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => console.log(`View applicants for job: ${job.id}`)} // Placeholder for View Applicants action
+            >
+              View Applicants
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => console.log(`Close job: ${job.id}`)} // Placeholder for Close Job action
+            >
+              Close Job
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => console.log(`Duplicate job: ${job.id}`)} // Placeholder for Duplicate Job action
+            >
+              Duplicate Job
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => console.log(`Share job: ${job.id}`)} // Placeholder for Share Job action
+            >
+              Share Job
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant='destructive'
+              onClick={() => console.log(`Delete job: ${job.id}`)}>
+              Delete Job
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

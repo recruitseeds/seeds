@@ -1,10 +1,6 @@
-import { ArrowLeft } from 'lucide-react'
 import { Metadata } from 'next'
 
 import { SidebarNav } from '@/components/settings/sidebar-nav'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Forms',
@@ -40,21 +36,8 @@ interface SettingsLayoutProps {
 
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   return (
-    <div className='space-y-6 p-10 pb-16 md:block'>
-      <Button asChild variant='link' className='pl-0 md:hidden'>
-        <Link href='/'>
-          <ArrowLeft className='size-3' />
-          Back
-        </Link>
-      </Button>
-      <div className='space-y-0.5'>
-        <h2 className='text-2xl font-bold tracking-tight'>Settings</h2>
-        <p className='text-muted-foreground'>
-          Manage your account settings and set e-mail preferences.
-        </p>
-      </div>
-      <Separator className='my-6' />
-      <div className='flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0'>
+    <div className='space-y-6 px-10 pb-16 mb-6 md:block'>
+      <div className='flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 my-6'>
         <aside className='lg:w-1/5'>
           <SidebarNav items={sidebarNavItems} />
         </aside>

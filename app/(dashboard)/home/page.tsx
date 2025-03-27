@@ -2,17 +2,17 @@
 
 import { Container } from '@/components/container'
 import { useInterviewColumns } from '@/components/home/columns'
+import { HomeCards } from '@/components/home/home-cards'
 import { DataTable } from '@/components/jobs/data-table'
-import { Button } from '@/components/ui/button'
 import { interviews } from '@/data/interview-data'
-import { CalendarPlus } from 'lucide-react'
 
 export default function InterviewsPage() {
   const { columns, dialogComponent, handleRowClick } = useInterviewColumns()
 
   return (
-    <Container className='w-full'>
-      <div className='py-6'>
+    <Container className='w-full py-6 flex flex-col gap-12'>
+      <HomeCards />
+      <div>
         <div className='flex flex-col sm:flex-row justify-between gap-4 sm:items-center mb-6'>
           <div>
             <h1 className='text-2xl font-bold'>Upcoming Interviews</h1>
@@ -20,10 +20,10 @@ export default function InterviewsPage() {
               Manage and view all your scheduled interviews
             </p>
           </div>
-          <Button className='flex items-center gap-2 sm:self-start'>
+          {/* <Button className='flex items-center gap-2 sm:self-start'>
             <CalendarPlus className='h-4 w-4' />
             <span>Schedule Interview</span>
-          </Button>
+          </Button> */}
         </div>
 
         <div className='w-full relative'>
