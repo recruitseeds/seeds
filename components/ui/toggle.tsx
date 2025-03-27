@@ -5,7 +5,7 @@ import * as TogglePrimitive from '@radix-ui/react-toggle'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
 
-const toggleContainerVariants = cva(
+const toggleVariants = cva(
   [
     // Base styles
     'inline-flex items-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-50 relative',
@@ -57,7 +57,7 @@ const toggleThumbVariants = cva(
 
 export interface ToggleProps
   extends React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root>,
-    VariantProps<typeof toggleContainerVariants> {
+    VariantProps<typeof toggleVariants> {
   thumbClassName?: string
 }
 
@@ -70,7 +70,7 @@ const Toggle = React.forwardRef<
   return (
     <TogglePrimitive.Root
       ref={ref}
-      className={cn(toggleContainerVariants({ variant, size }), className)}
+      className={cn(toggleVariants({ variant, size }), className)}
       data-state={isPressed ? 'on' : 'off'}
       role='switch'
       aria-checked={isPressed}
@@ -130,4 +130,4 @@ const LegacyToggle = ({
 
 LegacyToggle.displayName = 'LegacyToggle'
 
-export { LegacyToggle, Toggle, toggleContainerVariants, toggleThumbVariants }
+export { LegacyToggle, Toggle, toggleThumbVariants, toggleVariants }

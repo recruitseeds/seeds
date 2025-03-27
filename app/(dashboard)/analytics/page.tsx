@@ -1,18 +1,19 @@
-import { Container } from '@/components/container'
-import { ChartFour } from '@/components/analytics/chart-four'
-import { ChartOne } from '@/components/analytics/chart-one'
+import { SectionCards } from '@/components/analytics/cards'
+import { ChartAreaInteractive } from '@/components/analytics/chart-one'
 
 export default function Page() {
   return (
-    <Container>
-      <div className='flex flex-col gap-8 xl:gap-5 md:gap-2'>
-        <div className='grid flex-1 scroll-mt-20 items-start gap-8 md:gap-2 lg:grid-cols-3 xl:gap-5'>
-          <ChartOne />
-          <ChartOne />
-          <ChartOne />
+    <div className='flex flex-1 flex-col'>
+      <div className='@container/main flex flex-1 flex-col gap-2'>
+        <div className='flex flex-col gap-4 py-4 md:gap-6 md:py-6'>
+          <SectionCards />
+          <div className='px-4 lg:px-6'>
+            <ChartAreaInteractive />
+          </div>
+          {/* <SectionCards /> */}
+          {/* <DataTable data={data} /> */}
         </div>
-        <ChartFour />
       </div>
-    </Container>
+    </div>
   )
 }

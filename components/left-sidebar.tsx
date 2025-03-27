@@ -40,6 +40,7 @@ import {
   UserRoundPen,
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 
 const Logo = (props) => (
@@ -68,6 +69,9 @@ const IconMap = {
   ChartPie: ChartPie,
   UserRoundPen: UserRoundPen,
 }
+
+// Define the type for the icon keys
+type IconName = keyof typeof IconMap
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
@@ -104,7 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {item.items.map((subItem) => {
-                  const Icon = IconMap[subItem.icon] || Home
+                  const Icon = IconMap[subItem.icon as IconName] || Home
                   const hasSubItems =
                     subItem.subItems && subItem.subItems.length > 0
                   const isActive = isItemOrSubItemActive(subItem)
@@ -119,7 +123,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           </a>
                         </SidebarMenuButton>
                         {subItem.title === 'Drafts' ? (
-                          <SidebarMenuBadge>12</SidebarMenuBadge>
+                          <SidebarMenuBadge>
+                            <Badge variant='warning' className='rounded-full'>
+                              12
+                            </Badge>
+                          </SidebarMenuBadge>
                         ) : null}
 
                         {hasSubItems && (
