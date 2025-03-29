@@ -8,6 +8,8 @@ import { jobTemplates } from '@/data/job-templates'
 import { JobPost, jobs } from '@/data/jobs-posts'
 import { Row } from '@tanstack/react-table'
 
+// TODO: Further abstract the data table to be able to use it in other pages easier
+
 export default function Jobs() {
   const hasJobs = jobs.length > 0
 
@@ -23,8 +25,10 @@ export default function Jobs() {
 
   return (
     <Container className='w-full'>
-      <div className='py-6'>
-        <Button>Test</Button>
+      <div className='pb-6'>
+        <div className='flex justify-end my-2'>
+          <Button>Create new job post</Button>
+        </div>
         <div
           className={hasJobs ? 'bg-secondary/20 rounded-lg py-4 border' : ''}>
           <DataTable
