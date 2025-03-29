@@ -79,7 +79,9 @@ export function HomeCards() {
                     </div>
                     <span>{activity.type}</span>
                   </div>
-                  <Badge variant='secondary' className='text-sm'>
+                  <Badge
+                    variant='secondary'
+                    className='bg-black/5 dark:bg-white/10 min-h-4.5 flex flex-none items-center justify-center rounded px-1.5 pb-px pt-0.5 uppercase text-[10px] leading-none font-semibold'>
                     {activity.count}
                   </Badge>
                 </div>

@@ -85,7 +85,6 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // Check if there's actual data, not filtered data
   const hasData = data.length > 0
 
   return (
