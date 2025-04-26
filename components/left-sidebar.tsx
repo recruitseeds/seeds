@@ -181,7 +181,7 @@ const SidebarSettingsDropdown = () => (
       <DropdownMenuTrigger asChild>
         <Button
           variant='ghost'
-          className='hover:bg-transparent size-6'
+          className='hover:bg-transparent size-6 !rounded-full'
           size='icon'>
           <Avatar className='size-6'>
             <AvatarImage
