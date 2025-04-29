@@ -1,7 +1,14 @@
+
+'use client'
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Briefcase, Calendar, Plus } from "lucide-react"
+import { Briefcase, Calendar, Plus, Pencil } from "lucide-react"
+import {   Popover,
+  PopoverContent,
+  PopoverTrigger, } from "../ui/poppy"
+
 
 interface WorkExperienceItem {
   id: string
@@ -51,6 +58,7 @@ const experiences: WorkExperienceItem[] = [
 ]
 
 export function WorkExperience() {
+  const [open, setOpen] = useState(false);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -58,9 +66,23 @@ export function WorkExperience() {
           <CardTitle>Work Experience</CardTitle>
           <CardDescription>Your professional journey</CardDescription>
         </div>
+        <div className="flex items-center gap-2">
+
         <Button size="sm">
           <Plus className="h-4 w-4 mr-1" /> Add Experience
         </Button>
+        <Button variant="outline" size="icon" className="h-7">
+                <Pencil className="h-4 w-4 mr-1" />
+              </Button>
+        {/* <Popover>
+        <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Pencil className="h-4 w-4 mr-1" /> Edit Section
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>Test</PopoverContent>
+        </Popover> */}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-8">

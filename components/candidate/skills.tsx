@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Pencil } from "lucide-react"
 
 interface SkillCategory {
   id: string
@@ -40,9 +40,15 @@ export function Skills() {
           <CardTitle>Skills</CardTitle>
           <CardDescription>Your technical and professional skills</CardDescription>
         </div>
+        <div className="flex items-center gap-2">
+
         <Button size="sm">
           <Plus className="h-4 w-4 mr-1" /> Add Skill
         </Button>
+        <Button variant="outline" size="icon" className="h-7">
+                        <Pencil className="h-4 w-4 mr-1" />
+                      </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -51,7 +57,7 @@ export function Skills() {
               <h3 className="font-medium mb-3">{category.name}</h3>
               <div className="flex flex-wrap gap-2">
                 {category.skills.map((skill) => (
-                  <Badge key={skill} variant="outline" className="px-3 py-1">
+                  <Badge key={skill} variant="outline">
                     {skill}
                   </Badge>
                 ))}

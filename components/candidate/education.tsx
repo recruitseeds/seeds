@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { GraduationCap, Calendar, Plus } from "lucide-react"
+import { GraduationCap, Calendar, Plus, Pencil } from "lucide-react"
 
 interface EducationItem {
   id: string
@@ -45,9 +45,15 @@ export function Education() {
           <CardTitle>Education</CardTitle>
           <CardDescription>Your academic background</CardDescription>
         </div>
+        <div className="flex items-center gap-2">
+
         <Button size="sm">
           <Plus className="h-4 w-4 mr-1" /> Add Education
         </Button>
+        <Button variant="outline" size="icon" className="h-7">
+                <Pencil className="h-4 w-4 mr-1" />
+              </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-8">

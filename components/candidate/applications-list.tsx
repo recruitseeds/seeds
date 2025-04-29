@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, CheckCircle2, XCircle, AlertCircle, Calendar, ArrowUpRight } from "lucide-react"
+import { Clock, CheckCircle2, XCircle, AlertCircle, Calendar, ArrowUpRight, Plus } from "lucide-react"
 
 type ApplicationStatus = "applied" | "in-review" | "interview" | "rejected" | "offer"
 
@@ -122,9 +122,14 @@ const applications: Application[] = [
 export function ApplicationsList() {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
         <CardTitle>Job Applications</CardTitle>
         <CardDescription>Track the status of your job applications</CardDescription>
+        </div>
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-1" /> Add Applications
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

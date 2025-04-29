@@ -13,6 +13,7 @@ import { WorkExperience } from "./work-experience"
 import { Education } from "./education"
 import { Skills } from "./skills"
 import { ContactInfo } from "./contact-info"
+import { FileManager } from "./file-manager"
 
 export function CandidateProfile() {
   const [profileImage, setProfileImage] = useState<string | null>(null)
@@ -41,7 +42,7 @@ export function CandidateProfile() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 md:px-6">
+    <div className="container py-6 px-4 md:px-6 w-screen">
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
@@ -106,12 +107,13 @@ export function CandidateProfile() {
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 md:w-fit">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl">
+        <TabsList className="">
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="experience">Experience</TabsTrigger>
           <TabsTrigger value="education">Education</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
+          <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
         </TabsList>
         <div className="mt-6">
@@ -126,6 +128,9 @@ export function CandidateProfile() {
           </TabsContent>
           <TabsContent value="skills">
             <Skills />
+          </TabsContent>
+          <TabsContent value="files">
+            <FileManager />
           </TabsContent>
           <TabsContent value="contact">
             <ContactInfo />
