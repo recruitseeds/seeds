@@ -45,7 +45,7 @@ export function CandidateProfile() {
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
-            <Avatar className="w-32 h-32 border-4 border shadow-sm">
+            <Avatar className="w-32 h-32 border-4 border">
               {profileImage && !imageError ? (
                 <AvatarImage src={profileImage} alt="Profile" />
               ) : (
@@ -78,7 +78,7 @@ export function CandidateProfile() {
             </Badge>
           </div>
         </div>
-        <Card className="flex-1">
+        <Card className="flex-1 shadow-none">
           <CardHeader className="pb-2">
             <CardTitle>Application Summary</CardTitle>
             <CardDescription>Overview of your job applications</CardDescription>
