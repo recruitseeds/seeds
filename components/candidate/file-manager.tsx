@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
@@ -46,6 +47,7 @@ import {
   FileCheck,
   X,
   Plus,
+  Send
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -275,8 +277,8 @@ export function FileManager() {
                   className={cn(
                     "w-full justify-start",
                     activeSection === item.value
-                      ? "bg-muted hover:bg-muted"
-                      : "hover:bg-transparent hover:underline",
+                      ? "bg-muted/50 hover:bg-muted/80 shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]"
+                      : "hover:bg-transparent hover:underline active:bg-muted",
                   )}
                   onClick={() =>
                     setActiveSection(item.value as keyof typeof documentTypes)
@@ -357,15 +359,21 @@ export function FileManager() {
                                 <Badge
                                   key={tag}
                                   variant="outline"
-                                  className="flex items-center gap-1 pl-1.5 pr-0.5 py-0 text-xs"
+                                  className="flex items-center gap-1"
                                 >
                                   {tag}
                                   <button
                                     onClick={() => removeTag(document.id, tag)}
-                                    className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                                    className={cn(
+                                      "ml-0.5 rounded hover:bg-muted-foreground/20 p-[2px]",
+                                      "border border-transparent",
+                                      "focus:outline-none",
+                                      "focus:border-brand",
+                                      "focus:ring-1 focus:ring-brand-subtle",
+                                    )}
                                     aria-label={`Remove tag ${tag}`}
                                   >
-                                    <X className="h-3 w-3" />
+                                    <X className="size-3" />
                                   </button>
                                 </Badge>
                               ))}
@@ -385,7 +393,7 @@ export function FileManager() {
                       </Button>
                       <Button variant="outline" size="sm" asChild>
                         <a href={document.url} download={document.name}>
-                          <Download className="h-4 w-4 sm:mr-1" />{" "}
+                          <Download className="h-4 w-4 sm:mr-1" />
                           <span className="hidden sm:inline">Download</span>
                         </a>
                       </Button>
@@ -434,10 +442,10 @@ export function FileManager() {
                                       onClick={() =>
                                         setNewTags(newTags.filter((t) => t !== tag))
                                       }
-                                      className="ml-1 rounded-full hover:bg-muted-foreground/20"
+                                      className="ml-1 rounded hover:bg-muted-foreground/20"
                                       aria-label={`Remove new tag ${tag}`}
                                     >
-                                      <X className="h-3 w-3" />
+                                      <X className="size-3" />
                                     </button>
                                   </Badge>
                                 ))}
@@ -457,17 +465,19 @@ export function FileManager() {
                                 <Button
                                   type="button"
                                   onClick={() => addTag(document.id)}
-                                  size="sm"
+                                  size="icon"
                                   aria-label="Add tag"
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  <Plus className="size-4" />
                                 </Button>
                               </div>
                             </div>
                             <DialogFooter>
-                              <Button onClick={() => saveTags(document.id)}>
+                            <DialogClose asChild>
+                              <Button variant='brand' onClick={() => saveTags(document.id)}>
                                 Save Tags
                               </Button>
+                            </DialogClose>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -475,8 +485,8 @@ export function FileManager() {
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
+                          <Button variant="ghost" className="h-6.5 px-1 ml-[1px]">
+                            <MoreVertical className="size-4" />
                             <span className="sr-only">More options</span>
                           </Button>
                         </DropdownMenuTrigger>
@@ -565,12 +575,17 @@ export function FileManager() {
               />
             </div>
             <DialogFooter className="mt-4 sm:mt-6 flex-col sm:flex-row gap-2">
-              <Button variant="outline" asChild>
+              <Button variant="brand" size='sm' asChild>
                 <a href={selectedDocument?.url} download={selectedDocument?.name}>
-                  <Download className="h-4 w-4 mr-2" /> Download
+                  <Download className="size-4" /> Download
                 </a>
               </Button>
-              <Button onClick={() => setShowPdfPreview(false)}>Close</Button>
+            {/* <Button variant="outline" size="icon" className="h-7">
+              <a href="mailto:recipient@example.com">
+                <Send className="size-4" />
+                <span className="sr-only">Send email</span>
+              </a>
+            </Button> */}
             </DialogFooter>
           </DialogContent>
         </Dialog>
