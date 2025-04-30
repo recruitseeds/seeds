@@ -136,7 +136,7 @@ export function ApplicationsList() {
           {applications.map((application) => (
             <div
               key={application.id}
-              className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+              className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded"
             >
               <div className="flex items-center gap-4 mb-3 md:mb-0">
                 <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">

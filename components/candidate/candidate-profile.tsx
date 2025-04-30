@@ -37,7 +37,7 @@ export function CandidateProfile() {
     current.set("tab", newTab);
     const search = current.toString();
     const query = search ? `?${search}` : "";
-    router.replace(`${pathname}${query}`);
+    router.push(`${pathname}${query}`);
   };
 
   return (

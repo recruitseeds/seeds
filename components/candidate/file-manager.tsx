@@ -328,7 +328,7 @@ export function FileManager() {
                 {documentsByType[currentSectionKey].map((document) => (
                   <div
                     key={document.id}
-                    className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
+                    className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded gap-4"
                   >
                     <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
                       <div className="bg-muted p-2 rounded hidden sm:block">
@@ -499,8 +499,9 @@ export function FileManager() {
                             </DropdownMenuItem>
                           )}
                           {document.type === "resume" && document.isDefault && (
-                            <DropdownMenuItem disabled>
-                              <StarOff className="h-4 w-4 mr-2" /> Default Resume
+                            <DropdownMenuItem>
+                              <Star className="h-4 w-4 mr-2 text-yellow-500 fill-yellow-300" />
+                              Default resume
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
