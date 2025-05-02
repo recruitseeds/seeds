@@ -18,10 +18,13 @@ export function SignUpForm({
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userRole, setUserRole] = useState<"candidate" | "company">("candidate");
+  const [userRole, setUserRole] = useState<"candidate" | "company">(
+    "candidate",
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  // Removed successMessage state as we will redirect directly
+  // const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -29,32 +32,37 @@ export function SignUpForm({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
-      const { data, error } = await handleEmailPasswordSignUp(
+      const { data, error: signUpError } = await handleEmailPasswordSignUp(
         supabase,
         email,
         password,
-        userRole
+        userRole,
       );
 
-      if (error) {
-        setError(error.message);
+      if (signUpError) {
+        setError(signUpError.message);
+        setIsLoading(false);
         return;
       }
 
       if (data?.user) {
-        setSuccessMessage(
-          "Registration successful! Please check your email to confirm your account."
-        );
-        // Optionally redirect after a delay
-        // setTimeout(() => router.push('/login'), 3000);
+        console.log("Signup successful, redirecting...");
+        if (userRole === "candidate") {
+          router.push("/candidate/profile");
+        } else if (userRole === "company") {
+          router.push("/company/dashboard");
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        setError("Signup failed unexpectedly. Please try again.");
+        setIsLoading(false);
       }
-    } catch (err) {
-      setError("An unexpected error occurred");
-      console.error(err);
-    } finally {
+    } catch (err: any) {
+      console.error("Signup handleSubmit Error:", err);
+      setError(err.message || "An unexpected error occurred during signup.");
       setIsLoading(false);
     }
   };
@@ -65,11 +73,9 @@ export function SignUpForm({
 
     try {
       await handleOAuthSignIn(supabase, provider, userRole);
-      // The OAuth flow will redirect to the provider's login page
-    } catch (err) {
-      setError("An unexpected error occurred");
-      console.error(err);
-    } finally {
+    } catch (err: any) {
+      console.error("OAuth Signup Error:", err);
+      setError(err.message || "An unexpected error occurred with OAuth signup.");
       setIsLoading(false);
     }
   };
@@ -91,11 +97,7 @@ export function SignUpForm({
                   {error}
                 </div>
               )}
-              {successMessage && (
-                <div className="rounded bg-green-100 p-2 text-sm text-green-600">
-                  {successMessage}
-                </div>
-              )}
+              {/* TODO: Do I want to set up a success notification? */}
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -105,24 +107,29 @@ export function SignUpForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required 
+                  required
+                  disabled={isLoading}
                 />
               </div>
               <div className="grid gap-2">
                 <Label>I am a</Label>
-                <RadioGroup 
-                  value={userRole} 
-                  onValueChange={(value) => setUserRole(value as "candidate" | "company")}
+                <RadioGroup
+                  value={userRole}
+                  onValueChange={(value) =>
+                    setUserRole(value as "candidate" | "company")
+                  }
                   className="flex gap-4"
+                  disabled={isLoading}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="candidate" id="candidate" />
@@ -143,9 +150,9 @@ export function SignUpForm({
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={() => handleOAuthSignUp("google")}
                   disabled={isLoading}
@@ -158,24 +165,24 @@ export function SignUpForm({
                   </svg>
                   <span className="sr-only">Sign up with Google</span>
                 </Button>
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={() => handleOAuthSignUp("azure")}
                   disabled={isLoading}
                 >
-                  <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" width="256" height="256" preserveAspectRatio="xMidYMid"><path fill="#F1511B" d="M121.666 121.666H0V0h121.666z"/><path fill="#80CC28" d="M256 121.666H134.335V0H256z"/><path fill="#00ADEF" d="M121.663 256.002H0V134.336h121.663z"/><path fill="#FBBC09" d="M256 256.002H134.335V134.336H256z"/></svg>
+                  <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" width="24" height="24" preserveAspectRatio="xMidYMid"><path fill="#F1511B" d="M121.666 121.666H0V0h121.666z"/><path fill="#80CC28" d="M256 121.666H134.335V0H256z"/><path fill="#00ADEF" d="M121.663 256.002H0V134.336h121.663z"/><path fill="#FBBC09" d="M256 256.002H134.335V134.336H256z"/></svg>
                   <span className="sr-only">Sign up with Microsoft</span>
                 </Button>
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={() => handleOAuthSignUp("linkedin_oidc")}
                   disabled={isLoading}
                 >
-                  <svg width="256" height="256" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" viewBox="0 0 256 256"><path d="M218.123 218.127h-37.931v-59.403c0-14.165-.253-32.4-19.728-32.4-19.756 0-22.779 15.434-22.779 31.369v60.43h-37.93V95.967h36.413v16.694h.51a39.907 39.907 0 0 1 35.928-19.733c38.445 0 45.533 25.288 45.533 58.186l-.016 67.013ZM56.955 79.27c-12.157.002-22.014-9.852-22.016-22.009-.002-12.157 9.851-22.014 22.008-22.016 12.157-.003 22.014 9.851 22.016 22.008A22.013 22.013 0 0 1 56.955 79.27m18.966 138.858H37.95V95.967h37.97v122.16ZM237.033.018H18.89C8.58-.098.125 8.161-.001 18.471v219.053c.122 10.315 8.576 18.582 18.89 18.474h218.144c10.336.128 18.823-8.139 18.966-18.474V18.454c-.147-10.33-8.635-18.588-18.966-18.453" fill="#0A66C2"/></svg>
+                  <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" viewBox="0 0 256 256"><path d="M218.123 218.127h-37.931v-59.403c0-14.165-.253-32.4-19.728-32.4-19.756 0-22.779 15.434-22.779 31.369v60.43h-37.93V95.967h36.413v16.694h.51a39.907 39.907 0 0 1 35.928-19.733c38.445 0 45.533 25.288 45.533 58.186l-.016 67.013ZM56.955 79.27c-12.157.002-22.014-9.852-22.016-22.009-.002-12.157 9.851-22.014 22.008-22.016 12.157-.003 22.014 9.851 22.016 22.008A22.013 22.013 0 0 1 56.955 79.27m18.966 138.858H37.95V95.967h37.97v122.16ZM237.033.018H18.89C8.58-.098.125 8.161-.001 18.471v219.053c.122 10.315 8.576 18.582 18.89 18.474h218.144c10.336.128 18.823-8.139 18.966-18.474V18.454c-.147-10.33-8.635-18.588-18.966-18.453" fill="#0A66C2"/></svg>
                   <span className="sr-only">Sign up with LinkedIn</span>
                 </Button>
               </div>
@@ -190,7 +197,7 @@ export function SignUpForm({
           <div className="relative hidden md:block">
             <img
               src="/placeholder.svg"
-              alt="Image"
+              alt="Signup illustration"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>
