@@ -61,7 +61,7 @@ export function HomeCards() {
 
   return (
     <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-      <Card className='@container/card rounded-md'>
+      <Card className='@container/card'>
         <CardHeader>
           <CardTitle className='text-lg font-semibold'>Activities</CardTitle>
           <CardDescription>
@@ -102,7 +102,7 @@ export function HomeCards() {
         </CardContent>
       </Card>
 
-      <Card className='@container/card rounded-md'>
+      <Card className='@container/card'>
         <CardHeader className='flex flex-row items-center justify-between'>
           <div>
             <CardTitle className='text-lg font-semibold'>
