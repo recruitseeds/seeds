@@ -40,30 +40,30 @@ export type Database = {
           created_at: string | null
           id: string
           notes: string | null
-          status: Database["public"]["Enums"]["candidate_application_status"]
+          status: Database['public']['Enums']['candidate_application_status']
         }
         Insert: {
           application_id: string
           created_at?: string | null
           id?: string
           notes?: string | null
-          status: Database["public"]["Enums"]["candidate_application_status"]
+          status: Database['public']['Enums']['candidate_application_status']
         }
         Update: {
           application_id?: string
           created_at?: string | null
           id?: string
           notes?: string | null
-          status?: Database["public"]["Enums"]["candidate_application_status"]
+          status?: Database['public']['Enums']['candidate_application_status']
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_application_history_application_id_fkey"
-            columns: ["application_id"]
+            foreignKeyName: 'candidate_application_history_application_id_fkey'
+            columns: ['application_id']
             isOneToOne: false
-            referencedRelation: "candidate_applications"
-            referencedColumns: ["id"]
-          },
+            referencedRelation: 'candidate_applications'
+            referencedColumns: ['id']
+          }
         ]
       }
       candidate_applications: {
@@ -82,8 +82,8 @@ export type Database = {
           next_step_date: string | null
           next_step_description: string | null
           salary_range: string | null
-          source: Database["public"]["Enums"]["candidate_application_source"]
-          status: Database["public"]["Enums"]["candidate_application_status"]
+          source: Database['public']['Enums']['candidate_application_source']
+          status: Database['public']['Enums']['candidate_application_status']
           updated_at: string | null
         }
         Insert: {
@@ -101,8 +101,8 @@ export type Database = {
           next_step_date?: string | null
           next_step_description?: string | null
           salary_range?: string | null
-          source?: Database["public"]["Enums"]["candidate_application_source"]
-          status: Database["public"]["Enums"]["candidate_application_status"]
+          source?: Database['public']['Enums']['candidate_application_source']
+          status: Database['public']['Enums']['candidate_application_status']
           updated_at?: string | null
         }
         Update: {
@@ -120,18 +120,18 @@ export type Database = {
           next_step_date?: string | null
           next_step_description?: string | null
           salary_range?: string | null
-          source?: Database["public"]["Enums"]["candidate_application_source"]
-          status?: Database["public"]["Enums"]["candidate_application_status"]
+          source?: Database['public']['Enums']['candidate_application_source']
+          status?: Database['public']['Enums']['candidate_application_status']
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_applications_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: 'candidate_applications_candidate_id_fkey'
+            columns: ['candidate_id']
             isOneToOne: false
-            referencedRelation: "candidate_profiles"
-            referencedColumns: ["id"]
-          },
+            referencedRelation: 'candidate_profiles'
+            referencedColumns: ['id']
+          }
         ]
       }
       candidate_education: {
@@ -176,12 +176,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_education_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: 'candidate_education_candidate_id_fkey'
+            columns: ['candidate_id']
             isOneToOne: false
-            referencedRelation: "candidate_profiles"
-            referencedColumns: ["id"]
-          },
+            referencedRelation: 'candidate_profiles'
+            referencedColumns: ['id']
+          }
         ]
       }
       candidate_files: {
@@ -189,7 +189,7 @@ export type Database = {
           candidate_id: string
           created_at: string | null
           file_name: string
-          file_type: Database["public"]["Enums"]["candidate_file_type"]
+          file_type: Database['public']['Enums']['candidate_file_type']
           id: string
           is_default_resume: boolean | null
           mime_type: string | null
@@ -204,7 +204,7 @@ export type Database = {
           candidate_id: string
           created_at?: string | null
           file_name: string
-          file_type: Database["public"]["Enums"]["candidate_file_type"]
+          file_type: Database['public']['Enums']['candidate_file_type']
           id?: string
           is_default_resume?: boolean | null
           mime_type?: string | null
@@ -219,7 +219,7 @@ export type Database = {
           candidate_id?: string
           created_at?: string | null
           file_name?: string
-          file_type?: Database["public"]["Enums"]["candidate_file_type"]
+          file_type?: Database['public']['Enums']['candidate_file_type']
           id?: string
           is_default_resume?: boolean | null
           mime_type?: string | null
@@ -232,19 +232,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_files_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: 'candidate_files_candidate_id_fkey'
+            columns: ['candidate_id']
             isOneToOne: false
-            referencedRelation: "candidate_profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'candidate_profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "candidate_files_previous_version_id_fkey"
-            columns: ["previous_version_id"]
+            foreignKeyName: 'candidate_files_previous_version_id_fkey'
+            columns: ['previous_version_id']
             isOneToOne: false
-            referencedRelation: "candidate_files"
-            referencedColumns: ["id"]
-          },
+            referencedRelation: 'candidate_files'
+            referencedColumns: ['id']
+          }
         ]
       }
       candidate_profiles: {
@@ -334,12 +334,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_skills_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: 'candidate_skills_candidate_id_fkey'
+            columns: ['candidate_id']
             isOneToOne: false
-            referencedRelation: "candidate_profiles"
-            referencedColumns: ["id"]
-          },
+            referencedRelation: 'candidate_profiles'
+            referencedColumns: ['id']
+          }
         ]
       }
       candidate_work_experiences: {
@@ -384,12 +384,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_work_experiences_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: 'candidate_work_experiences_candidate_id_fkey'
+            columns: ['candidate_id']
             isOneToOne: false
-            referencedRelation: "candidate_profiles"
-            referencedColumns: ["id"]
-          },
+            referencedRelation: 'candidate_profiles'
+            referencedColumns: ['id']
+          }
         ]
       }
     }
@@ -400,22 +400,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      candidate_application_source: "platform" | "import" | "manual"
+      candidate_application_source: 'platform' | 'import' | 'manual'
       candidate_application_status:
-        | "applied"
-        | "in-review"
-        | "interview"
-        | "rejected"
-        | "offer"
+        | 'applied'
+        | 'in-review'
+        | 'interview'
+        | 'rejected'
+        | 'offer'
       candidate_file_type:
-        | "resume"
-        | "cover_letter"
-        | "portfolio"
-        | "certification"
-        | "transcript"
-        | "reference"
-        | "eligibility"
-        | "other"
+        | 'resume'
+        | 'cover_letter'
+        | 'portfolio'
+        | 'certification'
+        | 'transcript'
+        | 'reference'
+        | 'eligibility'
+        | 'other'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -423,110 +423,110 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    ? keyof (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+      DefaultSchema['Views'])
+  ? (DefaultSchema['Tables'] &
+      DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
+    | keyof DefaultSchema['Enums']
     | { schema: keyof Database },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof Database
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    ? keyof Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never
 > = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   graphql_public: {
@@ -534,23 +534,23 @@ export const Constants = {
   },
   public: {
     Enums: {
-      candidate_application_source: ["platform", "import", "manual"],
+      candidate_application_source: ['platform', 'import', 'manual'],
       candidate_application_status: [
-        "applied",
-        "in-review",
-        "interview",
-        "rejected",
-        "offer",
+        'applied',
+        'in-review',
+        'interview',
+        'rejected',
+        'offer',
       ],
       candidate_file_type: [
-        "resume",
-        "cover_letter",
-        "portfolio",
-        "certification",
-        "transcript",
-        "reference",
-        "eligibility",
-        "other",
+        'resume',
+        'cover_letter',
+        'portfolio',
+        'certification',
+        'transcript',
+        'reference',
+        'eligibility',
+        'other',
       ],
     },
   },
