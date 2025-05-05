@@ -1,8 +1,8 @@
-import { CandidateProfile } from "@/components/candidate/candidate-profile"
+import { CandidateProfile } from '@/components/candidate/candidate-profile'
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <main>
       <CandidateProfile />
     </main>
   )

@@ -79,6 +79,7 @@ function DropdownMenuItem({
         'border border-transparent',
         // Shadow styling for default variant focus
         'focus:shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]',
+        'focus:shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]',
         // Destructive variant styling
         'data-[variant=destructive]:text-destructive-vibrant data-[variant=destructive]:bg-destructive-subtle',
         // Make SVG icons inherit the destructive color
