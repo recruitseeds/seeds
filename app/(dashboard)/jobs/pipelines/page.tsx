@@ -1,4 +1,13 @@
+'use client'
+
 import { Container } from '@/components/container'
+import {
+  Briefcase,
+  ClipboardText,
+  EditorPencil,
+  PlusCircle,
+  Users,
+} from '@/components/icons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,16 +20,11 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Briefcase,
-  ClipboardCheck,
-  Pencil,
-  PlusCircle,
-  Search,
-  Users,
-} from 'lucide-react'
+import { Search } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const PipelineListingPage = () => {
+  const router = useRouter()
   const pipelines = [
     {
       id: 1,
@@ -74,7 +78,6 @@ const PipelineListingPage = () => {
     },
   ]
 
-  // Group pipelines by department
   const groupedPipelines = pipelines.reduce((acc, pipeline) => {
     if (!acc[pipeline.department]) {
       acc[pipeline.department] = []
@@ -85,9 +88,13 @@ const PipelineListingPage = () => {
 
   const departments = Object.keys(groupedPipelines)
 
+  const handleEditPipeline = (pipelineId: number) => {
+    router.push(`/jobs/pipelines/edit/${pipelineId}`)
+  }
+
   return (
     <Container className='py-6'>
-      <div className='flex justify-between items-center mb-6'>
+      <div className='flex items-center mb-3'>
         <div>
           <h1 className='text-2xl font-bold tracking-tight'>
             Recruitment Pipelines
@@ -96,13 +103,9 @@ const PipelineListingPage = () => {
             Manage your hiring workflows and candidate journey templates
           </p>
         </div>
-        <Button className='gap-1'>
-          <PlusCircle className='h-4 w-4' />
-          Create Pipeline
-        </Button>
       </div>
 
-      <div className='mb-6 flex items-center gap-4'>
+      <div className='mb-3 flex items-center gap-4'>
         <div className='relative flex-1 max-w-sm'>
           <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
           <Input placeholder='Search pipelines...' className='pl-9' />
@@ -129,9 +132,7 @@ const PipelineListingPage = () => {
           <TabsContent key={dept} value={dept} className='space-y-6'>
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
               {groupedPipelines[dept].map((pipeline) => (
-                <Card
-                  key={pipeline.id}
-                  className='hover:shadow-md transition-shadow'>
+                <Card key={pipeline.id}>
                   <CardHeader className='pb-2'>
                     <div className='flex justify-between items-start'>
                       <CardTitle className='text-lg'>{pipeline.name}</CardTitle>
@@ -139,8 +140,9 @@ const PipelineListingPage = () => {
                         variant='ghost'
                         size='icon'
                         className='h-8 w-8'
-                        title='Edit Pipeline'>
-                        <Pencil className='h-4 w-4' />
+                        title='Edit Pipeline'
+                        onClick={() => handleEditPipeline(pipeline.id)}>
+                        <EditorPencil className='h-4 w-4' />
                       </Button>
                     </div>
                     <CardDescription>
@@ -170,15 +172,14 @@ const PipelineListingPage = () => {
                   </CardContent>
                   <CardFooter>
                     <Button variant='outline' className='w-full gap-2'>
-                      <ClipboardCheck className='h-4 w-4' />
+                      <ClipboardText className='h-4 w-4' />
                       View Pipeline
                     </Button>
                   </CardFooter>
                 </Card>
               ))}
 
-              {/* Add new pipeline card - appears at the end of each category */}
-              <Card className='border-dashed hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer flex flex-col items-center justify-center p-6'>
+              <Card className='border-dashed  cursor-pointer flex flex-col items-center justify-center p-6'>
                 <div className='rounded-full bg-primary/10 p-3 mb-3'>
                   <PlusCircle className='h-6 w-6 text-primary' />
                 </div>

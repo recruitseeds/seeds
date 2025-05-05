@@ -1,5 +1,13 @@
 'use client'
 
+import {
+  BarChart,
+  Briefcase,
+  Clipboard,
+  Home,
+  Messages,
+  PenTool,
+} from '@/components/icons'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -27,17 +35,11 @@ import {
 import { sidebarData } from '@/data/data'
 import {
   Blocks,
-  Briefcase,
   CalendarClock,
-  ChartPie,
   CircleHelp,
-  Clipboard,
-  Home,
   LogOut,
-  MessageCircle,
   MessageCircleQuestion,
   Settings,
-  UserRoundPen,
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Badge } from './ui/badge'
@@ -65,9 +67,9 @@ const IconMap = {
   Home: Home,
   Briefcase: Briefcase,
   Clipboard: Clipboard,
-  MessageCircle: MessageCircle,
-  ChartPie: ChartPie,
-  UserRoundPen: UserRoundPen,
+  MessageCircle: Messages,
+  ChartPie: BarChart,
+  UserRoundPen: PenTool,
 }
 
 // Define the type for the icon keys

@@ -1,14 +1,6 @@
 'use client'
 import { DataTableViewOptions } from '@/components/data-table/column-toggle'
 import { DataTablePagination } from '@/components/data-table/pagination'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -35,6 +27,14 @@ import { ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
 
 declare module '@tanstack/table-core' {
   interface ColumnMeta<TData, TValue> {
@@ -90,62 +90,68 @@ export function DataTable<TData, TValue>({
   return (
     <div className='space-y-4 min-w-full'>
       {hasData && (
-        <div className='flex items-center justify-between gap-4 px-6'>
+        <div className='flex items-center justify-between mt-1'>
           <div className='flex items-center gap-4'>
             {filterField && table.getColumn(filterField) && (
-              <Input
-                placeholder={filterPlaceholder}
-                value={
-                  (table.getColumn(filterField)?.getFilterValue() as string) ??
-                  ''
-                }
-                onChange={(event) =>
-                  table
-                    .getColumn(filterField)
-                    ?.setFilterValue(event.target.value)
-                }
-                className='ml-1 mt-1'
-              />
+              <div className='w-64'>
+                <Input
+                  placeholder={filterPlaceholder}
+                  value={
+                    (table
+                      .getColumn(filterField)
+                      ?.getFilterValue() as string) ?? ''
+                  }
+                  onChange={(event) =>
+                    table
+                      .getColumn(filterField)
+                      ?.setFilterValue(event.target.value)
+                  }
+                />
+              </div>
             )}
             {table.getColumn('department') && (
-              <Select
-                onValueChange={(value) =>
-                  table
-                    .getColumn('department')
-                    ?.setFilterValue(value === 'all' ? '' : value)
-                }
-                defaultValue=''>
-                <SelectTrigger className=''>
-                  <SelectValue placeholder='All Departments' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Departments</SelectItem>
-                  <SelectItem value='Engineering'>Engineering</SelectItem>
-                  <SelectItem value='Product'>Product</SelectItem>
-                  <SelectItem value='Design'>Design</SelectItem>
-                  <SelectItem value='Analytics'>Analytics</SelectItem>
-                  <SelectItem value='Marketing'>Marketing</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className='w-48'>
+                <Select
+                  onValueChange={(value) =>
+                    table
+                      .getColumn('department')
+                      ?.setFilterValue(value === 'all' ? '' : value)
+                  }
+                  defaultValue=''>
+                  <SelectTrigger>
+                    <SelectValue placeholder='All Departments' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All Departments</SelectItem>
+                    <SelectItem value='Engineering'>Engineering</SelectItem>
+                    <SelectItem value='Product'>Product</SelectItem>
+                    <SelectItem value='Design'>Design</SelectItem>
+                    <SelectItem value='Analytics'>Analytics</SelectItem>
+                    <SelectItem value='Marketing'>Marketing</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             )}
             {table.getColumn('status') && (
-              <Select
-                onValueChange={(value) =>
-                  table
-                    .getColumn('status')
-                    ?.setFilterValue(value === 'all' ? '' : value)
-                }
-                defaultValue=''>
-                <SelectTrigger>
-                  <SelectValue placeholder='All Statuses' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Statuses</SelectItem>
-                  <SelectItem value='Open'>Open</SelectItem>
-                  <SelectItem value='Closed'>Closed</SelectItem>
-                  <SelectItem value='Draft'>Draft</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className='w-40'>
+                <Select
+                  onValueChange={(value) =>
+                    table
+                      .getColumn('status')
+                      ?.setFilterValue(value === 'all' ? '' : value)
+                  }
+                  defaultValue=''>
+                  <SelectTrigger>
+                    <SelectValue placeholder='All Statuses' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All Statuses</SelectItem>
+                    <SelectItem value='Open'>Open</SelectItem>
+                    <SelectItem value='Closed'>Closed</SelectItem>
+                    <SelectItem value='Draft'>Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
           <DataTableViewOptions table={table} />
@@ -214,7 +220,7 @@ export function DataTable<TData, TValue>({
       ) : (
         <div className='mx-auto max-w-lg py-6 h-[calc(100vh-6rem)] flex flex-col justify-center'>
           <h2 className='text-base font-semibold'>Create a job posting</h2>
-          <p className='mt-1 text-sm text-muted-foreground'>
+          <p className='text-sm text-muted-foreground'>
             Get started by selecting a template or create a job from scratch.
           </p>
           {templates.length > 0 ? (
