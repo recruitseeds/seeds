@@ -44,3 +44,11 @@ next-env.d.ts
 *storybook.log
 
 .cursor
+venv/
+*.venv
+.venv
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
