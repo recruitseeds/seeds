@@ -44,3 +44,6 @@ next-env.d.ts
 *storybook.log
 
 .cursor
+venv/
+*.venv
+.venv
