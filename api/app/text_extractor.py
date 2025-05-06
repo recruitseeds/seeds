@@ -14,6 +14,12 @@ SUPPORTED_CONTENT_TYPES = {
 
 
 def get_file_extension(file_key: str) -> str | None:
+    """
+    Extracts the file extension from a file key string.
+    
+    Removes query parameters and fragments before extracting the lowercase extension.
+    Returns None if no extension is found.
+    """
     if '.' in file_key:
         base_key = file_key.split('?')[0].split('#')[0]
         if '.' in base_key:
@@ -22,6 +28,17 @@ def get_file_extension(file_key: str) -> str | None:
 
 
 def extract_text_and_links_from_pdf(file_content: bytes) -> tuple[str, list[str]]:
+    """
+    Extracts text and unique URI links from a PDF file provided as bytes.
+    
+    Opens the PDF from the given byte stream, concatenates text from all pages, and collects all unique URI links found in page annotations. Returns the extracted text and a sorted list of unique links. On error, returns empty text and link list.
+    
+    Args:
+        file_content: The PDF file content as a byte stream.
+    
+    Returns:
+        A tuple containing the extracted text and a list of unique URI links.
+    """
     text = ""
     links = []
     try:
@@ -57,6 +74,11 @@ def extract_text_and_links_from_pdf(file_content: bytes) -> tuple[str, list[str]
 
 
 def extract_text_from_docx(file_content: bytes) -> str:
+    """
+    Extracts and returns all text from a DOCX file provided as bytes.
+    
+    Iterates through all paragraphs in the document, concatenating their text with newline separators. Returns an empty string if extraction fails.
+    """
     text = ""
     try:
         doc = docx.Document(io.BytesIO(file_content))
@@ -71,6 +93,18 @@ def extract_text_from_docx(file_content: bytes) -> str:
 
 
 def extract_text(file_content: bytes, file_key: str) -> tuple[str, list[str]]:
+    """
+    Extracts text and annotation links from a PDF or DOCX file based on its extension.
+    
+    Determines the file type from the provided file key and dispatches to the appropriate extraction function. For PDF files, returns both extracted text and a list of unique annotation links. For DOCX files, returns extracted text and an empty list of links. Raises an HTTP 415 error for unsupported file types.
+    
+    Args:
+        file_content: The binary content of the file to extract from.
+        file_key: The identifier or filename used to determine the file extension.
+    
+    Returns:
+        A tuple containing the extracted text and a list of annotation links (empty for DOCX).
+    """
     extension = get_file_extension(file_key)
     logger.info(
         f"Attempting text extraction for file key: {file_key} (extension: {extension})")

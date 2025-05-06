@@ -17,6 +17,15 @@ from .utils import download_file_from_r2
 
 class PrettyJSONResponse(JSONResponse):
     def render(self, content: any) -> bytes:
+        """
+        Serializes content to a pretty-printed JSON byte string.
+        
+        Args:
+            content: The data to serialize.
+        
+        Returns:
+            A UTF-8 encoded JSON byte string with indentation and readable formatting.
+        """
         return json.dumps(
             jsonable_encoder(content),
             ensure_ascii=False,
@@ -43,6 +52,11 @@ app = FastAPI(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    """
+    Middleware that logs the start and completion of each HTTP request with a unique request ID.
+    
+    Logs the request path, method, processing time in milliseconds, and response status code for each incoming request.
+    """
     idem = "".join(random.choices(string.ascii_uppercase +
                    string.digits, k=6))
     logger.info(
@@ -61,6 +75,11 @@ async def log_requests(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handles uncaught exceptions during request processing and returns a generic 500 error response.
+    
+    Logs the exception details and stack trace, then responds with a JSON message indicating an internal server error.
+    """
     logger.exception(
         f"Unhandled exception during request to {request.url.path}: {exc}")
     return JSONResponse(
@@ -70,6 +89,12 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 
 def get_settings() -> Settings:
+    """
+    Retrieves the application settings instance.
+    
+    Returns:
+        The global Settings object containing application configuration.
+    """
     return settings
 
 
@@ -82,13 +107,18 @@ async def parse_resume_endpoint(
     request: ParseRequest,
 ):
     """
-    Parses a resume file stored in R2.
-
-    - **request**: Body containing the `file_key`.
-        - **file_key**: The key (path including filename) of the resume file in the R2 bucket (e.g., `resumes/user123/my_resume.pdf`).
-    \f # Adds space in Swagger UI docs
-    :param request: The request body containing the file key.
-    :return: A JSON object with the parsed resume data.
+    Parses a resume file from an R2 bucket and returns structured resume data.
+    
+    Receives a file key identifying the resume file in R2, downloads the file, extracts text and annotation links, and parses the content into structured resume information.
+    
+    Args:
+        request: Contains the file_key specifying the path to the resume file in the R2 bucket.
+    
+    Returns:
+        Parsed resume data as a JSON object conforming to the ResumeData model.
+    
+    Raises:
+        HTTPException: If the file cannot be processed or an unexpected error occurs.
     """
     file_key = request.file_key
     logger.info(f"Received request to parse file key: {file_key}")
@@ -133,5 +163,10 @@ async def parse_resume_endpoint(
          summary="Health Check",
          description="Simple health check endpoint to verify the service is running.")
 def health_check():
-    """Returns a simple status indicating the service is operational."""
+    """
+    Returns a JSON object indicating the service is operational.
+    
+    Returns:
+        dict: A dictionary with status and message confirming service health.
+    """
     return {"status": "ok", "message": "Service is running"}
