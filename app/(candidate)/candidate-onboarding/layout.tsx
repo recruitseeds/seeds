@@ -3,6 +3,11 @@ import React from 'react'
 
 const steps = [
   {
+    id: 'import-resume',
+    title: 'Upload Resume',
+    description: 'Upload your resume to pre-fill information',
+  },
+  {
     id: 'personal',
     title: 'Personal Information',
     description: 'Tell us about yourself',

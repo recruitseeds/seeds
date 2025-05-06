@@ -27,7 +27,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
         <Steps.List className='relative flex justify-between'>
           <div className='absolute left-0 right-0 top-4 h-0.5'>
             <div className='relative h-full mx-4'>
-              <div className='absolute inset-0 -translate-y-px bg-muted' />
+              <div className='absolute inset-0 -translate-y-px bg-secondary' />
               <div
                 className='absolute left-0 top-0 h-full -translate-y-px bg-primary'
                 style={{
@@ -42,12 +42,12 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
             <Steps.Item key={step.id} index={index} className='relative z-10'>
               <Steps.Trigger className='flex flex-col items-center w-8'>
                 <Steps.Indicator
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border-1 ${
                     index < currentStep
                       ? 'border-primary bg-primary text-primary-foreground'
                       : index === currentStep
                       ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-muted bg-background text-muted-foreground'
+                      : 'border-secondary bg-background text-muted-foreground'
                   } transition-colors duration-300 ease-in-out`}>
                   {index < currentStep ? (
                     <Check className='size-5' />
