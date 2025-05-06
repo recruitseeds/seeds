@@ -33,7 +33,15 @@ PORTFOLIO_KEYWORDS = ["portfolio", "about", "me",
 
 
 def find_links_in_text(text: str) -> dict:
-    """Finds various types of links using regex within plain text."""
+    """
+    Extracts and classifies URLs from plain text into LinkedIn, GitHub, Twitter/X, portfolio, and other categories.
+    
+    Args:
+        text: The plain text to search for URLs.
+    
+    Returns:
+        A dictionary with keys 'linkedin', 'github', 'twitter', 'portfolio', and 'other', where each key maps to the first matching URL (or None) for the main categories, and 'other' is a list of remaining URLs.
+    """
     if not text:
         return {"linkedin": None, "github": None, "twitter": None, "portfolio": None, "other": []}
 
@@ -84,8 +92,16 @@ def find_links_in_text(text: str) -> dict:
 
 def parse_resume_text(text: str, annotation_links: list[str]) -> ResumeData:
     """
-    Parses the extracted text and uses annotation links to populate ResumeData.
-    Uses a hybrid approach: Regex, direct links, spaCy NER.
+    Parses resume text and annotation links to extract structured contact and profile information.
+    
+    Combines regex extraction, PDF annotation links, and spaCy named entity recognition (NER) to populate a ResumeData object with email, phone number, social and portfolio links, full name, and location. Deduplicates and classifies links from both text and annotations, and uses NER to identify personal and location entities when possible.
+    
+    Args:
+        text: The extracted resume text.
+        annotation_links: List of URLs found in PDF annotations.
+    
+    Returns:
+        ResumeData: An object containing extracted contact details, links, and named entities.
     """
     if not text and not annotation_links:
         logger.warning(

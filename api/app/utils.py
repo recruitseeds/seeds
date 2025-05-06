@@ -8,6 +8,12 @@ from .config import settings
 
 
 def get_s3_client():
+    """
+    Initializes and returns a boto3 S3 client configured for Cloudflare R2 storage.
+    
+    Attempts to verify the connection by listing buckets. Raises an HTTP 500 error if
+    the connection or authentication fails.
+    """
     try:
         endpoint_url = settings.r2_endpoint_url or f"https://{settings.cloudflare_account_id}.r2.cloudflarestorage.com"
 
@@ -35,6 +41,18 @@ def get_s3_client():
 
 
 def download_file_from_r2(file_key: str) -> bytes:
+    """
+    Downloads a file from the configured Cloudflare R2 bucket and returns its contents as bytes.
+    
+    Args:
+        file_key: The key (path) of the file to download from the R2 bucket.
+    
+    Returns:
+        The contents of the file as a bytes object.
+    
+    Raises:
+        HTTPException: If the file is not found (404) or if an error occurs during download (500).
+    """
     s3 = get_s3_client()
     try:
         response = s3.get_object(Bucket=settings.r2_bucket_name, Key=file_key)
