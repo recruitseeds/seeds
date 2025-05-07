@@ -193,6 +193,7 @@ export type Database = {
           id: string
           is_default_resume: boolean | null
           mime_type: string | null
+          parsed_resume_data: Json | null
           previous_version_id: string | null
           size_bytes: number | null
           storage_path: string
@@ -208,6 +209,7 @@ export type Database = {
           id?: string
           is_default_resume?: boolean | null
           mime_type?: string | null
+          parsed_resume_data?: Json | null
           previous_version_id?: string | null
           size_bytes?: number | null
           storage_path: string
@@ -223,6 +225,7 @@ export type Database = {
           id?: string
           is_default_resume?: boolean | null
           mime_type?: string | null
+          parsed_resume_data?: Json | null
           previous_version_id?: string | null
           size_bytes?: number | null
           storage_path?: string
@@ -255,6 +258,7 @@ export type Database = {
           first_name: string | null
           github_url: string | null
           id: string
+          is_onboarded: boolean
           job_title: string | null
           joined_date: string | null
           last_name: string | null
@@ -274,6 +278,7 @@ export type Database = {
           first_name?: string | null
           github_url?: string | null
           id: string
+          is_onboarded?: boolean
           job_title?: string | null
           joined_date?: string | null
           last_name?: string | null
@@ -293,6 +298,7 @@ export type Database = {
           first_name?: string | null
           github_url?: string | null
           id?: string
+          is_onboarded?: boolean
           job_title?: string | null
           joined_date?: string | null
           last_name?: string | null
@@ -397,7 +403,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      set_default_resume_and_add_new_with_parsed_data: {
+        Args: {
+          p_candidate_id: string
+          p_file_name: string
+          p_file_type: Database['public']['Enums']['candidate_file_type']
+          p_mime_type: string
+          p_storage_path: string
+          p_size_bytes: number
+          p_parsed_resume_data: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       candidate_application_source: 'platform' | 'import' | 'manual'
