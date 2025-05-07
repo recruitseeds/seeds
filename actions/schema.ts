@@ -108,3 +108,105 @@ export const updateCandidateEducationSchema = z.object({
   description: z.any().optional().nullable(),
   achievements: z.array(z.string()).optional().nullable(),
 })
+
+export const resumeSchema = z.object({
+  personalInfo: z
+    .object({
+      fullName: z
+        .string()
+        .nullable()
+        .optional()
+        .describe('Full name of the candidate'), // Consider making nullable
+      email: z.string().email().nullable().optional().describe('Email address'), // Consider making nullable
+      phone: z.string().nullable().optional().describe('Phone number'), // Consider making nullable
+      linkedin: z
+        .string()
+        .nullable()
+        .optional()
+        .describe('LinkedIn profile URL or username'), // Already good
+      location: z
+        .string()
+        .nullable()
+        .optional()
+        .describe('City and State, or Country'), // Consider making nullable
+    })
+    .describe('Personal contact information and details'),
+  summary: z
+    .string()
+    .nullable() // If summary can be null
+    .optional()
+    .describe('A brief professional summary or objective from the resume'),
+  education: z
+    .array(
+      z.object({
+        institution: z.string().describe('Name of the educational institution'),
+        degree: z
+          .string()
+          .describe('Degree obtained (e.g., Bachelor of Science)'),
+        fieldOfStudy: z
+          .string()
+          .nullable()
+          .optional()
+          .describe('Field of study (e.g., Computer Science)'),
+        // UPDATED:
+        location: z
+          .string()
+          .nullable()
+          .optional()
+          .describe('Institution location'),
+        startDate: z
+          .string()
+          .nullable()
+          .optional()
+          .describe('Start date of education (e.g., YYYY-MM, Month YYYY)'),
+        // UPDATED:
+        endDate: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            'End date or graduation date (e.g., YYYY-MM, Month YYYY, Present)'
+          ),
+      })
+    )
+    .optional()
+    .describe('Educational background'),
+  workExperience: z
+    .array(
+      z.object({
+        title: z.string().describe('Job title or position'),
+        company: z.string().describe('Company name'),
+        // UPDATED:
+        location: z.string().nullable().optional().describe('Company location'),
+        startDate: z
+          .string()
+          .nullable()
+          .optional()
+          .describe('Start date of employment (e.g., YYYY-MM, Month YYYY)'),
+        endDate: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            'End date of employment (e.g., YYYY-MM, Month YYYY, Present)'
+          ),
+        description: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            'Key responsibilities, achievements, or a summary of the role'
+          ),
+      })
+    )
+    .optional()
+    .describe('Professional work experience'),
+  skills: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'List of relevant skills (technical, soft, tools, programming languages, etc.)'
+    ),
+})
+
+export type ResumeData = z.infer<typeof resumeSchema>
