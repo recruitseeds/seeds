@@ -88,3 +88,83 @@ export async function getCandidateEducation(
 
   return { data, error }
 }
+
+export type CandidateWorkExperience = Tables<'candidate_work_experiences'>
+
+export async function getCandidateWorkExperiences(
+  supabase: Client,
+  candidateId: string
+): Promise<{
+  data: CandidateWorkExperience[] | null
+  error: PostgrestError | null
+}> {
+  const { data, error } = await supabase
+    .from('candidate_work_experiences')
+    .select('*')
+    .eq('candidate_id', candidateId)
+    .order('start_date', { ascending: false })
+
+  if (error) {
+    console.error(
+      `Error fetching work experiences for candidate ${candidateId}:`,
+      error
+    )
+  }
+  return { data, error }
+}
+
+export async function getCandidateWorkExperienceById(
+  supabase: Client,
+  workExperienceId: string,
+  candidateId: string
+): Promise<{
+  data: CandidateWorkExperience | null
+  error: PostgrestError | null
+}> {
+  const { data, error } = await supabase
+    .from('candidate_work_experiences')
+    .select('*')
+    .eq('id', workExperienceId)
+    .eq('candidate_id', candidateId)
+    .single()
+
+  if (error) {
+    console.error(
+      `Error fetching work experience ${workExperienceId} for candidate ${candidateId}:`,
+      error
+    )
+  }
+  return { data, error }
+}
+
+export type CandidateFile = Tables<'candidate_files'>
+
+export async function getDefaultCandidateResume(
+  supabase: Client,
+  userId: string
+): Promise<CandidateFile | null> {
+  console.log(`[Query] Fetching default resume for user: ${userId}`)
+  const { data, error } = await supabase
+    .from('candidate_files')
+    .select('*')
+    .eq('candidate_id', userId)
+    .eq('file_type', 'resume')
+    .eq('is_default_resume', true)
+    .maybeSingle()
+
+  if (error) {
+    console.error(
+      `[Query] Error fetching default resume for user ${userId}:`,
+      error
+    )
+    return null
+  }
+
+  if (!data) {
+    console.log(`[Query] No default resume found for user ${userId}.`)
+    return null
+  }
+
+  console.log(`[Query] Default resume found for user ${userId}: ID ${data.id}`)
+  return data
+}

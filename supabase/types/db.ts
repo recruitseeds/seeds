@@ -403,6 +403,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      process_uploaded_resume: {
+        Args: {
+          p_auth_user_id: string
+          p_file_name: string
+          p_file_type: Database['public']['Enums']['candidate_file_type']
+          p_mime_type: string
+          p_storage_path: string
+          p_size_bytes: number
+          p_parsed_resume_data: Json
+        }
+        Returns: undefined
+      }
       set_default_resume_and_add_new_with_parsed_data: {
         Args: {
           p_candidate_id: string
