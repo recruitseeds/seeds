@@ -1,6 +1,5 @@
-// src/app/(candidate)/candidate-onboarding/education/page.tsx
 import { OnboardingEducationForm } from '@/components/candidate/onboarding-education-form'
-import { createClient } from '@/supabase/client/server' // Corrected import path
+import { createClient } from '@/supabase/client/server'
 import { CandidateEducation, getCandidateEducation } from '@/supabase/queries'
 import { redirect } from 'next/navigation'
 

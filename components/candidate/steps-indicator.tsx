@@ -1,5 +1,6 @@
 import { Steps } from '@ark-ui/react/steps'
 import { Check } from 'lucide-react'
+import Link from 'next/link' // 1. Import Link
 
 interface Step {
   id: string
@@ -40,29 +41,33 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
 
           {steps.map((step, index) => (
             <Steps.Item key={step.id} index={index} className='relative z-10'>
-              <Steps.Trigger className='flex flex-col items-center w-8'>
-                <Steps.Indicator
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-1 ${
-                    index < currentStep
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : index === currentStep
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-secondary bg-background text-muted-foreground'
-                  } transition-colors duration-300 ease-in-out`}>
-                  {index < currentStep ? (
-                    <Check className='size-5' />
-                  ) : (
-                    <span className='text-sm font-medium'>{index + 1}</span>
-                  )}
-                </Steps.Indicator>
-                <div
-                  className={`mt-1.5 w-max max-w-[60px] text-center text-xs font-medium ${
-                    index <= currentStep
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  } transition-colors duration-300 ease-in-out`}>
-                  {step.title}
-                </div>
+              <Steps.Trigger asChild>
+                <Link
+                  href={step.id}
+                  className='flex flex-col items-center w-8 text-center no-underline'>
+                  <Steps.Indicator
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border-1 ${
+                      index < currentStep
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : index === currentStep
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-secondary bg-background text-muted-foreground'
+                    } transition-colors duration-300 ease-in-out`}>
+                    {index < currentStep ? (
+                      <Check className='size-5' />
+                    ) : (
+                      <span className='text-sm font-medium'>{index + 1}</span>
+                    )}
+                  </Steps.Indicator>
+                  <div
+                    className={`mt-1.5 w-max max-w-[60px] text-xs font-medium ${
+                      index <= currentStep
+                        ? 'text-foreground'
+                        : 'text-muted-foreground'
+                    } transition-colors duration-300 ease-in-out`}>
+                    {step.title}
+                  </div>
+                </Link>
               </Steps.Trigger>
               <Steps.Separator className='hidden' />
             </Steps.Item>

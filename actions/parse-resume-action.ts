@@ -213,23 +213,18 @@ export const parseAndStoreResumeAction = authActionClient
           `[Action: parseAndStore] File uploaded to R2 for Auth User ID: ${authUserId}, Key: ${r2Key}`
         )
 
-        const { error: transactionError } = await supabase.rpc(
-          'set_default_resume_and_add_new_with_parsed_data',
-          {
-            p_candidate_id: actualCandidateProfileId,
-            p_file_name: file.name,
-            p_file_type: 'resume',
-            p_mime_type: file.type,
-            p_storage_path: r2Key,
-            p_size_bytes: file.size,
-            p_parsed_resume_data: parsedDataFromAI,
-          }
-        )
+        const { error } = await supabase.rpc('process_uploaded_resume', {
+          p_auth_user_id: authUserId,
+          p_file_name: file.name,
+          p_file_type: 'resume',
+          p_mime_type: file.type,
+          p_storage_path: r2Key,
+          p_size_bytes: file.size,
+          p_parsed_resume_data: parsedDataFromAI,
+        })
 
-        if (transactionError) {
-          throw new Error(
-            `Failed to save file record: ${transactionError.message}`
-          )
+        if (error) {
+          throw new Error(`Failed to save file record: ${error.message}`)
         }
         console.log(
           `[Action: parseAndStore] RPC successful for Profile ID: ${actualCandidateProfileId}`
