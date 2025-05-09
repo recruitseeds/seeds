@@ -34,7 +34,27 @@ export async function updateCandidateProfile(
 
   if (Object.keys(input).length === 0) {
     console.warn('No fields provided to updateCandidateProfile.')
-    return supabase.from('candidate_profiles').select('*').eq('id', id).single()
+    const { data: existingData, error: fetchError } = await supabase
+      .from('candidate_profiles')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) {
+      console.error(
+        'Error fetching candidate profile in no-update path:',
+        fetchError
+      )
+      throw new Error(
+        `Failed to fetch candidate profile (no-update path): ${fetchError.message}`
+      )
+    }
+    if (!existingData) {
+      throw new Error(
+        `Candidate profile with ID ${id} not found (no-update path).`
+      )
+    }
+    return existingData
   }
 
   const { data: updatedData, error } = await supabase
@@ -504,4 +524,28 @@ export async function uploadFileToR2AndRecord(
     is_default_resume: insertedRecord.is_default_resume,
     parsed_resume_data: insertedRecord.parsed_resume_data,
   }
+}
+
+export async function deleteCandidateEducation(
+  supabase: Client,
+  educationId: string,
+  candidateId: string
+): Promise<{ success: boolean; error?: Error }> {
+  const { error } = await supabase
+    .from('candidate_education')
+    .delete()
+    .eq('id', educationId)
+    .eq('candidate_id', candidateId)
+
+  if (error) {
+    console.error(
+      `Error deleting education record ${educationId} for candidate ${candidateId}:`,
+      error
+    )
+    return { success: false, error }
+  }
+  console.log(
+    `Successfully deleted education record ${educationId} for candidate ${candidateId}`
+  )
+  return { success: true }
 }
