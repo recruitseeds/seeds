@@ -168,3 +168,52 @@ export async function getDefaultCandidateResume(
   console.log(`[Query] Default resume found for user ${userId}: ID ${data.id}`)
   return data
 }
+
+export async function getCandidateEducationByCandidateId(
+  supabase: Client,
+  candidateId: string
+): Promise<CandidateEducation[]> {
+  const { data, error } = await supabase
+    .from('candidate_education')
+    .select('*')
+    .eq('candidate_id', candidateId)
+
+  if (error) {
+    console.error('Error fetching candidate education records:', error)
+    // Depending on your error handling, you might throw or return empty array
+    return []
+  }
+  return data || []
+}
+
+export async function getCandidateWorkExperienceByCandidateId(
+  supabase: Client,
+  candidateId: string
+): Promise<CandidateWorkExperience[]> {
+  const { data, error } = await supabase
+    .from('candidate_work_experiences')
+    .select('*')
+    .eq('candidate_id', candidateId)
+
+  if (error) {
+    console.error('Error fetching candidate work experience records:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function getCandidateFilesByCandidateId(
+  supabase: Client,
+  candidateId: string
+): Promise<CandidateFile[]> {
+  const { data, error } = await supabase
+    .from('candidate_files') // Ensure this table name is correct
+    .select('*')
+    .eq('candidate_id', candidateId)
+
+  if (error) {
+    console.error('Error fetching candidate files:', error)
+    return []
+  }
+  return data || []
+}

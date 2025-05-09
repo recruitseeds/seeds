@@ -372,7 +372,6 @@ export const candidateWorkExperienceFormSchema = z
           data.endDate !== undefined &&
           data.endDate !== null
         ) {
-          // If isCurrent is true, endDate must be 'PRESENT' or not set
           return false
         }
       }
@@ -380,10 +379,14 @@ export const candidateWorkExperienceFormSchema = z
     },
     {
       message: 'Current status and end date are inconsistent.',
-      path: ['isCurrent'], // Or ['endDate'] or both, depending on the primary field for this error
+      path: ['isCurrent'],
     }
   )
 
+export const deleteCandidateEducationSchema = z.object({
+  id: z.string().uuid('Invalid education ID format.'),
+})
+
 export const deleteCandidateWorkExperienceSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid work experience ID.' }),
+  id: z.string().uuid('Invalid work experience ID format.'),
 })
