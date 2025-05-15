@@ -47,10 +47,14 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  displayDateRange,
+  formatDateToYYYYMMDD,
+  parseDateString,
+} from '@/lib/dates'
 import type { CandidateWorkExperience } from '@/supabase/queries'
 import type { Json } from '@/supabase/types/db'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format, isValid, parse } from 'date-fns'
 import {
   Calendar as CalendarIcon,
   Loader2,
@@ -69,37 +73,12 @@ type WorkExperienceFormValues = z.infer<
   typeof candidateWorkExperienceFormSchema
 >
 
-// Define an internal type that includes the optional is_current property
 type CandidateWorkExperienceInternal = CandidateWorkExperience & {
   is_current?: boolean | null
 }
 
 interface OnboardingWorkExperienceFormProps {
   initialData: CandidateWorkExperience[]
-}
-
-const parseDateString = (
-  dateStr: string | null | undefined
-): Date | undefined => {
-  if (!dateStr) return undefined
-  try {
-    let date = parse(dateStr, 'yyyy-MM-dd', new Date())
-    if (isValid(date)) return date
-    date = parse(dateStr, 'yyyy-MM', new Date())
-    if (isValid(date)) return date
-    return undefined
-  } catch {
-    return undefined
-  }
-}
-
-const formatDateToYYYYMMDD = (date: Date | null | undefined): string => {
-  if (!date || !isValid(date)) return ''
-  try {
-    return format(date, 'yyyy-MM-dd')
-  } catch {
-    return ''
-  }
 }
 
 export function OnboardingWorkExperienceForm({
@@ -109,7 +88,6 @@ export function OnboardingWorkExperienceForm({
   const [experiences, setExperiences] = useState<
     CandidateWorkExperienceInternal[]
   >(
-    // Cast items from initialData when setting initial state
     initialData
       ? initialData.map((exp) => exp as CandidateWorkExperienceInternal)
       : []
@@ -179,29 +157,25 @@ export function OnboardingWorkExperienceForm({
     createCandidateWorkExperienceAction,
     {
       onSuccess: (hookProvidedResult) => {
-        // Renamed for clarity
-        // hookProvidedResult is { data: ServerActionReturn, input: ActionInput }
-        // ServerActionReturn is { success: boolean, data?: ActualRecord, error?: ... }
-
         if (
           hookProvidedResult &&
-          hookProvidedResult.data && // Check if the server action's return object exists
-          hookProvidedResult.data.success === true && // Check the success flag from the server action
-          hookProvidedResult.data.data // Check if the actual record data exists
+          hookProvidedResult.data &&
+          hookProvidedResult.data.success === true &&
+          hookProvidedResult.data.data
         ) {
           const newExperienceRecord = hookProvidedResult.data
-            .data as CandidateWorkExperienceInternal // Cast to internal type
+            .data as CandidateWorkExperienceInternal
 
           if (
             typeof newExperienceRecord === 'object' &&
-            newExperienceRecord !== null && // Good practice to check for null
+            newExperienceRecord !== null &&
             'id' in newExperienceRecord
           ) {
             setExperiences((prev) => [...prev, newExperienceRecord])
             if (isFormOpen) {
               closeDialog()
             } else {
-              resetForm(null) // Reset inline form
+              resetForm(null)
             }
           } else {
             console.error(
@@ -249,7 +223,7 @@ export function OnboardingWorkExperienceForm({
           serverActionResponse.data
         ) {
           const updatedRecord =
-            serverActionResponse.data as CandidateWorkExperienceInternal // Cast to internal type
+            serverActionResponse.data as CandidateWorkExperienceInternal
           if (
             typeof updatedRecord === 'object' &&
             updatedRecord !== null &&
@@ -283,12 +257,9 @@ export function OnboardingWorkExperienceForm({
         input: { id: string }
       }) => {
         let idToDelete: string | null = null
-        // result.input contains the arguments passed to the action
         if (result.input && typeof result.input.id === 'string') {
           idToDelete = result.input.id
         }
-
-        // result.data contains the server response
         const serverResponse = result.data
         if (serverResponse && serverResponse.success === true) {
           if (idToDelete) {
@@ -403,8 +374,6 @@ export function OnboardingWorkExperienceForm({
       }
       updateExperience(validation.data)
     } else {
-      // payloadForAction is used directly, its optional 'id' field will be undefined
-      // and ignored by createCandidateWorkExperienceSchema if not defined there.
       const validation =
         createCandidateWorkExperienceSchema.safeParse(payloadForAction)
       if (!validation.success) {
@@ -450,22 +419,6 @@ export function OnboardingWorkExperienceForm({
 
   const handlePrevious = () => {
     router.push('/candidate-onboarding/education')
-  }
-
-  const formatDisplayDate = (dateStr: string | null | undefined): string => {
-    if (!dateStr) return 'N/A'
-    const date = parseDateString(dateStr)
-    return date ? format(date, 'MMM yyyy') : dateStr
-  }
-
-  const displayDateRange = (
-    startDate: string | null,
-    dbEndDate: string | null,
-    isCurrentFlag: boolean | null | undefined
-  ) => {
-    const start = formatDisplayDate(startDate)
-    const end = isCurrentFlag ? 'Present' : formatDisplayDate(dbEndDate)
-    return `${start} - ${end}`
   }
 
   const ExperienceFormFields = () => (

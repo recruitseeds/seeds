@@ -49,7 +49,6 @@ interface ParseResumeActionResult {
   error?: { message?: string; code?: string; [key: string]: unknown } | null
 }
 
-// This represents the typical structure returned by a next-safe-action hook or direct await
 interface ActionHookResult<
   TSuccessData = unknown,
   TErrorData = {
@@ -63,9 +62,9 @@ interface ActionHookResult<
     error?: TErrorData
   } = { success: boolean; data?: TSuccessData; error?: TErrorData }
 > {
-  data?: TActionResult // The actual result from the action handler
-  serverError?: string // Error from the server before/during action execution
-  validationErrors?: Record<string, string[]> // Schema validation errors
+  data?: TActionResult
+  serverError?: string
+  validationErrors?: Record<string, string[]>
 }
 
 interface PreOnboardingOptionsProps {
@@ -94,7 +93,7 @@ export function PreOnboardingOptions({
     setIsProcessing(true)
     setProcessError(null)
     setProcessSuccess(false)
-    const formData = new FormData() // Reinstated
+    const formData = new FormData()
     formData.append('resumeFile', file)
 
     try {

@@ -1,70 +1,115 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Plus, Pencil } from "lucide-react"
+'use client'
 
-interface SkillCategory {
-  id: string
-  name: string
-  skills: string[]
-}
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { useTRPC } from '@/trpc/client'
+import type { RouterOutputs } from '@/trpc/routers/_app'
+import { useQuery } from '@tanstack/react-query'
+import { Loader2, Pencil, Plus } from 'lucide-react'
 
-const skillCategories: SkillCategory[] = [
-  {
-    id: "1",
-    name: "Programming Languages",
-    skills: ["JavaScript", "TypeScript", "HTML", "CSS", "Python", "SQL"],
-  },
-  {
-    id: "2",
-    name: "Frameworks & Libraries",
-    skills: ["React", "Next.js", "Angular", "Vue.js", "Node.js", "Express", "Tailwind CSS", "Bootstrap"],
-  },
-  {
-    id: "3",
-    name: "Tools & Platforms",
-    skills: ["Git", "GitHub", "VS Code", "Docker", "AWS", "Vercel", "Netlify", "Figma"],
-  },
-  {
-    id: "4",
-    name: "Soft Skills",
-    skills: ["Team Leadership", "Project Management", "Communication", "Problem Solving", "Agile Methodologies"],
-  },
-]
+type SkillCategoryFromAPI = RouterOutputs['candidate']['listSkills'][number]
 
 export function Skills() {
+  const trpc = useTRPC()
+
+  const {
+    data: skillCategories,
+    isLoading,
+    error,
+  } = useQuery(
+    trpc.candidate.listSkills.queryOptions(undefined, {
+      staleTime: 5 * 60 * 1000,
+    })
+  )
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Skills</CardTitle>
+          <CardDescription>
+            Loading your technical and professional skills...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='flex justify-center items-center h-40'>
+          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Skills</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className='text-red-600'>Error loading skills: {error.message}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className='flex flex-row items-center justify-between'>
         <div>
           <CardTitle>Skills</CardTitle>
-          <CardDescription>Your technical and professional skills</CardDescription>
+          <CardDescription>
+            Your technical and professional skills
+          </CardDescription>
         </div>
-        <div className="flex items-center gap-2">
-
-        <Button size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Add Skill
-        </Button>
-        <Button variant="outline" size="icon" className="h-7">
-                        <Pencil className="h-4 w-4 mr-1" />
-                      </Button>
+        <div className='flex items-center gap-2'>
+          <Button
+            size='sm'
+            onClick={() => alert('Add Skill UI to be implemented')}>
+            <Plus className='h-4 w-4 mr-1' /> Add Skill
+          </Button>
+          <Button
+            variant='outline'
+            size='icon'
+            className='h-7'
+            onClick={() => alert('Edit Section UI to be implemented')}>
+            <Pencil className='h-3 w-3' />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {skillCategories.map((category) => (
-            <div key={category.id}>
-              <h3 className="font-medium mb-3">{category.name}</h3>
-              <div className="flex flex-wrap gap-2">
-                {category.skills.map((skill) => (
-                  <Badge key={skill} variant="outline">
-                    {skill}
-                  </Badge>
-                ))}
+        {skillCategories && skillCategories.length > 0 ? (
+          <div className='space-y-6'>
+            {skillCategories.map((category) => (
+              <div key={category.id}>
+                {category.skills &&
+                Array.isArray(category.skills) &&
+                category.skills.length > 0 ? (
+                  <div className='flex flex-wrap gap-2'>
+                    {(category.skills as string[]).map((skill) => (
+                      <Badge key={skill} variant='outline'>
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className='text-sm text-muted-foreground'>
+                    No skills listed in this category.
+                  </p>
+                )}
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className='text-sm text-muted-foreground'>
+            No skills added yet. Click &quot;Add Skill&quot; to get started.
+          </p>
+        )}
       </CardContent>
     </Card>
   )

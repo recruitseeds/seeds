@@ -1,176 +1,198 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Clock, CheckCircle2, XCircle, AlertCircle, Calendar, ArrowUpRight, Plus } from "lucide-react"
+'use client'
 
-type ApplicationStatus = "applied" | "in-review" | "interview" | "rejected" | "offer"
+import { EditExperienceDialog } from '@/components/candidate/edit-experience-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { formatDate } from '@/lib/dates'
+import { useTRPC } from '@/trpc/client'
+import { useQuery } from '@tanstack/react-query'
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from 'lucide-react'
+import { useState } from 'react'
+import { CandidateApplicationActionsDropdown } from './candidate-application-actions-dropdown'
+import { CandidateApplicationsSkeleton } from './skeletons/candidate-applications-skeleton'
 
-interface Application {
-  id: string
-  jobTitle: string
-  company: string
-  logo: string
-  status: ApplicationStatus
-  date: string
-  nextStep?: string
-  nextStepDate?: string
-}
+type ApplicationStatus =
+  | 'applied'
+  | 'in-review'
+  | 'interview'
+  | 'rejected'
+  | 'offer'
+  | string
 
-const getStatusBadge = (status: ApplicationStatus) => {
+const getStatusBadge = (status: ApplicationStatus | null) => {
   switch (status) {
-    case "applied":
+    case 'applied':
       return (
-        <Badge variant="outline" className="flex items-center gap-1">
-          <Clock className="h-3 w-3" /> Applied
+        <Badge variant='outline' className='flex items-center gap-1'>
+          <Clock className='h-3 w-3' /> Applied
         </Badge>
       )
-    case "in-review":
+    case 'in-review':
       return (
-        <Badge
-          variant="warning"
-          className="flex items-center gap-1"
-        >
-          <AlertCircle className="size-3" /> In Review
+        <Badge variant='warning' className='flex items-center gap-1'>
+          <AlertCircle className='size-3' /> In Review
         </Badge>
       )
-    case "interview":
+    case 'interview':
       return (
-        <Badge variant="info" className="flex items-center gap-1">
-          <Calendar className="size-3" /> Interview
+        <Badge variant='info' className='flex items-center gap-1'>
+          <Calendar className='size-3' /> Interview
         </Badge>
       )
-    case "rejected":
+    case 'rejected':
       return (
-        <Badge variant="destructive" className="flex items-center gap-1">
-          <XCircle className="size-3" /> Rejected
+        <Badge variant='destructive' className='flex items-center gap-1'>
+          <XCircle className='size-3' /> Rejected
         </Badge>
       )
-    case "offer":
+    case 'offer':
       return (
-        <Badge variant="success" className="flex items-center gap-1">
-          <CheckCircle2 className="size" /> Offer
+        <Badge variant='success' className='flex items-center gap-1'>
+          <CheckCircle2 className='size-3' /> Offer
         </Badge>
       )
+    default:
+      return <Badge variant='secondary'>{status || 'Unknown'}</Badge>
   }
 }
 
-const applications: Application[] = [
-  {
-    id: "1",
-    jobTitle: "Senior Frontend Developer",
-    company: "TechCorp Inc.",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "offer",
-    date: "2023-04-15",
-    nextStep: "Review offer by",
-    nextStepDate: "2023-05-01",
-  },
-  {
-    id: "2",
-    jobTitle: "Full Stack Engineer",
-    company: "InnovateSoft",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "interview",
-    date: "2023-04-10",
-    nextStep: "Technical Interview",
-    nextStepDate: "2023-04-25",
-  },
-  {
-    id: "3",
-    jobTitle: "React Developer",
-    company: "WebSolutions Ltd",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "interview",
-    date: "2023-04-05",
-    nextStep: "Final Interview",
-    nextStepDate: "2023-04-28",
-  },
-  {
-    id: "4",
-    jobTitle: "UI/UX Developer",
-    company: "DesignHub",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "in-review",
-    date: "2023-04-02",
-  },
-  {
-    id: "5",
-    jobTitle: "JavaScript Engineer",
-    company: "CodeMasters",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "in-review",
-    date: "2023-03-28",
-  },
-  {
-    id: "6",
-    jobTitle: "Frontend Architect",
-    company: "ArchSystems",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "rejected",
-    date: "2023-03-20",
-  },
-  {
-    id: "7",
-    jobTitle: "Senior React Developer",
-    company: "ReactPro",
-    logo: "/placeholder.svg?height=40&width=40",
-    status: "applied",
-    date: "2023-03-15",
-  },
-]
-
 export function ApplicationsList() {
+  const trpcClient = useTRPC()
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+
+  const {
+    data: applicationsData,
+    isLoading,
+    error,
+    isFetching,
+  } = useQuery(
+    trpcClient.candidate.listApplications.queryOptions(
+      { page: currentPage, pageSize: pageSize },
+      {
+        staleTime: 5 * 60 * 1000,
+      }
+    )
+  )
+
+  const applications = applicationsData?.data || []
+  const totalCount = applicationsData?.count || 0
+  const totalPages = Math.ceil(totalCount / pageSize)
+
+  if (isLoading && !applicationsData) {
+    return <CandidateApplicationsSkeleton />
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Job Applications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className='text-red-600'>
+            Error loading applications: {error.message}
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className='flex flex-row items-center justify-between'>
         <div>
-        <CardTitle>Job Applications</CardTitle>
-        <CardDescription>Track the status of your job applications</CardDescription>
+          <CardTitle>Job Applications</CardTitle>
+          <CardDescription>
+            Track the status of your job applications
+          </CardDescription>
         </div>
-        <Button size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Add Applications
-        </Button>
+        <CandidateApplicationActionsDropdown />
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {applications.map((application) => (
-            <div
-              key={application.id}
-              className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded"
-            >
-              <div className="flex items-center gap-4 mb-3 md:mb-0">
-                <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
-                  <img
-                    src={application.logo || "/placeholder.svg"}
-                    alt={application.company}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-medium">{application.jobTitle}</h3>
-                  <p className="text-sm text-muted-foreground">{application.company}</p>
-                </div>
-              </div>
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
-                <div className="flex flex-col gap-1 w-full md:w-auto">
-                  {getStatusBadge(application.status)}
-                  <span className="text-xs text-muted-foreground">
-                    Applied on {new Date(application.date).toLocaleDateString()}
-                  </span>
-                </div>
-                {application.nextStep && (
-                  <div className="bg-muted px-3 py-1 rounded text-xs w-full md:w-auto">
-                    <span className="font-medium">{application.nextStep}:</span>{" "}
-                    {new Date(application.nextStepDate!).toLocaleDateString()}
+        {applications.length === 0 && !isLoading && !isFetching ? (
+          <p>No applications found.</p>
+        ) : (
+          <div className='space-y-4'>
+            {applications.map((app) => (
+              <div
+                key={app.id}
+                className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded'>
+                <div className='flex items-center gap-4 mb-3 md:mb-0 flex-grow'>
+                  <div className='w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-muted'>
+                    {app.company_logo_url ? (
+                      // TODO: Revisit this to use Image component from next/image. During POC using GitHub png
+                      // requires me to update next.config which I don't want to do.
+                      <img
+                        src={app.company_logo_url}
+                        // src={app.company_logo_url || ''}
+                        alt={app.company_name || 'Company'}
+                        width={40}
+                        height={40}
+                        className='w-full h-full object-contain'
+                      />
+                    ) : (
+                      <div className='w-full h-full flex items-center justify-center text-muted-foreground text-xs'>
+                        {app.company_name?.substring(0, 1) || '?'}
+                      </div>
+                    )}
                   </div>
-                )}
-                <Button variant="ghost" size="sm" className="ml-auto">
-                  <ArrowUpRight className="h-4 w-4 mr-1" /> View
-                </Button>
+                  <div className='w-full md:w-auto'>
+                    <h3 className='font-medium'>{app.job_title || 'N/A'}</h3>
+                    <p className='text-sm text-muted-foreground'>
+                      {app.company_name || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div className='flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto md:flex-shrink-0'>
+                  <div className='flex flex-col gap-1 items-start md:items-end w-full md:w-auto'>
+                    {getStatusBadge(app.status as ApplicationStatus | null)}
+                    <span className='text-xs text-muted-foreground'>
+                      Applied on {formatDate(app.application_date)}
+                    </span>
+                  </div>
+                  <EditExperienceDialog application={app} />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+        {totalPages > 1 && (
+          <div className='flex justify-center items-center gap-2 mt-6'>
+            <Button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 || isFetching}
+              variant='outline'
+              size='sm'>
+              Previous
+            </Button>
+            <span className='text-sm text-muted-foreground'>
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages || isFetching}
+              variant='outline'
+              size='sm'>
+              Next
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
