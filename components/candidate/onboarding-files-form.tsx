@@ -63,7 +63,7 @@ export function OnboardingFilesForm({
         id: initialResume.id,
         isExisting: true,
         existingFileName: initialResume.file_name,
-        existingFileSize: initialResume.size_bytes || 0, // Use || 0 as fallback
+        existingFileSize: initialResume.size_bytes || 0,
         existingStoragePath: initialResume.storage_path,
       }
     }
