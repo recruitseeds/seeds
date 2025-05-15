@@ -1,7 +1,7 @@
 'use client'
 
 import { createCandidateEducationAction } from '@/actions/create-candidate-education-action'
-import { deleteCandidateEducationAction } from '@/actions/delete-candidate-education-action' // Import the new delete action
+import { deleteCandidateEducationAction } from '@/actions/delete-candidate-education-action'
 import {
   candidateEducationFormSchema,
   createCandidateEducationSchema,
@@ -9,7 +9,7 @@ import {
 } from '@/actions/schema'
 import { updateCandidateEducationAction } from '@/actions/update-candidate-education'
 import {
-  AlertDialog, // Import AlertDialog components
+  AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
@@ -107,7 +107,7 @@ export function OnboardingEducationForm({
   )
   const [educationToDeleteId, setEducationToDeleteId] = useState<string | null>(
     null
-  ) // State for delete confirmation
+  )
   const submissionSourceRef = useRef<
     'initial_save_button' | 'continue_implicit_save' | null
   >(null)
@@ -146,13 +146,13 @@ export function OnboardingEducationForm({
     if (initialData.length === 0 && !editingDegree) {
       resetForm(null)
     }
-  }, [initialData, editingDegree, resetForm]) // Added resetForm to dependencies
+  }, [initialData, editingDegree, resetForm])
 
   const { execute: createEducation, status: createStatus } = useAction(
     createCandidateEducationAction,
     {
       onSuccess: (hookProvidedResult) => {
-        const actionResult = hookProvidedResult.data // next-safe-action wraps result in .data
+        const actionResult = hookProvidedResult.data
         if (actionResult?.success && actionResult.data) {
           const newEducationRecord = actionResult.data as CandidateEducation
           setDegrees((prev) => [...prev, newEducationRecord])
@@ -228,11 +228,11 @@ export function OnboardingEducationForm({
             hookProvidedResult
           )
         }
-        setEducationToDeleteId(null) // Close dialog
+        setEducationToDeleteId(null)
       },
       onError: (hookErrorPayload) => {
         console.error('Delete education hook error:', hookErrorPayload.error)
-        setEducationToDeleteId(null) // Close dialog on error too
+        setEducationToDeleteId(null)
       },
     }
   )
@@ -339,7 +339,6 @@ export function OnboardingEducationForm({
     if (educationToDeleteId) {
       deleteEducation({ id: educationToDeleteId })
     }
-    // setEducationToDeleteId(null); // Already handled in onSuccess/onError of deleteEducation
   }
 
   const handleContinue = async () => {
@@ -347,8 +346,7 @@ export function OnboardingEducationForm({
       const isValid = await form.trigger()
       if (isValid) {
         const currentValues = form.getValues()
-        // ... (rest of your implicit save logic for education) ...
-        handleFormSubmit(currentValues) // Call the main submit handler
+        handleFormSubmit(currentValues)
       } else {
         return
       }

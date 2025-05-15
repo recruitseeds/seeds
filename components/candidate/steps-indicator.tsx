@@ -1,6 +1,6 @@
 import { Steps } from '@ark-ui/react/steps'
 import { Check } from 'lucide-react'
-import Link from 'next/link' // 1. Import Link
+import Link from 'next/link'
 
 interface Step {
   id: string

@@ -1,6 +1,6 @@
 'use client'
 
-import { updateCandidateOnboardingStatusAction } from '@/actions/update-candidate-onboarding-status' // Adjust path if necessary
+import { updateCandidateOnboardingStatusAction } from '@/actions/update-candidate-onboarding-status'
 import { Button } from '@/components/ui/button'
 import {
   Card,

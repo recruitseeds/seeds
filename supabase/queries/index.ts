@@ -180,7 +180,6 @@ export async function getCandidateEducationByCandidateId(
 
   if (error) {
     console.error('Error fetching candidate education records:', error)
-    // Depending on your error handling, you might throw or return empty array
     return []
   }
   return data || []
@@ -207,7 +206,7 @@ export async function getCandidateFilesByCandidateId(
   candidateId: string
 ): Promise<CandidateFile[]> {
   const { data, error } = await supabase
-    .from('candidate_files') // Ensure this table name is correct
+    .from('candidate_files')
     .select('*')
     .eq('candidate_id', candidateId)
 

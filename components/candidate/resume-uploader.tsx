@@ -36,7 +36,6 @@ export function ResumeUploader({
       return
     }
 
-    // Check file type
     const allowedTypes = [
       'application/pdf',
       'application/msword',
@@ -48,7 +47,6 @@ export function ResumeUploader({
       return
     }
 
-    // Check file size (5MB limit)
     if (selectedFile.size > 5 * 1024 * 1024) {
       setUploadError('File size must be less than 5MB.')
       return
