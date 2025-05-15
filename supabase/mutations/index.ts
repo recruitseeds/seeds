@@ -247,12 +247,11 @@ export async function createCandidateWorkExperience(
 export type CandidateWorkExperience = Tables<'candidate_work_experiences'>
 export async function updateCandidateWorkExperience(
   supabase: Client,
-  candidateId: string, // This is the user's ID, used to ensure ownership
+  candidateId: string,
   params: UpdateCandidateWorkExperienceParams
 ): Promise<CandidateWorkExperience> {
   const { id, ...updatePayload } = params
 
-  // Remove undefined fields to prevent Supabase errors if a field is not meant to be updated
   Object.keys(updatePayload).forEach((key) => {
     if (updatePayload[key as keyof typeof updatePayload] === undefined) {
       delete updatePayload[key as keyof typeof updatePayload]
@@ -263,8 +262,6 @@ export async function updateCandidateWorkExperience(
     console.warn(
       `[Mutation: updateCandidateWorkExperience] No fields provided to update for ID: ${id}. Fetching existing.`
     )
-    // If no fields to update, fetch and return the existing record
-    // This behavior might need adjustment based on whether an error or the existing record is preferred
     const { data: existingData, error: fetchError } = await supabase
       .from('candidate_work_experiences')
       .select('*')
@@ -293,7 +290,7 @@ export async function updateCandidateWorkExperience(
     .from('candidate_work_experiences')
     .update(updatePayload)
     .eq('id', id)
-    .eq('candidate_id', candidateId) // Crucial for security and correctness
+    .eq('candidate_id', candidateId)
     .select('*')
     .single()
 
@@ -311,7 +308,6 @@ export async function updateCandidateWorkExperience(
       error
     )
     if (error.code === 'PGRST116') {
-      // PostgREST error for "No rows found"
       throw new Error(
         `Work experience record with ID ${id} not found or not owned by candidate ${candidateId}. (Error code: ${error.code})`
       )
@@ -334,7 +330,7 @@ export async function updateCandidateWorkExperience(
     `[Mutation: updateCandidateWorkExperience] Successfully updated and returning data for ID ${id}:`,
     updatedData
   )
-  return updatedData as CandidateWorkExperience // Ensure the return type matches
+  return updatedData as CandidateWorkExperience
 }
 
 export async function deleteCandidateWorkExperience(
@@ -381,10 +377,7 @@ async function getArrayBufferFromFile(file: File | Blob): Promise<ArrayBuffer> {
       '[Util:getArrayBufferFromFile] Using file.arrayBuffer() method.'
     )
     return await file.arrayBuffer()
-  }
-  // The File API also provides a stream() method. Blobs also have a stream() method.
-  // This can be a fallback or alternative way to read the file.
-  else if (typeof file.stream === 'function') {
+  } else if (typeof file.stream === 'function') {
     console.warn(
       `[Util:getArrayBufferFromFile] file.arrayBuffer not available or not a function for '${fileNameForError}'. Attempting to read from file.stream().`
     )
@@ -428,28 +421,26 @@ export async function uploadFileToR2AndRecord(
   supabase: SupabaseClient<Database>,
   s3Client: S3Client,
   r2BucketName: string,
-  userId: string, // This is the candidate_id
+  userId: string,
   file: File,
-  fileCategoryForR2Path: 'resume' | 'cover_letter' | 'transcript' | 'other', // For R2 path organization
-  dbFileType: Database['public']['Enums']['candidate_file_type'] // For the database column
+  fileCategoryForR2Path: 'resume' | 'cover_letter' | 'transcript' | 'other',
+  dbFileType: Database['public']['Enums']['candidate_file_type']
 ): Promise<CandidateUploadedFileMetadata> {
-  const originalFileName = file.name || `unknown_file_${uuidv4()}` // Fallback for filename in DB
+  const originalFileName = file.name || `unknown_file_${uuidv4()}`
   if (!file.name) {
     console.warn(
       `[Mutation:uploadFileToR2AndRecord] File object received without a 'name' property. Using fallback for DB record: '${originalFileName}'.`
     )
   }
 
-  const fileExtension = originalFileName.split('.').pop() // Get extension from original name
+  const fileExtension = originalFileName.split('.').pop()
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
 
-  // Use the fileCategoryForR2Path as the base name for the R2 key.
-  const baseNameForR2 = fileCategoryForR2Path // e.g., "resume", "cover_letter"
+  const baseNameForR2 = fileCategoryForR2Path
 
   const uniqueFilenameInR2 = `${timestamp}_${baseNameForR2}${
     fileExtension ? '.' + fileExtension : ''
   }`
-  // Path structure in R2
   const r2Key = `candidates/${userId}/${fileCategoryForR2Path}/${uniqueFilenameInR2}`
 
   console.log(
@@ -470,26 +461,20 @@ export async function uploadFileToR2AndRecord(
     `[Mutation:uploadFileToR2AndRecord] File (original name: '${originalFileName}') uploaded to R2.`
   )
 
-  // Prepare the record for your `candidate_files` table
-  // The `file_name` stored in DB is the original user-provided filename.
   const documentRecordToInsert: Database['public']['Tables']['candidate_files']['Insert'] =
     {
       candidate_id: userId,
-      file_name: originalFileName, // Store the actual original/fallback name here
+      file_name: originalFileName,
       file_type: dbFileType,
       mime_type: file.type || null,
       size_bytes: file.size,
-      storage_path: r2Key, // This path uses the category-based unique name
-      // is_default_resume, parsed_resume_data, etc., are handled by other logic/actions
+      storage_path: r2Key,
     }
 
-  // Insert into `candidate_files` table
   const { data: insertedRecord, error: dbError } = await supabase
     .from('candidate_files')
     .insert(documentRecordToInsert)
     .select(
-      // Select the columns you need for the CandidateUploadedFileMetadata interface
-      // Ensure these match your `candidate_files` table and the interface
       'id, candidate_id, file_name, file_type, mime_type, size_bytes, storage_path, is_default_resume, parsed_resume_data'
     )
     .single()
@@ -499,7 +484,6 @@ export async function uploadFileToR2AndRecord(
       `[Mutation:uploadFileToR2AndRecord] Failed to record document metadata for ${r2Key} in DB (table: candidate_files):`,
       dbError
     )
-    // Consider deleting from R2 if DB insert fails for atomicity
     throw new Error(
       `Failed to record document metadata in candidate_files: ${
         dbError?.message || 'Unknown DB error'
@@ -511,16 +495,15 @@ export async function uploadFileToR2AndRecord(
     `[Mutation:uploadFileToR2AndRecord] Metadata recorded in candidate_files for ${r2Key}. DB ID: ${insertedRecord.id}`
   )
 
-  // Map the `insertedRecord` to the `CandidateUploadedFileMetadata` interface
   return {
     id: insertedRecord.id,
     candidate_id: insertedRecord.candidate_id,
-    file_name: insertedRecord.file_name, // This is the originalFileName stored in DB
+    file_name: insertedRecord.file_name,
     file_type:
       insertedRecord.file_type as Database['public']['Enums']['candidate_file_type'],
     mime_type: insertedRecord.mime_type,
     size_bytes: insertedRecord.size_bytes,
-    storage_path: insertedRecord.storage_path, // This is the R2 key
+    storage_path: insertedRecord.storage_path,
     is_default_resume: insertedRecord.is_default_resume,
     parsed_resume_data: insertedRecord.parsed_resume_data,
   }
@@ -548,4 +531,69 @@ export async function deleteCandidateEducation(
     `Successfully deleted education record ${educationId} for candidate ${candidateId}`
   )
   return { success: true }
+}
+
+export type CreateCandidateApplicationParams =
+  TablesInsert<'candidate_applications'>
+
+export async function createCandidateApplication(
+  supabase: SupabaseClient<Database>,
+  params: CreateCandidateApplicationParams
+) {
+  if (!params.candidate_id) {
+    throw new Error('candidate_id is required to create an application.')
+  }
+  if (!params.job_title || !params.company_name || !params.application_date) {
+    throw new Error(
+      'Job title, company name, and application date are required.'
+    )
+  }
+
+  const { data: insertedData, error } = await supabase
+    .from('candidate_applications')
+    .insert(params)
+    .select('*')
+    .single()
+
+  if (error) {
+    console.error('Error creating candidate application:', error)
+    throw new Error(`Failed to create application: ${error.message}`)
+  }
+  if (!insertedData) {
+    throw new Error(
+      'Failed to create application: No data returned after insert.'
+    )
+  }
+  return insertedData
+}
+
+export async function createMultipleCandidateApplications(
+  supabase: SupabaseClient<Database>,
+  applications: CreateCandidateApplicationParams[]
+) {
+  if (!applications || applications.length === 0) {
+    return { data: [], error: null, count: 0 }
+  }
+
+  applications.forEach((app) => {
+    if (!app.candidate_id) {
+      throw new Error('candidate_id is required for all applications in batch.')
+    }
+    if (!app.job_title || !app.company_name || !app.application_date) {
+      throw new Error(
+        'Job title, company name, and application date are required for all applications in batch.'
+      )
+    }
+  })
+
+  const { data, error, count } = await supabase
+    .from('candidate_applications')
+    .insert(applications)
+    .select('*')
+
+  if (error) {
+    console.error('Error creating multiple candidate applications:', error)
+    throw new Error(`Failed to create multiple applications: ${error.message}`)
+  }
+  return { data, error, count }
 }
