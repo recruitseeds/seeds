@@ -1,8 +1,4 @@
-import {
-  getS3Client,
-  R2_BUCKET_NAME,
-  uploadFileToR2AndRecord,
-} from '@/lib/s3-client'
+import { R2_BUCKET_NAME, getS3Client, uploadFileToR2AndRecord } from '@/lib/s3-client'
 import {
   createCandidateApplication,
   createCandidateEducation,
@@ -16,6 +12,7 @@ import {
 } from '@/supabase/mutations'
 import {
   getCandidateApplicationsPaginated,
+  getCandidateContactInfo,
   getCandidateEducation,
   getCandidateFilesByCandidateId,
   getCandidateProfile,
@@ -24,18 +21,12 @@ import {
   getDefaultCandidateResume,
 } from '@/supabase/queries'
 import type { Database, TablesInsert } from '@/supabase/types/db'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { PostgrestError } from '@supabase/supabase-js'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { candidateProcedure, createTRPCRouter } from '../init'
 
-const applicationStatusEnum = z.enum([
-  'applied',
-  'in-review',
-  'interview',
-  'rejected',
-  'offer',
-])
+const applicationStatusEnum = z.enum(['applied', 'in-review', 'interview', 'rejected', 'offer'])
 const applicationSourceEnum = z.enum(['platform', 'manual', 'import'])
 
 const baseApplicationSchema = {
@@ -54,15 +45,9 @@ const baseApplicationSchema = {
   job_id: z.string().optional().nullable(),
 }
 
-const candidateFileTypeEnum = z.enum([
-  'resume',
-  'cover_letter',
-  'transcript',
-  'other',
-])
+const candidateFileTypeEnum = z.enum(['resume', 'cover_letter', 'transcript', 'other'])
 
-type ApplicationStatus =
-  Database['public']['Enums']['candidate_application_status']
+type ApplicationStatusType = Database['public']['Enums']['candidate_application_status']
 
 export const candidateRouter = createTRPCRouter({
   getProfile: candidateProcedure.query(async ({ ctx }) => {
@@ -70,9 +55,7 @@ export const candidateRouter = createTRPCRouter({
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: `Failed to get profile: ${
-          (error as { message?: string })?.message ?? String(error)
-        }`,
+        message: `Failed to get profile: ${(error as { message?: string })?.message ?? String(error)}`,
       })
     }
     return data
@@ -103,10 +86,7 @@ export const candidateRouter = createTRPCRouter({
     }),
 
   listEducation: candidateProcedure.query(async ({ ctx }) => {
-    const { data, error } = await getCandidateEducation(
-      ctx.supabase,
-      ctx.user.id
-    )
+    const { data, error } = await getCandidateEducation(ctx.supabase, ctx.user.id)
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -154,18 +134,11 @@ export const candidateRouter = createTRPCRouter({
   deleteEducation: candidateProcedure
     .input(z.object({ educationId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      return deleteCandidateEducation(
-        ctx.supabase,
-        input.educationId,
-        ctx.user.id
-      )
+      return deleteCandidateEducation(ctx.supabase, input.educationId, ctx.user.id)
     }),
 
   listWorkExperiences: candidateProcedure.query(async ({ ctx }) => {
-    const { data, error } = await getCandidateWorkExperiences(
-      ctx.supabase,
-      ctx.user.id
-    )
+    const { data, error } = await getCandidateWorkExperiences(ctx.supabase, ctx.user.id)
     if (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -178,11 +151,7 @@ export const candidateRouter = createTRPCRouter({
   getWorkExperienceById: candidateProcedure
     .input(z.object({ workExperienceId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const { data, error } = await getCandidateWorkExperienceById(
-        ctx.supabase,
-        input.workExperienceId,
-        ctx.user.id
-      )
+      const { data, error } = await getCandidateWorkExperienceById(ctx.supabase, input.workExperienceId, ctx.user.id)
       if (error) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -208,10 +177,7 @@ export const candidateRouter = createTRPCRouter({
 
     if (!skillsData) return []
 
-    const groupedSkills: Record<
-      string,
-      { id: string; name: string; skills: string[] }
-    > = {}
+    const groupedSkills: Record<string, { id: string; name: string; skills: string[] }> = {}
 
     for (const skill of skillsData) {
       if (!groupedSkills[skill.category_name]) {
@@ -266,11 +232,7 @@ export const candidateRouter = createTRPCRouter({
   deleteWorkExperience: candidateProcedure
     .input(z.object({ workExperienceId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      return deleteCandidateWorkExperience(
-        ctx.supabase,
-        input.workExperienceId,
-        ctx.user.id
-      )
+      return deleteCandidateWorkExperience(ctx.supabase, input.workExperienceId, ctx.user.id)
     }),
 
   listFiles: candidateProcedure.query(async ({ ctx }) => {
@@ -287,13 +249,7 @@ export const candidateRouter = createTRPCRouter({
         fileName: z.string(),
         fileMimeType: z.string(),
         fileContentBase64: z.string(),
-        fileCategoryForR2Path: z.enum([
-          'resume',
-          'cover_letter',
-          'transcript',
-          'other',
-          'avatar',
-        ]),
+        fileCategoryForR2Path: z.enum(['resume', 'cover_letter', 'transcript', 'other', 'avatar']),
         dbFileType: candidateFileTypeEnum,
       })
     )
@@ -335,9 +291,7 @@ export const candidateRouter = createTRPCRouter({
         console.error('Error in uploadFile tRPC mutation:', error)
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `File upload failed: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          message: `File upload failed: ${error instanceof Error ? error.message : String(error)}`,
         })
       }
     }),
@@ -347,6 +301,8 @@ export const candidateRouter = createTRPCRouter({
       z.object({
         page: z.number().min(1).default(1),
         pageSize: z.number().min(1).max(100).default(10),
+        search: z.string().optional(),
+        status: applicationStatusEnum.optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -354,7 +310,9 @@ export const candidateRouter = createTRPCRouter({
         ctx.supabase,
         ctx.user.id,
         input.page,
-        input.pageSize
+        input.pageSize,
+        input.search,
+        input.status
       )
       if (result.error) {
         throw new TRPCError({
@@ -386,7 +344,7 @@ export const candidateRouter = createTRPCRouter({
     let offers = 0
 
     const statusMap: {
-      [key in ApplicationStatus]?: 'inReview' | 'interviews' | 'offers'
+      [key in ApplicationStatusType]?: 'inReview' | 'interviews' | 'offers'
     } = {
       applied: undefined,
       'in-review': 'inReview',
@@ -395,8 +353,8 @@ export const candidateRouter = createTRPCRouter({
       offer: 'offers',
     }
 
-    applications.forEach((app) => {
-      const category = statusMap[app.status as ApplicationStatus]
+    for (const app of applications) {
+      const category = statusMap[app.status as ApplicationStatusType]
       if (category === 'inReview') {
         inReview++
       } else if (category === 'interviews') {
@@ -404,7 +362,7 @@ export const candidateRouter = createTRPCRouter({
       } else if (category === 'offers') {
         offers++
       }
-    })
+    }
 
     return {
       total: applications.length,
@@ -414,25 +372,20 @@ export const candidateRouter = createTRPCRouter({
     }
   }),
 
-  createApplication: candidateProcedure
-    .input(z.object(baseApplicationSchema))
-    .mutation(async ({ ctx, input }) => {
-      const params: TablesInsert<'candidate_applications'> = {
-        ...input,
-        candidate_id: ctx.user.id,
-      }
-      try {
-        return await createCandidateApplication(ctx.supabase, params)
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to create application',
-        })
-      }
-    }),
+  createApplication: candidateProcedure.input(z.object(baseApplicationSchema)).mutation(async ({ ctx, input }) => {
+    const params: TablesInsert<'candidate_applications'> = {
+      ...input,
+      candidate_id: ctx.user.id,
+    }
+    try {
+      return await createCandidateApplication(ctx.supabase, params)
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to create application',
+      })
+    }
+  }),
 
   importApplications: candidateProcedure
     .input(z.array(z.object(baseApplicationSchema)))
@@ -443,33 +396,58 @@ export const candidateRouter = createTRPCRouter({
           message: 'No applications provided for import.',
         })
       }
-      const applicationsToInsert: TablesInsert<'candidate_applications'>[] =
-        input.map((app) => ({
-          ...app,
-          candidate_id: ctx.user.id,
-          source: app.source || 'import',
-        }))
+      const applicationsToInsert: TablesInsert<'candidate_applications'>[] = input.map((app) => ({
+        ...app,
+        candidate_id: ctx.user.id,
+        source: app.source || 'import',
+      }))
 
       try {
-        const result = await createMultipleCandidateApplications(
-          ctx.supabase,
-          applicationsToInsert
-        )
+        const result = await createMultipleCandidateApplications(ctx.supabase, applicationsToInsert)
         return {
           success: !result.error,
           count: result.count ?? 0,
-          errors: result.error
-            ? [(result.error as PostgrestError).message]
-            : [],
+          errors: result.error ? [(result.error as PostgrestError).message] : [],
         }
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to import applications',
+          message: error instanceof Error ? error.message : 'Failed to import applications',
         })
       }
+    }),
+
+  getContactInfo: candidateProcedure.query(async ({ ctx }) => {
+    const { data, error } = await getCandidateContactInfo(ctx.supabase, ctx.user.id)
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Failed to get contact info: ${(error as { message?: string })?.message ?? String(error)}`,
+      })
+    }
+
+    return {
+      ...data,
+      email: ctx.user.email || null,
+    }
+  }),
+
+  updateContactInfo: candidateProcedure
+    .input(
+      z.object({
+        phone_number: z.string().max(50).optional().nullable(),
+        location: z.string().max(255).optional().nullable(),
+        personal_website_url: z.string().url().optional().nullable(),
+        linkedin_url: z.string().url().optional().nullable(),
+        github_url: z.string().url().optional().nullable(),
+        twitter_url: z.string().url().optional().nullable(),
+        bio: z.string().max(2000).optional().nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return updateCandidateProfile(ctx.supabase, {
+        id: ctx.user.id,
+        ...input,
+      })
     }),
 })

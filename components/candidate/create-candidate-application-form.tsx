@@ -17,7 +17,7 @@ import { useTRPC } from '@/trpc/client'
 import type { AppRouter } from '@/trpc/routers/_app'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { TRPCClientErrorLike } from '@trpc/client'
+import type { TRPCClientErrorLike } from '@trpc/client'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 

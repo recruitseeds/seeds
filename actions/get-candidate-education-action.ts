@@ -1,7 +1,9 @@
-// src/actions/get-candidate-education-action.ts
 'use server'
 
-import { CandidateEducation, getCandidateEducation } from '@/supabase/queries'
+import {
+  type CandidateEducation,
+  getCandidateEducation,
+} from '@/supabase/queries'
 import { authActionClient } from './safe-action'
 
 export const getCandidateEducationAction = authActionClient
@@ -16,9 +18,8 @@ export const getCandidateEducationAction = authActionClient
       data?: CandidateEducation[]
       error?: { code: string; message: string }
     }> => {
-      console.log(`[Action: get-candidate-education] ENTERING`, ctx)
+      console.log('[Action: get-candidate-education] ENTERING', ctx)
 
-      // Check if user context exists
       if (!ctx.user || !ctx.user.id) {
         return {
           success: false,

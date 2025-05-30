@@ -20,13 +20,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import DatePicker from '@/components/ui/date-picker'
 import {
@@ -37,41 +31,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  displayDateRange,
-  formatDateToYYYYMMDD,
-  parseDateString,
-} from '@/lib/dates'
+import { displayDateRange, formatDateToYYYYMMDD, parseDateString } from '@/lib/dates'
 import type { CandidateWorkExperience } from '@/supabase/queries'
 import type { Json } from '@/supabase/types/db'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Calendar as CalendarIcon,
-  Loader2,
-  MapPin,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { Calendar as CalendarIcon, Loader2, MapPin, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useAction } from 'next-safe-action/hooks'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import type { z } from 'zod'
 
-type WorkExperienceFormValues = z.infer<
-  typeof candidateWorkExperienceFormSchema
->
+type WorkExperienceFormValues = z.infer<typeof candidateWorkExperienceFormSchema>
 
 type CandidateWorkExperienceInternal = CandidateWorkExperience & {
   is_current?: boolean | null
@@ -81,26 +55,41 @@ interface OnboardingWorkExperienceFormProps {
   initialData: CandidateWorkExperience[]
 }
 
-export function OnboardingWorkExperienceForm({
-  initialData,
-}: OnboardingWorkExperienceFormProps) {
+const sortWorkExperiences = (experiences: CandidateWorkExperienceInternal[]): CandidateWorkExperienceInternal[] => {
+  return [...experiences].sort((a, b) => {
+    const aIsCurrent = a.is_current || !a.end_date
+    const bIsCurrent = b.is_current || !b.end_date
+
+    if (aIsCurrent && !bIsCurrent) return -1
+    if (!aIsCurrent && bIsCurrent) return 1
+
+    if (aIsCurrent && bIsCurrent) {
+      if (!a.start_date && !b.start_date) return 0
+      if (!a.start_date) return 1
+      if (!b.start_date) return -1
+      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+    }
+
+    if (!aIsCurrent && !bIsCurrent) {
+      if (!a.end_date && !b.end_date) return 0
+      if (!a.end_date) return 1
+      if (!b.end_date) return -1
+      return new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
+    }
+
+    return 0
+  })
+}
+
+export function OnboardingWorkExperienceForm({ initialData }: OnboardingWorkExperienceFormProps) {
   const router = useRouter()
-  const [experiences, setExperiences] = useState<
-    CandidateWorkExperienceInternal[]
-  >(
-    initialData
-      ? initialData.map((exp) => exp as CandidateWorkExperienceInternal)
-      : []
+  const [experiences, setExperiences] = useState<CandidateWorkExperienceInternal[]>(
+    initialData ? initialData.map((exp) => exp as CandidateWorkExperienceInternal) : []
   )
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingExperience, setEditingExperience] =
-    useState<CandidateWorkExperienceInternal | null>(null)
-  const [experienceToDeleteId, setExperienceToDeleteId] = useState<
-    string | null
-  >(null)
-  const submissionSourceRef = useRef<
-    'initial_save_button' | 'continue_implicit_save' | null
-  >(null)
+  const [editingExperience, setEditingExperience] = useState<CandidateWorkExperienceInternal | null>(null)
+  const [experienceToDeleteId, setExperienceToDeleteId] = useState<string | null>(null)
+  const submissionSourceRef = useRef<'initial_save_button' | 'continue_implicit_save' | null>(null)
 
   const form = useForm<WorkExperienceFormValues>({
     resolver: zodResolver(candidateWorkExperienceFormSchema),
@@ -153,146 +142,104 @@ export function OnboardingWorkExperienceForm({
     }
   }, [isCurrentValue, form])
 
-  const { execute: createExperience, status: createStatus } = useAction(
-    createCandidateWorkExperienceAction,
-    {
-      onSuccess: (hookProvidedResult) => {
-        if (
-          hookProvidedResult &&
-          hookProvidedResult.data &&
-          hookProvidedResult.data.success === true &&
-          hookProvidedResult.data.data
-        ) {
-          const newExperienceRecord = hookProvidedResult.data
-            .data as CandidateWorkExperienceInternal
+  const { execute: createExperience, status: createStatus } = useAction(createCandidateWorkExperienceAction, {
+    onSuccess: (hookProvidedResult) => {
+      if (
+        hookProvidedResult &&
+        hookProvidedResult.data &&
+        hookProvidedResult.data.success === true &&
+        hookProvidedResult.data.data
+      ) {
+        const newExperienceRecord = hookProvidedResult.data.data as CandidateWorkExperienceInternal
 
-          if (
-            typeof newExperienceRecord === 'object' &&
-            newExperienceRecord !== null &&
-            'id' in newExperienceRecord
-          ) {
-            setExperiences((prev) => [...prev, newExperienceRecord])
-            if (isFormOpen) {
-              closeDialog()
-            } else {
-              resetForm(null)
-            }
+        if (typeof newExperienceRecord === 'object' && newExperienceRecord !== null && 'id' in newExperienceRecord) {
+          setExperiences((prev) => sortWorkExperiences([...prev, newExperienceRecord]))
+          if (isFormOpen) {
+            closeDialog()
           } else {
-            console.error(
-              'Create Experience: Action reported success, but its `data.data` field (the actual record) was malformed or missing expected properties.',
-              newExperienceRecord
-            )
+            resetForm(null)
           }
         } else {
           console.error(
-            'Create Experience: Action reported failure or returned an invalid structure from the server action.',
-            hookProvidedResult
+            'Create Experience: Action reported success, but its `data.data` field (the actual record) was malformed or missing expected properties.',
+            newExperienceRecord
           )
         }
-      },
-      onError: (response) => {
-        const error = response.error
-        console.error('Create Experience Hook Error:', response)
-        if (error?.serverError)
-          console.error('Server Error:', error.serverError)
-        else if (error?.validationErrors)
-          console.error('Validation Errors:', error.validationErrors)
-        else console.error('Unknown Error:', response)
-      },
-      onSettled: () => {
-        submissionSourceRef.current = null
-      },
-    }
-  )
-
-  const { execute: updateExperience, status: updateStatus } = useAction(
-    updateCandidateWorkExperienceAction,
-    {
-      onSuccess: (hookProvidedResult) => {
-        if (
-          typeof hookProvidedResult !== 'object' ||
-          hookProvidedResult === null ||
-          typeof hookProvidedResult.data !== 'object' ||
-          hookProvidedResult.data === null
-        ) {
-          return
-        }
-        const serverActionResponse = hookProvidedResult.data
-        if (
-          serverActionResponse.success === true &&
-          serverActionResponse.data
-        ) {
-          const updatedRecord =
-            serverActionResponse.data as CandidateWorkExperienceInternal
-          if (
-            typeof updatedRecord === 'object' &&
-            updatedRecord !== null &&
-            'id' in updatedRecord
-          ) {
-            setExperiences((prev) =>
-              prev.map((exp) =>
-                exp.id === updatedRecord.id ? updatedRecord : exp
-              )
-            )
-            closeDialog()
-          }
-        }
-      },
-      onError: (hookErrorPayload) => {
+      } else {
         console.error(
-          'Update Action: onError - Hook-level error:',
-          hookErrorPayload.error
+          'Create Experience: Action reported failure or returned an invalid structure from the server action.',
+          hookProvidedResult
         )
-      },
-    }
-  )
+      }
+    },
+    onError: (response) => {
+      const error = response.error
+      console.error('Create Experience Hook Error:', response)
+      if (error?.serverError) console.error('Server Error:', error.serverError)
+      else if (error?.validationErrors) console.error('Validation Errors:', error.validationErrors)
+      else console.error('Unknown Error:', response)
+    },
+    onSettled: () => {
+      submissionSourceRef.current = null
+    },
+  })
 
-  const { execute: deleteExperience, status: deleteStatus } = useAction(
-    deleteCandidateWorkExperienceAction,
-    {
-      onSuccess: (result: {
-        data?:
-          | { success: boolean; error?: { code: string; message: string } }
-          | undefined
-        input: { id: string }
-      }) => {
-        let idToDelete: string | null = null
-        if (result.input && typeof result.input.id === 'string') {
-          idToDelete = result.input.id
+  const { execute: updateExperience, status: updateStatus } = useAction(updateCandidateWorkExperienceAction, {
+    onSuccess: (hookProvidedResult) => {
+      if (
+        typeof hookProvidedResult !== 'object' ||
+        hookProvidedResult === null ||
+        typeof hookProvidedResult.data !== 'object' ||
+        hookProvidedResult.data === null
+      ) {
+        return
+      }
+      const serverActionResponse = hookProvidedResult.data
+      if (serverActionResponse.success === true && serverActionResponse.data) {
+        const updatedRecord = serverActionResponse.data as CandidateWorkExperienceInternal
+        if (typeof updatedRecord === 'object' && updatedRecord !== null && 'id' in updatedRecord) {
+          setExperiences((prev) =>
+            sortWorkExperiences(prev.map((exp) => (exp.id === updatedRecord.id ? updatedRecord : exp)))
+          )
+          closeDialog()
         }
-        const serverResponse = result.data
-        if (serverResponse && serverResponse.success === true) {
-          if (idToDelete) {
-            setExperiences((prev) =>
-              prev.filter((exp) => exp.id !== idToDelete)
-            )
-          }
+      }
+    },
+    onError: (hookErrorPayload) => {
+      console.error('Update Action: onError - Hook-level error:', hookErrorPayload.error)
+    },
+  })
+
+  const { execute: deleteExperience, status: deleteStatus } = useAction(deleteCandidateWorkExperienceAction, {
+    onSuccess: (result: {
+      data?: { success: boolean; error?: { code: string; message: string } } | undefined
+      input: { id: string }
+    }) => {
+      let idToDelete: string | null = null
+      if (result.input && typeof result.input.id === 'string') {
+        idToDelete = result.input.id
+      }
+      const serverResponse = result.data
+      if (serverResponse && serverResponse.success === true) {
+        if (idToDelete) {
+          setExperiences((prev) => prev.filter((exp) => exp.id !== idToDelete))
         }
-        setExperienceToDeleteId(null)
-      },
-      onError: (hookErrorPayload) => {
-        console.error(
-          'Delete Action: onError - Hook-level error:',
-          hookErrorPayload.error
-        )
-        setExperienceToDeleteId(null)
-      },
-    }
-  )
+      }
+      setExperienceToDeleteId(null)
+    },
+    onError: (hookErrorPayload) => {
+      console.error('Delete Action: onError - Hook-level error:', hookErrorPayload.error)
+      setExperienceToDeleteId(null)
+    },
+  })
 
   const isSubmittingCombined =
-    createStatus === 'executing' ||
-    updateStatus === 'executing' ||
-    deleteStatus === 'executing'
+    createStatus === 'executing' || updateStatus === 'executing' || deleteStatus === 'executing'
 
   const displayDescription = (description: Json | null | undefined): string => {
     if (!description) return ''
     if (typeof description === 'string') return description
-    if (
-      typeof description === 'object' &&
-      description !== null &&
-      !Array.isArray(description)
-    ) {
+    if (typeof description === 'object' && description !== null && !Array.isArray(description)) {
       if ('text' in description && typeof description.text === 'string') {
         return description.text
       }
@@ -337,18 +284,12 @@ export function OnboardingWorkExperienceForm({
       company_name: values.companyName ?? '',
       location: values.location || null,
       start_date: values.startDate ?? '',
-      end_date:
-        values.isCurrent || values.endDate?.toUpperCase() === 'PRESENT'
-          ? null
-          : values.endDate || null,
+      end_date: values.isCurrent || values.endDate?.toUpperCase() === 'PRESENT' ? null : values.endDate || null,
       is_current: values.isCurrent ?? false,
       description: values.description || null,
     }
 
-    if (
-      typeof payloadForAction.description === 'string' &&
-      payloadForAction.description.trim() !== ''
-    ) {
+    if (typeof payloadForAction.description === 'string' && payloadForAction.description.trim() !== '') {
       try {
         JSON.parse(payloadForAction.description)
       } catch {
@@ -362,8 +303,7 @@ export function OnboardingWorkExperienceForm({
 
     if (editingExperience && values.id) {
       const updatePayload = { ...payloadForAction, id: values.id }
-      const validation =
-        updateCandidateWorkExperienceSchema.safeParse(updatePayload)
+      const validation = updateCandidateWorkExperienceSchema.safeParse(updatePayload)
       if (!validation.success) {
         validation.error.issues.forEach((issue) => {
           form.setError(issue.path[0] as keyof WorkExperienceFormValues, {
@@ -374,8 +314,7 @@ export function OnboardingWorkExperienceForm({
       }
       updateExperience(validation.data)
     } else {
-      const validation =
-        createCandidateWorkExperienceSchema.safeParse(payloadForAction)
+      const validation = createCandidateWorkExperienceSchema.safeParse(payloadForAction)
       if (!validation.success) {
         validation.error.issues.forEach((issue) => {
           form.setError(issue.path[0] as keyof WorkExperienceFormValues, {
@@ -431,11 +370,7 @@ export function OnboardingWorkExperienceForm({
           <FormItem>
             <FormLabel>Job Title</FormLabel>
             <FormControl>
-              <Input
-                placeholder='Software Engineer'
-                {...field}
-                disabled={isSubmittingCombined}
-              />
+              <Input placeholder='Software Engineer' {...field} disabled={isSubmittingCombined} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -448,11 +383,7 @@ export function OnboardingWorkExperienceForm({
           <FormItem>
             <FormLabel>Company Name</FormLabel>
             <FormControl>
-              <Input
-                placeholder='Acme Corp'
-                {...field}
-                disabled={isSubmittingCombined}
-              />
+              <Input placeholder='Acme Corp' {...field} disabled={isSubmittingCombined} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -465,12 +396,7 @@ export function OnboardingWorkExperienceForm({
           <FormItem>
             <FormLabel>Location (Optional)</FormLabel>
             <FormControl>
-              <Input
-                placeholder='City, Country'
-                {...field}
-                value={field.value ?? ''}
-                disabled={isSubmittingCombined}
-              />
+              <Input placeholder='City, Country' {...field} value={field.value ?? ''} disabled={isSubmittingCombined} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -500,11 +426,7 @@ export function OnboardingWorkExperienceForm({
             <FormItem className='flex flex-col'>
               <FormLabel>End Date (Optional)</FormLabel>
               <DatePicker
-                selected={
-                  field.value?.toUpperCase() === 'PRESENT'
-                    ? undefined
-                    : parseDateString(field.value)
-                }
+                selected={field.value?.toUpperCase() === 'PRESENT' ? undefined : parseDateString(field.value)}
                 onSelect={(date) => field.onChange(formatDateToYYYYMMDD(date))}
                 placeholder={isCurrentValue ? 'Present' : 'Select end date'}
                 disabled={isSubmittingCombined || isCurrentValue}
@@ -527,9 +449,7 @@ export function OnboardingWorkExperienceForm({
                 id='isCurrentExperience'
               />
             </FormControl>
-            <FormLabel
-              htmlFor='isCurrentExperience'
-              className='font-normal text-sm'>
+            <FormLabel htmlFor='isCurrentExperience' className='font-normal text-sm'>
               I am currently working in this role
             </FormLabel>
           </FormItem>
@@ -564,22 +484,18 @@ export function OnboardingWorkExperienceForm({
           <CardHeader>
             <CardTitle>Add Your Work Experience</CardTitle>
             <CardDescription>
-              Please provide details about your work experience. You can add
-              more entries later.
+              Please provide details about your work experience. You can add more entries later.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleFormSubmit)}
-                className='space-y-4'>
+              <form onSubmit={form.handleSubmit(handleFormSubmit)} className='space-y-4'>
                 <ExperienceFormFields />
                 <div className='flex justify-end pt-4'>
                   <Button type='submit' disabled={isSubmittingCombined}>
-                    {createStatus === 'executing' &&
-                      submissionSourceRef.current === 'initial_save_button' && (
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      )}
+                    {createStatus === 'executing' && submissionSourceRef.current === 'initial_save_button' && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
                     Save Experience
                   </Button>
                 </div>
@@ -624,12 +540,9 @@ export function OnboardingWorkExperienceForm({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete this work experience entry.
+                            This action cannot be undone. This will permanently delete this work experience entry.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -642,9 +555,7 @@ export function OnboardingWorkExperienceForm({
                             onClick={confirmDeleteExperience}
                             disabled={deleteStatus === 'executing'}
                             className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-                            {deleteStatus === 'executing' ? (
-                              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                            ) : null}
+                            {deleteStatus === 'executing' ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : null}
                             Delete
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -663,20 +574,10 @@ export function OnboardingWorkExperienceForm({
                   )}
                   <div className='flex items-center gap-1'>
                     <CalendarIcon className='h-3.5 w-3.5' />
-                    <span>
-                      {displayDateRange(
-                        exp.start_date,
-                        exp.end_date,
-                        exp.is_current
-                      )}
-                    </span>
+                    <span>{displayDateRange(exp.start_date, exp.end_date, exp.is_current)}</span>
                   </div>
                 </div>
-                {exp.description && (
-                  <p className='mt-2 text-sm'>
-                    {displayDescription(exp.description)}
-                  </p>
-                )}
+                {exp.description && <p className='mt-2 text-sm'>{displayDescription(exp.description)}</p>}
               </CardContent>
             </Card>
           ))}
@@ -684,26 +585,19 @@ export function OnboardingWorkExperienceForm({
       )}
 
       <div className='flex justify-between items-center pt-4'>
-        <Button
-          variant='outline'
-          onClick={handlePrevious}
-          disabled={isSubmittingCombined}>
+        <Button variant='outline' onClick={handlePrevious} disabled={isSubmittingCombined}>
           Previous
         </Button>
         <div className='flex items-center space-x-2'>
           {experiences.length > 0 && (
-            <Button
-              variant='outline'
-              onClick={openAddDialog}
-              disabled={isSubmittingCombined}>
+            <Button variant='outline' onClick={openAddDialog} disabled={isSubmittingCombined}>
               <Plus className='h-4 w-4 mr-2' /> Add Another
             </Button>
           )}
           <Button onClick={handleContinue} disabled={isSubmittingCombined}>
-            {createStatus === 'executing' &&
-              submissionSourceRef.current === 'continue_implicit_save' && (
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-              )}
+            {createStatus === 'executing' && submissionSourceRef.current === 'continue_implicit_save' && (
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+            )}
             Continue
           </Button>
         </div>
@@ -712,32 +606,20 @@ export function OnboardingWorkExperienceForm({
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className='sm:max-w-[550px]'>
           <DialogHeader>
-            <DialogTitle>
-              {editingExperience ? 'Edit Experience' : 'Add Experience'}
-            </DialogTitle>
+            <DialogTitle>{editingExperience ? 'Edit Experience' : 'Add Experience'}</DialogTitle>
             <DialogDescription>
-              {editingExperience
-                ? 'Update the details for this role.'
-                : 'Add a new role to your professional history.'}
+              {editingExperience ? 'Update the details for this role.' : 'Add a new role to your professional history.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleFormSubmit)}
-              className='space-y-4 py-4'>
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className='space-y-4 py-4'>
               <ExperienceFormFields />
               <DialogFooter className='pt-4'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={closeDialog}
-                  disabled={isSubmittingCombined}>
+                <Button type='button' variant='outline' onClick={closeDialog} disabled={isSubmittingCombined}>
                   Cancel
                 </Button>
                 <Button type='submit' disabled={isSubmittingCombined}>
-                  {isSubmittingCombined && (
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  )}
+                  {isSubmittingCombined && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
                   {editingExperience ? 'Update Experience' : 'Add Experience'}
                 </Button>
               </DialogFooter>

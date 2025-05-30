@@ -5,65 +5,38 @@ type Client = SupabaseClient<Database>
 export type CandidateEducation = Tables<'candidate_education'>
 
 export async function getCandidateProfile(supabase: Client, userId: string) {
-  return supabase
-    .from('candidate_profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-    .throwOnError()
-}
-
-type ApplicationFull =
-  Database['public']['Tables']['candidate_applications']['Row']
-
-type PaginatedApplicationsResult = {
-  data: ApplicationFull[] | null
-  count: number | null
-  error: PostgrestError | Error | null
+  return supabase.from('candidate_profiles').select('*').eq('id', userId).single().throwOnError()
 }
 
 export async function getCandidateApplicationsPaginated(
-  supabase: Client,
-  userId: string,
-  page: number = 1,
-  pageSize: number = 10
-): Promise<PaginatedApplicationsResult> {
-  const rangeFrom = (page - 1) * pageSize
-  const rangeTo = rangeFrom + pageSize - 1
+  client: SupabaseClient<Database>,
+  candidateId: string,
+  page: number,
+  pageSize: number,
+  searchCompanyName?: string,
+  status?: Database['public']['Enums']['candidate_application_status']
+) {
+  const offset = (page - 1) * pageSize
 
-  const { data, error, count } = await supabase
+  let query = client
     .from('candidate_applications')
-    .select(
-      `
-      id,
-      candidate_id,
-      job_title,
-      company_name,
-      company_logo_url,
-      status,
-      application_date,
-      next_step_description,
-      next_step_date,
-      source,
-      job_id,
-      application_url,
-      contact_person,
-      contact_email,
-      salary_range,
-      created_at,
-      updated_at
-    `,
-      { count: 'exact' }
-    )
-    .eq('candidate_id', userId)
+    .select('*', { count: 'exact' })
+    .eq('candidate_id', candidateId)
     .order('application_date', { ascending: false })
-    .range(rangeFrom, rangeTo)
 
-  if (error) {
-    console.error('Error fetching paginated applications: ', error)
-    return { data: null, count: null, error: error }
+  if (searchCompanyName && searchCompanyName.trim() !== '') {
+    query = query.ilike('company_name', `%${searchCompanyName.trim()}%`)
   }
-  return { data, count, error: null }
+
+  if (status) {
+    query = query.eq('status', status)
+  }
+
+  query = query.range(offset, offset + pageSize - 1)
+
+  const { data, error, count } = await query
+
+  return { data, error, count }
 }
 
 export async function getCandidateEducation(
@@ -77,13 +50,11 @@ export async function getCandidateEducation(
     .from('candidate_education')
     .select('*')
     .eq('candidate_id', candidateId)
+    .order('end_date', { ascending: false, nullsFirst: true })
     .order('start_date', { ascending: false })
 
   if (error) {
-    console.error(
-      `Error fetching education for candidate ${candidateId}:`,
-      error
-    )
+    console.error(`Error fetching education for candidate ${candidateId}:`, error)
   }
 
   return { data, error }
@@ -102,13 +73,11 @@ export async function getCandidateWorkExperiences(
     .from('candidate_work_experiences')
     .select('*')
     .eq('candidate_id', candidateId)
+    .order('end_date', { ascending: false, nullsFirst: true })
     .order('start_date', { ascending: false })
 
   if (error) {
-    console.error(
-      `Error fetching work experiences for candidate ${candidateId}:`,
-      error
-    )
+    console.error(`Error fetching work experiences for candidate ${candidateId}:`, error)
   }
   return { data, error }
 }
@@ -129,20 +98,14 @@ export async function getCandidateWorkExperienceById(
     .single()
 
   if (error) {
-    console.error(
-      `Error fetching work experience ${workExperienceId} for candidate ${candidateId}:`,
-      error
-    )
+    console.error(`Error fetching work experience ${workExperienceId} for candidate ${candidateId}:`, error)
   }
   return { data, error }
 }
 
 export type CandidateFile = Tables<'candidate_files'>
 
-export async function getDefaultCandidateResume(
-  supabase: Client,
-  userId: string
-): Promise<CandidateFile | null> {
+export async function getDefaultCandidateResume(supabase: Client, userId: string): Promise<CandidateFile | null> {
   console.log(`[Query] Fetching default resume for user: ${userId}`)
   const { data, error } = await supabase
     .from('candidate_files')
@@ -153,10 +116,7 @@ export async function getDefaultCandidateResume(
     .maybeSingle()
 
   if (error) {
-    console.error(
-      `[Query] Error fetching default resume for user ${userId}:`,
-      error
-    )
+    console.error(`[Query] Error fetching default resume for user ${userId}:`, error)
     return null
   }
 
@@ -173,10 +133,7 @@ export async function getCandidateEducationByCandidateId(
   supabase: Client,
   candidateId: string
 ): Promise<CandidateEducation[]> {
-  const { data, error } = await supabase
-    .from('candidate_education')
-    .select('*')
-    .eq('candidate_id', candidateId)
+  const { data, error } = await supabase.from('candidate_education').select('*').eq('candidate_id', candidateId)
 
   if (error) {
     console.error('Error fetching candidate education records:', error)
@@ -189,10 +146,7 @@ export async function getCandidateWorkExperienceByCandidateId(
   supabase: Client,
   candidateId: string
 ): Promise<CandidateWorkExperience[]> {
-  const { data, error } = await supabase
-    .from('candidate_work_experiences')
-    .select('*')
-    .eq('candidate_id', candidateId)
+  const { data, error } = await supabase.from('candidate_work_experiences').select('*').eq('candidate_id', candidateId)
 
   if (error) {
     console.error('Error fetching candidate work experience records:', error)
@@ -201,18 +155,37 @@ export async function getCandidateWorkExperienceByCandidateId(
   return data || []
 }
 
-export async function getCandidateFilesByCandidateId(
-  supabase: Client,
-  candidateId: string
-): Promise<CandidateFile[]> {
-  const { data, error } = await supabase
-    .from('candidate_files')
-    .select('*')
-    .eq('candidate_id', candidateId)
+export async function getCandidateFilesByCandidateId(supabase: Client, candidateId: string): Promise<CandidateFile[]> {
+  const { data, error } = await supabase.from('candidate_files').select('*').eq('candidate_id', candidateId)
 
   if (error) {
     console.error('Error fetching candidate files:', error)
     return []
   }
   return data || []
+}
+
+export type CandidateContactInfo = Pick<
+  Tables<'candidate_profiles'>,
+  'phone_number' | 'location' | 'personal_website_url' | 'linkedin_url' | 'github_url' | 'twitter_url' | 'bio'
+>
+
+export async function getCandidateContactInfo(
+  supabase: Client,
+  userId: string
+): Promise<{
+  data: CandidateContactInfo | null
+  error: PostgrestError | null
+}> {
+  const { data, error } = await supabase
+    .from('candidate_profiles')
+    .select('phone_number, location, personal_website_url, linkedin_url, github_url, twitter_url, bio')
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    console.error(`Error fetching contact info for candidate ${userId}:`, error)
+  }
+
+  return { data, error }
 }
