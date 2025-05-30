@@ -1,40 +1,78 @@
 import { CandidateProfile } from '@/components/candidate/candidate-profile'
-import { HydrateClient, prefetch, trpc } from '@/trpc/server'
+import { HydrateClient, getServerTRPCCaller } from '@/trpc/server'
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: 'Candidate Profile | Seeds',
 }
 
-function CandidateProfileLoading() {
-  return <div className='p-6 text-center'>Loading profile sections...</div>
+type ApplicationStatus =
+  | 'applied'
+  | 'in-review'
+  | 'interview'
+  | 'rejected'
+  | 'offer'
+
+interface CandidateProfilePageProps {
+  searchParams: {
+    page?: string
+    pageSize?: string
+    tab?: string
+    search?: string
+    status?: string
+  }
 }
 
-export default async function CandidateProfilePage() {
-  try {
-    await Promise.all([
-      prefetch(trpc.candidate.getProfile.queryOptions(undefined)),
-      prefetch(
-        trpc.candidate.listApplications.queryOptions({
-          page: 1,
-          pageSize: 10,
-        })
-      ),
-      prefetch(trpc.candidate.listWorkExperiences.queryOptions(undefined)),
-      prefetch(trpc.candidate.listEducation.queryOptions(undefined)),
-      prefetch(trpc.candidate.listSkills.queryOptions(undefined)),
-      prefetch(trpc.candidate.listFiles.queryOptions(undefined)),
-    ])
-  } catch (error) {
-    console.error('Error prefetching all profile data on server:', error)
+export default async function CandidateProfilePage({
+  searchParams,
+}: CandidateProfilePageProps) {
+  const page = searchParams?.page ? Number.parseInt(searchParams.page, 10) : 1
+  const pageSize = searchParams?.pageSize
+    ? Number.parseInt(searchParams.pageSize, 10)
+    : 10
+  const search = searchParams?.search || undefined
+  const statusParam = searchParams?.status
+
+  let status: ApplicationStatus | undefined = undefined
+  if (
+    statusParam &&
+    ['applied', 'in-review', 'interview', 'rejected', 'offer'].includes(
+      statusParam
+    )
+  ) {
+    status = statusParam as ApplicationStatus
   }
+
+  const caller = await getServerTRPCCaller()
+
+  const [
+    applicationsData,
+    workExperiencesData,
+    educationData,
+    skillsData,
+    contactData,
+  ] = await Promise.all([
+    caller.candidate.listApplications({
+      page: page > 0 ? page : 1,
+      pageSize: pageSize > 0 ? pageSize : 10,
+      search: search,
+      status: status,
+    }),
+    caller.candidate.listWorkExperiences(),
+    caller.candidate.listEducation(),
+    caller.candidate.listSkills(),
+    caller.candidate.getContactInfo().catch(() => null),
+  ])
 
   return (
     <HydrateClient>
-      <Suspense fallback={<CandidateProfileLoading />}>
-        <CandidateProfile />
-      </Suspense>
+      <CandidateProfile
+        initialApplicationsData={applicationsData}
+        workExperiencesData={workExperiencesData}
+        educationData={educationData}
+        skillsData={skillsData}
+        contactData={contactData}
+      />
     </HydrateClient>
   )
 }

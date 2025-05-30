@@ -1,5 +1,5 @@
 import { OnboardingStepClientWrapper } from '@/components/candidate/onboarding-step-client-wrapper'
-import React from 'react'
+import type React from 'react'
 
 const steps = [
   {

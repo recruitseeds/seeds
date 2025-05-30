@@ -1,34 +1,19 @@
 'use client'
 
 import {
-  handleCandidateFileUploadsAction,
   type CandidateFileUploadsActionResult,
+  handleCandidateFileUploadsAction,
 } from '@/actions/create-file-uploads-action'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { CandidateUploadedFileMetadata } from '@/supabase/mutations'
-import {
-  FileIcon,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  Loader2,
-  Upload,
-  X,
-} from 'lucide-react'
+import { FileIcon, FileImage, FileSpreadsheet, FileText, Loader2, Upload, X } from 'lucide-react'
 import { useAction } from 'next-safe-action/hooks'
 import { useRouter } from 'next/navigation'
 import type React from 'react'
 import { useCallback, useId, useState } from 'react'
-import { toast } from 'sonner'
 
 interface ClientFileData {
   file: File
@@ -44,9 +29,7 @@ interface OnboardingFilesFormProps {
   initialResume?: CandidateUploadedFileMetadata | null
 }
 
-export function OnboardingFilesForm({
-  initialResume,
-}: OnboardingFilesFormProps) {
+export function OnboardingFilesForm({ initialResume }: OnboardingFilesFormProps) {
   const router = useRouter()
   const [coverLetter, setCoverLetter] = useState<ClientFileData | null>(null)
   const [transcript, setTranscript] = useState<ClientFileData | null>(null)
@@ -70,106 +53,40 @@ export function OnboardingFilesForm({
     return null
   })
 
-  const { execute: uploadFilesAction, status } = useAction(
-    handleCandidateFileUploadsAction,
-    {
-      onExecute: () => {
-        toast.loading('Uploading files...')
-      },
-      onSuccess: (result) => {
-        toast.dismiss()
-        const serverResponse = result.data as
-          | CandidateFileUploadsActionResult
-          | undefined
+  const { execute: uploadFilesAction, status } = useAction(handleCandidateFileUploadsAction, {
+    onSuccess: (result) => {
+      const serverResponse = result.data as CandidateFileUploadsActionResult | undefined
 
-        if (!serverResponse) {
-          console.error(
-            '[OnboardingFilesForm] onSuccess: Server response wrapper is undefined.',
-            result
-          )
-          toast.error('An unexpected error occurred. (Code: S0)')
-          return
-        }
+      if (!serverResponse) {
+        console.error('[OnboardingFilesForm] onSuccess: Server response wrapper is undefined.', result)
+        return
+      }
 
-        if (serverResponse.success && serverResponse.results) {
-          const successfulUploads = serverResponse.results.length
-          toast.success(`${successfulUploads} file(s) processed successfully!`)
-          const resumeResult = serverResponse.results.find(
-            (r) => r.originalClientKey === 'resume'
-          )
-          if (resumeResult?.parsed_resume_data) {
-            console.log('Parsed Resume Data:', resumeResult.parsed_resume_data)
-            toast.info('Resume parsed successfully.')
-          } else if (
-            resumeResult &&
-            resumeResult.originalClientKey === 'resume' &&
-            !resumeResult.parsed_resume_data
-          ) {
-            toast.warning(
-              `Resume uploaded, but AI parsing may have encountered an issue (no parsed data returned).`
-            )
-          }
-          router.push('/candidate-onboarding/complete')
-        } else if (!serverResponse.success && serverResponse.error) {
-          let errorMsg = `File processing failed: ${serverResponse.error.message}`
-          if (
-            serverResponse.error.fieldErrors &&
-            serverResponse.error.fieldErrors.length > 0
-          ) {
-            errorMsg += serverResponse.error.fieldErrors
-              .map((fe) => `\n- ${fe.fileKeyOrName}: ${fe.message}`)
-              .join('')
-          }
-          toast.error(errorMsg, {
-            duration: 10000,
-            style: { whiteSpace: 'pre-line' },
-          })
-          console.error(
-            'File processing error from action:',
-            serverResponse.error
-          )
-        } else if (
-          serverResponse.success &&
-          (!serverResponse.results || serverResponse.results.length === 0)
-        ) {
-          if (initialResume && resume?.isExisting) {
-            toast.info(
-              'Using existing resume. No other new files selected. Proceeding.'
-            )
-          } else {
-            toast.info('No new files were processed.')
-          }
-          router.push('/candidate-onboarding/complete')
-        } else {
-          toast.error('An unexpected issue occurred during file processing.')
-          console.error('Unexpected file processing result:', serverResponse)
+      if (serverResponse.success && serverResponse.results) {
+        const resumeResult = serverResponse.results.find((r) => r.originalClientKey === 'resume')
+        if (resumeResult?.parsed_resume_data) {
+          console.log('Parsed Resume Data:', resumeResult.parsed_resume_data)
         }
-      },
-      onError: (errorHookPayload) => {
-        toast.dismiss()
-        console.error(
-          '[OnboardingFilesForm] File upload action hook error:',
-          errorHookPayload
-        )
-        const message =
-          errorHookPayload.error?.serverError ||
-          (typeof errorHookPayload.error?.validationErrors === 'string'
-            ? errorHookPayload.error?.validationErrors
-            : JSON.stringify(errorHookPayload.error?.validationErrors)) ||
-          'An unknown error occurred during upload.'
-        toast.error(`Upload error: ${message}`)
-      },
-    }
-  )
+        router.push('/candidate-onboarding/complete')
+      } else if (!serverResponse.success && serverResponse.error) {
+        console.error('File processing error from action:', serverResponse.error)
+      } else if (serverResponse.success && (!serverResponse.results || serverResponse.results.length === 0)) {
+        router.push('/candidate-onboarding/complete')
+      } else {
+        console.error('Unexpected file processing result:', serverResponse)
+      }
+    },
+    onError: (errorHookPayload) => {
+      console.error('[OnboardingFilesForm] File upload action hook error:', errorHookPayload)
+    },
+  })
 
   const isSubmitting = status === 'executing'
 
-  const formatFileSize = (
-    bytes: number | string | null | undefined
-  ): string => {
+  const formatFileSize = (bytes: number | string | null | undefined): string => {
     const numericBytes = Number(bytes || 0)
 
-    if (isNaN(numericBytes) || numericBytes <= 0) {
+    if (Number.isNaN(numericBytes) || numericBytes <= 0) {
       return '0 Bytes'
     }
 
@@ -180,14 +97,12 @@ export function OnboardingFilesForm({
     const i = Math.floor(Math.log(numericBytes) / Math.log(k))
     const index = Math.min(i, sizes.length - 1)
 
-    const sizeValue = Number.parseFloat(
-      (numericBytes / Math.pow(k, index)).toFixed(2)
-    )
-    if (isNaN(sizeValue)) {
+    const sizeValue = Number.parseFloat((numericBytes / k ** index).toFixed(2))
+    if (Number.isNaN(sizeValue)) {
       return 'N/A'
     }
 
-    return sizeValue + ' ' + sizes[index]
+    return `${sizeValue}${sizes[index]}`
   }
 
   const handleFileSelection = useCallback(
@@ -209,31 +124,24 @@ export function OnboardingFilesForm({
     []
   )
 
-  const handleMultipleFileSelection = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files
-      if (files) {
-        const newFiles: ClientFileData[] = Array.from(files).map((file) => ({
-          file,
-          previewUrl: URL.createObjectURL(file),
-          id: crypto.randomUUID(),
-          isExisting: false,
-        }))
-        setOtherFiles((prevFiles) => [...prevFiles, ...newFiles])
-      }
-      event.target.value = ''
-    },
-    []
-  )
+  const handleMultipleFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      const newFiles: ClientFileData[] = Array.from(files).map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        id: crypto.randomUUID(),
+        isExisting: false,
+      }))
+      setOtherFiles((prevFiles) => [...prevFiles, ...newFiles])
+    }
+    event.target.value = ''
+  }, [])
 
   const removeFile = useCallback(
-    (
-      type: 'resume' | 'coverLetter' | 'transcript' | 'other',
-      fileId?: string
-    ) => {
+    (type: 'resume' | 'coverLetter' | 'transcript' | 'other', fileId?: string) => {
       if (type === 'resume' && resume) {
-        if (!resume.isExisting && resume.previewUrl)
-          URL.revokeObjectURL(resume.previewUrl)
+        if (!resume.isExisting && resume.previewUrl) URL.revokeObjectURL(resume.previewUrl)
         setResume(null)
       } else if (type === 'coverLetter' && coverLetter) {
         if (coverLetter.previewUrl) URL.revokeObjectURL(coverLetter.previewUrl)
@@ -245,9 +153,7 @@ export function OnboardingFilesForm({
         const fileToRemove = otherFiles.find((f) => f.id === fileId)
         if (fileToRemove && !fileToRemove.isExisting && fileToRemove.previewUrl)
           URL.revokeObjectURL(fileToRemove.previewUrl)
-        setOtherFiles((currentOtherFiles) =>
-          currentOtherFiles.filter((f) => f.id !== fileId)
-        )
+        setOtherFiles((currentOtherFiles) => currentOtherFiles.filter((f) => f.id !== fileId))
       }
     },
     [resume, coverLetter, transcript, otherFiles]
@@ -258,9 +164,11 @@ export function OnboardingFilesForm({
     const extension = fileName.split('.').pop()?.toLowerCase()
     if (['pdf', 'doc', 'docx'].includes(extension || '')) {
       return <FileText className='size-8' />
-    } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
+    }
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
       return <FileImage className='size-8' />
-    } else if (['xls', 'xlsx', 'csv'].includes(extension || '')) {
+    }
+    if (['xls', 'xlsx', 'csv'].includes(extension || '')) {
       return <FileSpreadsheet className='size-6' />
     }
     return <FileIcon className='size-8' />
@@ -274,10 +182,7 @@ export function OnboardingFilesForm({
       formData.append('resume', resume.file, resume.file.name)
       filesAddedToFormData++
     } else if (resume?.isExisting) {
-      console.log(
-        'Skipping resume upload, using existing one:',
-        resume.existingFileName
-      )
+      console.log('Skipping resume upload, using existing one:', resume.existingFileName)
     }
 
     if (coverLetter?.file && !coverLetter.isExisting) {
@@ -288,27 +193,14 @@ export function OnboardingFilesForm({
       formData.append('transcript', transcript.file, transcript.file.name)
       filesAddedToFormData++
     }
-    otherFiles.forEach((fileData) => {
+    for (const fileData of otherFiles) {
       if (!fileData.isExisting) {
         formData.append('otherFiles', fileData.file, fileData.file.name)
         filesAddedToFormData++
       }
-    })
+    }
 
     if (filesAddedToFormData === 0) {
-      if (initialResume && !resume) {
-        toast.info('No new files selected. Proceeding to the next step.')
-      } else if (
-        initialResume &&
-        resume?.isExisting &&
-        filesAddedToFormData === 0
-      ) {
-        toast.info(
-          'Using existing resume. No other new files selected. Proceeding.'
-        )
-      } else if (!initialResume && filesAddedToFormData === 0) {
-        toast.info('No files selected. Proceeding to the next step.')
-      }
       router.push('/candidate-onboarding/complete')
       return
     }
@@ -339,33 +231,17 @@ export function OnboardingFilesForm({
         {fileData ? (
           <div className='flex items-start p-4 border rounded-lg'>
             <div className='mr-4'>
-              {getFileIcon(
-                fileData.isExisting
-                  ? fileData.existingFileName
-                  : fileData.file.name
-              )}
+              {getFileIcon(fileData.isExisting ? fileData.existingFileName : fileData.file.name)}
             </div>
             <div className='flex-1 min-w-0'>
               <p className='font-medium truncate'>
-                {fileData.isExisting
-                  ? fileData.existingFileName
-                  : fileData.file.name}
+                {fileData.isExisting ? fileData.existingFileName : fileData.file.name}
               </p>
-              {/* Correctly call formatFileSize for both existing and new files */}
               <p className='text-sm text-muted-foreground'>
-                {formatFileSize(
-                  fileData.isExisting
-                    ? fileData.existingFileSize
-                    : fileData.file.size
-                )}
+                {formatFileSize(fileData.isExisting ? fileData.existingFileSize : fileData.file.size)}
               </p>
             </div>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='ml-2'
-              onClick={onRemove}
-              disabled={isSubmitting}>
+            <Button variant='ghost' size='icon' className='ml-2' onClick={onRemove} disabled={isSubmitting}>
               <X className='h-4 w-4' />
               <span className='sr-only'>Remove {title}</span>
             </Button>
@@ -375,15 +251,8 @@ export function OnboardingFilesForm({
             <DefaultIcon className='h-10 w-10 text-muted-foreground mb-2' />
             <Label htmlFor={inputId} className='cursor-pointer text-center'>
               <div className='flex flex-col items-center'>
-                <p className='text-sm text-muted-foreground mb-1'>
-                  Drag & drop or click to upload
-                </p>
-                <Button
-                  size='sm'
-                  variant='secondary'
-                  type='button'
-                  className='mt-2'
-                  asChild>
+                <p className='text-sm text-muted-foreground mb-1'>Drag & drop or click to upload</p>
+                <Button size='sm' variant='secondary' type='button' className='mt-2' asChild>
                   <span>
                     <Upload className='h-4 w-4 mr-2' /> Select File
                   </span>
@@ -409,9 +278,7 @@ export function OnboardingFilesForm({
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         {renderFileUploadCard(
           'Resume',
-          resume?.isExisting
-            ? 'Previously uploaded resume. You can replace it.'
-            : 'Upload your most recent resume',
+          resume?.isExisting ? 'Previously uploaded resume. You can replace it.' : 'Upload your most recent resume',
           resume,
           (e) => handleFileSelection(e, setResume),
           () => removeFile('resume'),
@@ -443,29 +310,18 @@ export function OnboardingFilesForm({
         <Card flat>
           <CardHeader>
             <CardTitle>Other Documents</CardTitle>
-            <CardDescription>
-              Upload any additional documents (optional)
-            </CardDescription>
+            <CardDescription>Upload any additional documents (optional)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
               {otherFiles.length > 0 && (
                 <div className='space-y-2'>
                   {otherFiles.map((fileData) => (
-                    <div
-                      key={fileData.id}
-                      className='flex items-start p-4 border rounded-lg'>
-                      <div className='mr-4'>
-                        {getFileIcon(fileData.file.name)}
-                      </div>
+                    <div key={fileData.id} className='flex items-start p-4 border rounded-lg'>
+                      <div className='mr-4'>{getFileIcon(fileData.file.name)}</div>
                       <div className='flex-1 min-w-0'>
-                        <p className='font-medium truncate'>
-                          {fileData.file.name}
-                        </p>
-                        {/* Display size for other files as well */}
-                        <p className='text-sm text-muted-foreground'>
-                          {formatFileSize(fileData.file.size)}
-                        </p>
+                        <p className='font-medium truncate'>{fileData.file.name}</p>
+                        <p className='text-sm text-muted-foreground'>{formatFileSize(fileData.file.size)}</p>
                       </div>
                       <Button
                         variant='ghost'
@@ -482,19 +338,10 @@ export function OnboardingFilesForm({
               )}
               <div className='flex flex-col items-center justify-center p-6 border border-dashed rounded-lg'>
                 <FileIcon className='h-10 w-10 text-muted-foreground mb-2' />
-                <Label
-                  htmlFor={`${formDomId}-other-files-upload`}
-                  className='cursor-pointer text-center'>
+                <Label htmlFor={`${formDomId}-other-files-upload`} className='cursor-pointer text-center'>
                   <div className='flex flex-col items-center'>
-                    <p className='text-sm text-muted-foreground mb-1'>
-                      Drag & drop or click to upload
-                    </p>
-                    <Button
-                      size='sm'
-                      variant='secondary'
-                      type='button'
-                      className='mt-2'
-                      asChild>
+                    <p className='text-sm text-muted-foreground mb-1'>Drag & drop or click to upload</p>
+                    <Button size='sm' variant='secondary' type='button' className='mt-2' asChild>
                       <span>
                         <Upload className='h-4 w-4 mr-2' /> Select Files
                       </span>
@@ -516,10 +363,7 @@ export function OnboardingFilesForm({
       </div>
 
       <div className='flex justify-between pt-4'>
-        <Button
-          variant='outline'
-          onClick={handlePrevious}
-          disabled={isSubmitting}>
+        <Button variant='outline' onClick={handlePrevious} disabled={isSubmitting}>
           Previous
         </Button>
         <Button onClick={handleContinue} disabled={isSubmitting}>

@@ -4,28 +4,7 @@ import { Button } from '@/components/ui/button'
 import { SheetDropdownMenu } from '@/components/ui/sheet'
 import { FileTextIcon, PlusIcon, UploadCloudIcon } from 'lucide-react'
 import { CreateCandidateApplicationForm } from './create-candidate-application-form'
-
-function ImportCandidateApplicationsForm({
-  onApplicationsImported,
-  onClose,
-}: {
-  onApplicationsImported?: () => void
-  onClose?: () => void
-}) {
-  return (
-    <div>
-      ImportCandidateApplicationsForm
-      <Button
-        onClick={() => {
-          onApplicationsImported?.()
-          onClose?.()
-        }}
-        className='mt-4'>
-        Simulate Import & Close
-      </Button>
-    </div>
-  )
-}
+import { ImportCandidateApplicationsContent } from './import-candidate-applications-form'
 
 interface CandidateApplicationActionsDropdownProps {
   onActionComplete?: () => void
@@ -64,11 +43,12 @@ export function CandidateApplicationActionsDropdown({
           leftSlot: <UploadCloudIcon className='mr-2 size-4' />,
           sheet: {
             sheetContent: ({ closeSheet }) => (
-              <ImportCandidateApplicationsForm
+              <ImportCandidateApplicationsContent
                 onApplicationsImported={onActionComplete}
                 onClose={closeSheet}
               />
             ),
+            width: 'sm:max-w-2xl',
           },
         },
       ]}

@@ -2,41 +2,47 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTRPC } from '@/trpc/client'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { useQuery } from '@tanstack/react-query'
 import { Briefcase, Calendar, Loader2, Pencil, Plus } from 'lucide-react'
 
-type WorkExperienceItemFromAPI =
-  RouterOutputs['candidate']['listWorkExperiences'][number]
+interface WorkExperiencePropsWithData {
+  initialExperiencesData: RouterOutputs['candidate']['listWorkExperiences']
+}
 
-export function WorkExperience() {
+type WorkExperiencePropsWithoutData = object
+
+type WorkExperienceProps = WorkExperiencePropsWithData | WorkExperiencePropsWithoutData
+
+function hasData(props: WorkExperienceProps): props is WorkExperiencePropsWithData {
+  return 'initialExperiencesData' in props
+}
+
+export function WorkExperience(props: WorkExperienceProps) {
   const trpc = useTRPC()
 
   const {
-    data: experiences,
+    data: experiencesData,
     isLoading,
     error,
-  } = useQuery(trpc.candidate.listWorkExperiences.queryOptions(undefined))
+  } = useQuery({
+    ...trpc.candidate.listWorkExperiences.queryOptions(undefined),
+    ...(hasData(props) ? { initialData: props.initialExperiencesData } : {}),
+  })
+
+  const iconVerticalAlignClass = 'top-[6px]'
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Work Experience</CardTitle>
-          <CardDescription>
-            Loading your professional journey...
-          </CardDescription>
+          <CardDescription>Your professional journey</CardDescription>
         </CardHeader>
-        <CardContent className='flex justify-center items-center h-40'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+        <CardContent className='flex justify-center items-center h-60'>
+          <Loader2 className='h-10 w-10 animate-spin text-muted-foreground' />
         </CardContent>
       </Card>
     )
@@ -47,17 +53,16 @@ export function WorkExperience() {
       <Card>
         <CardHeader>
           <CardTitle>Work Experience</CardTitle>
+          <CardDescription>Your professional journey</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className='text-red-600'>
-            Error loading work experiences: {error.message}
-          </p>
+          <p className='text-red-600'>Error loading work experience: {error.message}</p>
         </CardContent>
       </Card>
     )
   }
 
-  const iconVerticalAlignClass = 'top-[6px]'
+  const experiences = experiencesData || []
 
   return (
     <Card>
@@ -67,9 +72,7 @@ export function WorkExperience() {
           <CardDescription>Your professional journey</CardDescription>
         </div>
         <div className='flex items-center gap-2'>
-          <Button
-            size='sm'
-            onClick={() => alert('Add Experience UI to be implemented')}>
+          <Button size='sm' onClick={() => alert('Add Experience UI to be implemented')}>
             <Plus className='h-4 w-4 mr-1' /> Add Experience
           </Button>
           <Button
@@ -82,9 +85,9 @@ export function WorkExperience() {
         </div>
       </CardHeader>
       <CardContent>
-        {experiences && experiences.length > 0 ? (
+        {experiences.length > 0 ? (
           <div className='relative'>
-            <div className='absolute left-[7px] top-5 bottom-20 w-0.5 bg-border'></div>
+            <div className='absolute left-[7px] top-5 bottom-20 w-0.5 bg-border' />
             <div className='space-y-8'>
               {experiences.map((experience) => (
                 <div key={experience.id} className='relative pl-8'>
@@ -96,38 +99,38 @@ export function WorkExperience() {
                   <div>
                     <div className='flex flex-col md:flex-row md:items-start justify-between mb-2'>
                       <div className='md:flex-1'>
-                        <h3 className='font-medium text-lg'>
-                          {experience.job_title || 'N/A'}
-                        </h3>
+                        <h3 className='font-medium text-lg'>{experience.job_title || 'N/A'}</h3>
                         <p className='text-muted-foreground'>
-                          {experience.company_name || 'N/A'} •{' '}
-                          {experience.location || 'N/A'}
+                          {experience.company_name || 'N/A'} • {experience.location || 'N/A'}
                         </p>
                       </div>
                       <div className='flex items-center gap-1 text-sm text-muted-foreground mt-1 md:mt-0'>
                         <Calendar className='h-3 w-3' />
                         <span>
                           {experience.start_date
-                            ? new Date(
-                                experience.start_date
-                              ).toLocaleDateString('en-US', {
+                            ? new Date(experience.start_date).toLocaleDateString('en-US', {
                                 month: 'short',
                                 year: 'numeric',
                               })
                             : 'N/A'}
                           {' - '}
                           {experience.end_date
-                            ? new Date(experience.end_date).toLocaleDateString(
-                                'en-US',
-                                { month: 'short', year: 'numeric' }
-                              )
+                            ? new Date(experience.end_date).toLocaleDateString('en-US', {
+                                month: 'short',
+                                year: 'numeric',
+                              })
                             : ' Present'}
                         </span>
                       </div>
                     </div>
                     <p className='text-sm mb-3'>
-                      {experience.description.text ||
-                        'No description provided.'}
+                      {experience.description &&
+                      typeof experience.description === 'object' &&
+                      'text' in experience.description
+                        ? (experience.description as { text: string }).text
+                        : typeof experience.description === 'string'
+                        ? experience.description
+                        : 'No description provided.'}
                     </p>
                     {experience.skills_tags &&
                     Array.isArray(experience.skills_tags) &&

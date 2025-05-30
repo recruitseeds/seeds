@@ -10,27 +10,45 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useTRPC } from '@/trpc/client'
+import type { RouterOutputs } from '@/trpc/routers/_app'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, GraduationCap, Loader2, Pencil, Plus } from 'lucide-react'
 
-export function Education() {
+interface EducationPropsWithData {
+  initialEducationData: RouterOutputs['candidate']['listEducation']
+}
+
+type EducationPropsWithoutData = object
+
+type EducationProps = EducationPropsWithData | EducationPropsWithoutData
+
+function hasData(props: EducationProps): props is EducationPropsWithData {
+  return 'initialEducationData' in props
+}
+
+export function Education(props: EducationProps) {
   const trpc = useTRPC()
 
   const {
-    data: educationItems,
+    data: educationData,
     isLoading,
     error,
-  } = useQuery(trpc.candidate.listEducation.queryOptions(undefined))
+  } = useQuery({
+    ...trpc.candidate.listEducation.queryOptions(undefined),
+    ...(hasData(props) ? { initialData: props.initialEducationData } : {}),
+  })
+
+  const iconVerticalAlignClass = 'top-[6px]'
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Education</CardTitle>
-          <CardDescription>Loading your academic background...</CardDescription>
+          <CardDescription>Your academic background</CardDescription>
         </CardHeader>
-        <CardContent className='flex justify-center items-center h-40'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+        <CardContent className='flex justify-center items-center h-60'>
+          <Loader2 className='h-10 w-10 animate-spin text-muted-foreground' />
         </CardContent>
       </Card>
     )
@@ -41,17 +59,18 @@ export function Education() {
       <Card>
         <CardHeader>
           <CardTitle>Education</CardTitle>
+          <CardDescription>Your academic background</CardDescription>
         </CardHeader>
         <CardContent>
           <p className='text-red-600'>
-            Error loading education history: {error.message}
+            Error loading education: {error.message}
           </p>
         </CardContent>
       </Card>
     )
   }
 
-  const iconVerticalAlignClass = 'top-[6px]' // Adjust for vertical alignment with degree/institution
+  const educationItems = educationData || []
 
   return (
     <Card>
@@ -71,14 +90,14 @@ export function Education() {
             size='icon'
             className='h-7'
             onClick={() => alert('Edit Section UI to be implemented')}>
-            <Pencil className='h-3 w-3' /> {/* Adjusted icon size */}
+            <Pencil className='h-3 w-3' />
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {educationItems && educationItems.length > 0 ? (
+        {educationItems.length > 0 ? (
           <div className='relative'>
-            <div className='absolute left-[7px] top-5 bottom-10 w-0.5 bg-border -z-10'></div>
+            <div className='absolute left-[7px] top-5 bottom-10 w-0.5 bg-border -z-10' />
             <div className='space-y-8'>
               {educationItems.map((education) => (
                 <div key={education.id} className='relative pl-8'>
@@ -122,7 +141,9 @@ export function Education() {
                         {typeof education.description === 'object' &&
                         'text' in education.description
                           ? (education.description as { text: string }).text
-                          : education.description}
+                          : typeof education.description === 'string'
+                          ? education.description
+                          : 'No description provided.'}
                       </p>
                     )}
                     {education.achievements &&
