@@ -1,10 +1,14 @@
+// src/trpc/routers/candidate.ts
+
 import { R2_BUCKET_NAME, getS3Client, uploadFileToR2AndRecord } from '@/lib/s3-client'
 import {
   createCandidateApplication,
   createCandidateEducation,
+  createCandidateSkill,
   createCandidateWorkExperience,
   createMultipleCandidateApplications,
   deleteCandidateEducation,
+  deleteCandidateSkill,
   deleteCandidateWorkExperience,
   updateCandidateEducation,
   updateCandidateProfile,
@@ -21,6 +25,7 @@ import {
   getDefaultCandidateResume,
 } from '@/supabase/queries'
 import type { Database, TablesInsert } from '@/supabase/types/db'
+import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
@@ -105,6 +110,7 @@ export const candidateRouter = createTRPCRouter({
         start_date: z.string().datetime({ offset: true }),
         end_date: z.string().datetime({ offset: true }).optional().nullable(),
         description: z.string().optional().nullable(),
+        is_current: z.boolean().default(false),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -120,11 +126,12 @@ export const candidateRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         institution_name: z.string().min(1).optional(),
-        degree: z.string().optional().nullable(),
+        degree_name: z.string().optional().nullable(),
         field_of_study: z.string().optional().nullable(),
         start_date: z.string().datetime({ offset: true }).optional(),
         end_date: z.string().datetime({ offset: true }).optional().nullable(),
         description: z.string().optional().nullable(),
+        is_current: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -164,8 +171,9 @@ export const candidateRouter = createTRPCRouter({
   listSkills: candidateProcedure.query(async ({ ctx }) => {
     const { data: skillsData, error: skillsError } = await ctx.supabase
       .from('candidate_skills')
-      .select('id, category_name, skill_name, proficiency_level')
+      .select('id, skill_name, proficiency_level')
       .eq('candidate_id', ctx.user.id)
+      .order('skill_name', { ascending: true })
 
     if (skillsError) {
       console.error('Error fetching skills:', skillsError)
@@ -177,19 +185,18 @@ export const candidateRouter = createTRPCRouter({
 
     if (!skillsData) return []
 
-    const groupedSkills: Record<string, { id: string; name: string; skills: string[] }> = {}
-
-    for (const skill of skillsData) {
-      if (!groupedSkills[skill.category_name]) {
-        groupedSkills[skill.category_name] = {
-          id: skill.category_name,
-          name: skill.category_name,
-          skills: [],
-        }
-      }
-      groupedSkills[skill.category_name].skills.push(skill.skill_name)
+    const proficiencyMap: Record<number, string> = {
+      1: 'beginner',
+      2: 'intermediate',
+      3: 'advanced',
+      4: 'expert',
     }
-    return Object.values(groupedSkills)
+
+    return skillsData.map((skill) => ({
+      id: skill.id,
+      name: skill.skill_name,
+      proficiency_level: proficiencyMap[skill.proficiency_level || 2] || 'intermediate',
+    }))
   }),
 
   createWorkExperience: candidateProcedure
@@ -249,7 +256,16 @@ export const candidateRouter = createTRPCRouter({
         fileName: z.string(),
         fileMimeType: z.string(),
         fileContentBase64: z.string(),
-        fileCategoryForR2Path: z.enum(['resume', 'cover_letter', 'transcript', 'other', 'avatar']),
+        fileCategoryForR2Path: z.enum([
+          'resume',
+          'cover_letter',
+          'transcript',
+          'other',
+          'portfolio',
+          'certification',
+          'reference',
+          'eligibility',
+        ]),
         dbFileType: candidateFileTypeEnum,
       })
     )
@@ -268,15 +284,9 @@ export const candidateRouter = createTRPCRouter({
           name: input.fileName,
           type: input.fileMimeType,
           size: fileBuffer.byteLength,
-          arrayBuffer: async () => {
-            const ab = new ArrayBuffer(fileBuffer.length)
-            const view = new Uint8Array(ab)
-            for (let i = 0; i < fileBuffer.length; ++i) {
-              view[i] = fileBuffer[i]
-            }
-            return ab
-          },
-        } as File
+          arrayBuffer: async () => fileBuffer,
+          stream: () => new ReadableStream(),
+        } as unknown as File
 
         return await uploadFileToR2AndRecord(
           ctx.supabase,
@@ -285,7 +295,7 @@ export const candidateRouter = createTRPCRouter({
           ctx.user.id,
           pseudoFile,
           input.fileCategoryForR2Path,
-          input.dbFileType as Database['public']['Enums']['candidate_file_type']
+          input.dbFileType
         )
       } catch (error: unknown) {
         console.error('Error in uploadFile tRPC mutation:', error)
@@ -294,6 +304,69 @@ export const candidateRouter = createTRPCRouter({
           message: `File upload failed: ${error instanceof Error ? error.message : String(error)}`,
         })
       }
+    }),
+
+  deleteFile: candidateProcedure.input(z.object({ fileId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    const { data: file, error: fetchError } = await ctx.supabase
+      .from('candidate_files')
+      .select('storage_path')
+      .eq('id', input.fileId)
+      .eq('candidate_id', ctx.user.id)
+      .single()
+
+    if (fetchError || !file) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'File not found or you do not have permission to delete it.',
+      })
+    }
+
+    try {
+      const s3Client = getS3Client()
+      await s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: file.storage_path,
+        })
+      )
+    } catch (r2Error) {
+      console.error(`Failed to delete file from R2 storage: ${file.storage_path}`, r2Error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Could not delete file from storage. Please try again.',
+      })
+    }
+
+    const { error: deleteDbError } = await ctx.supabase.from('candidate_files').delete().eq('id', input.fileId)
+
+    if (deleteDbError) {
+      console.error(`Failed to delete file record from database: ${input.fileId}`, deleteDbError)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to delete file record. Please try again.',
+      })
+    }
+
+    return { success: true }
+  }),
+
+  setDefaultResume: candidateProcedure
+    .input(z.object({ fileId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { error: transactionError } = await ctx.supabase.rpc('set_default_resume_for_candidate', {
+        p_candidate_id: ctx.user.id,
+        p_file_id: input.fileId,
+      })
+
+      if (transactionError) {
+        console.error('Error in set_default_resume RPC:', transactionError)
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to set default resume: ${transactionError.message}`,
+        })
+      }
+
+      return { success: true }
     }),
 
   listApplications: candidateProcedure
@@ -419,11 +492,21 @@ export const candidateRouter = createTRPCRouter({
 
   getContactInfo: candidateProcedure.query(async ({ ctx }) => {
     const { data, error } = await getCandidateContactInfo(ctx.supabase, ctx.user.id)
-    if (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: `Failed to get contact info: ${(error as { message?: string })?.message ?? String(error)}`,
-      })
+
+    if (error || !data) {
+      return {
+        id: ctx.user.id,
+        email: ctx.user.email || null,
+        first_name: null,
+        last_name: null,
+        phone_number: null,
+        location: null,
+        personal_website_url: null,
+        linkedin_url: null,
+        github_url: null,
+        twitter_url: null,
+        bio: null,
+      }
     }
 
     return {
@@ -450,4 +533,33 @@ export const candidateRouter = createTRPCRouter({
         ...input,
       })
     }),
+
+  createSkill: candidateProcedure
+    .input(
+      z.object({
+        skill_name: z.string().min(1, 'Skill name is required'),
+        proficiency_level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']).default('intermediate'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const proficiencyMap: Record<string, number> = {
+        beginner: 1,
+        intermediate: 2,
+        advanced: 3,
+        expert: 4,
+      }
+
+      const params: TablesInsert<'candidate_skills'> = {
+        candidate_id: ctx.user.id,
+        category_name: 'General',
+        skill_name: input.skill_name,
+        proficiency_level: proficiencyMap[input.proficiency_level],
+      }
+
+      return createCandidateSkill(ctx.supabase, params)
+    }),
+
+  deleteSkill: candidateProcedure.input(z.object({ skillId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    return deleteCandidateSkill(ctx.supabase, input.skillId, ctx.user.id)
+  }),
 })

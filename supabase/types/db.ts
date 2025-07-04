@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   graphql_public: {
@@ -142,8 +136,10 @@ export type Database = {
           degree_name: string
           description: Json | null
           end_date: string | null
+          field_of_study: string | null
           id: string
           institution_name: string
+          is_current: boolean
           location: string | null
           start_date: string
           updated_at: string | null
@@ -155,8 +151,10 @@ export type Database = {
           degree_name: string
           description?: Json | null
           end_date?: string | null
+          field_of_study?: string | null
           id?: string
           institution_name: string
+          is_current?: boolean
           location?: string | null
           start_date: string
           updated_at?: string | null
@@ -168,8 +166,10 @@ export type Database = {
           degree_name?: string
           description?: Json | null
           end_date?: string | null
+          field_of_study?: string | null
           id?: string
           institution_name?: string
+          is_current?: boolean
           location?: string | null
           start_date?: string
           updated_at?: string | null
@@ -356,6 +356,7 @@ export type Database = {
           description: Json | null
           end_date: string | null
           id: string
+          is_current: boolean | null
           job_title: string
           location: string | null
           skills_tags: string[] | null
@@ -369,6 +370,7 @@ export type Database = {
           description?: Json | null
           end_date?: string | null
           id?: string
+          is_current?: boolean | null
           job_title: string
           location?: string | null
           skills_tags?: string[] | null
@@ -382,6 +384,7 @@ export type Database = {
           description?: Json | null
           end_date?: string | null
           id?: string
+          is_current?: boolean | null
           job_title?: string
           location?: string | null
           skills_tags?: string[] | null
@@ -427,15 +430,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_default_resume_for_candidate: {
+        Args: { p_candidate_id: string; p_file_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       candidate_application_source: 'platform' | 'import' | 'manual'
-      candidate_application_status:
-        | 'applied'
-        | 'in-review'
-        | 'interview'
-        | 'rejected'
-        | 'offer'
+      candidate_application_status: 'applied' | 'in-review' | 'interview' | 'rejected' | 'offer'
       candidate_file_type:
         | 'resume'
         | 'cover_letter'
@@ -471,10 +473,8 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-      DefaultSchema['Views'])
-  ? (DefaultSchema['Tables'] &
-      DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+  ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
       Row: infer R
     }
     ? R
@@ -482,9 +482,7 @@ export type Tables<
   : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
-    | { schema: keyof Database },
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database
   }
@@ -505,9 +503,7 @@ export type TablesInsert<
   : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
-    | { schema: keyof Database },
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database
   }
@@ -528,9 +524,7 @@ export type TablesUpdate<
   : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
-    | { schema: keyof Database },
+  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums'] | { schema: keyof Database },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof Database
   }
@@ -543,9 +537,7 @@ export type Enums<
   : never
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
-    | { schema: keyof Database },
+  PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes'] | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
   }
@@ -564,13 +556,7 @@ export const Constants = {
   public: {
     Enums: {
       candidate_application_source: ['platform', 'import', 'manual'],
-      candidate_application_status: [
-        'applied',
-        'in-review',
-        'interview',
-        'rejected',
-        'offer',
-      ],
+      candidate_application_status: ['applied', 'in-review', 'interview', 'rejected', 'offer'],
       candidate_file_type: [
         'resume',
         'cover_letter',

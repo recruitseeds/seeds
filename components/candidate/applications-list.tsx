@@ -1,64 +1,29 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useTRPC } from '@/trpc/client'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import {
-  type SortingState,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
+import { type SortingState, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { FilterX } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import * as React from 'react'
-import {
-  type ApplicationStatus,
-  type ApplicationsListProps,
-  STATUS_OPTIONS,
-} from './applications-badge'
+import { type ApplicationStatus, type ApplicationsListProps, STATUS_OPTIONS } from './applications-badge'
 import { columns } from './applications-table-columns'
 import { CandidateApplicationActionsDropdown } from './candidate-application-actions-dropdown'
 
-export function ApplicationsList({
-  initialApplicationsData,
-}: ApplicationsListProps) {
+export function ApplicationsList({ initialApplicationsData }: ApplicationsListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const trpc = useTRPC()
-  const pageIndex = searchParams.get('page')
-    ? Number.parseInt(searchParams.get('page') as string, 10) - 1
-    : 0
-  const pageSize = searchParams.get('pageSize')
-    ? Number.parseInt(searchParams.get('pageSize') as string, 10)
-    : 10
+  const pageIndex = searchParams.get('page') ? Number.parseInt(searchParams.get('page') as string, 10) - 1 : 0
+  const pageSize = searchParams.get('pageSize') ? Number.parseInt(searchParams.get('pageSize') as string, 10) : 10
   const globalFilter = searchParams.get('search') || ''
-  const statusFilter =
-    (searchParams.get('status') as ApplicationStatus | 'all') || 'all'
+  const statusFilter = (searchParams.get('status') as ApplicationStatus | 'all') || 'all'
   const isTypingRef = React.useRef(false)
   const [searchInput, setSearchInput] = React.useState(globalFilter)
 
@@ -78,9 +43,7 @@ export function ApplicationsList({
 
   const queryOptionsObj = trpc.candidate.listApplications.queryOptions(
     queryInput,
-    initialApplicationsData
-      ? { initialData: initialApplicationsData }
-      : undefined
+    initialApplicationsData ? { initialData: initialApplicationsData } : undefined
   )
 
   const { data: applicationsQueryResult, isFetching } = useQuery({
@@ -91,16 +54,11 @@ export function ApplicationsList({
   const applications = applicationsQueryResult?.data || []
   const totalApplicationsCount = applicationsQueryResult?.count ?? 0
   const pageCount = React.useMemo(
-    () =>
-      totalApplicationsCount > 0
-        ? Math.ceil(totalApplicationsCount / pageSize)
-        : 0,
+    () => (totalApplicationsCount > 0 ? Math.ceil(totalApplicationsCount / pageSize) : 0),
     [totalApplicationsCount, pageSize]
   )
 
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: 'application_date', desc: true },
-  ])
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'application_date', desc: true }])
 
   const table = useReactTable({
     data: applications,
@@ -202,14 +160,12 @@ export function ApplicationsList({
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className='border-none gap-3 pt-0'>
+      <CardHeader className='px-0'>
         <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
           <div>
             <CardTitle>Job Applications</CardTitle>
-            <CardDescription>
-              Track and filter your job applications.
-            </CardDescription>
+            <CardDescription>Track and filter your job applications.</CardDescription>
           </div>
           <CandidateApplicationActionsDropdown />
         </div>
@@ -223,9 +179,7 @@ export function ApplicationsList({
             />
           </div>
           <div className='w-full sm:w-auto'>
-            <Select
-              value={statusFilter}
-              onValueChange={handleStatusFilterChange}>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
               <SelectTrigger className='w-full sm:w-[180px]'>
                 <SelectValue placeholder='Filter by status' />
               </SelectTrigger>
@@ -250,12 +204,8 @@ export function ApplicationsList({
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        {isFetching && (
-          <div className='text-center py-2 text-sm text-muted-foreground'>
-            Updating...
-          </div>
-        )}
+      <CardContent className='px-0'>
+        {isFetching && <div className='text-center py-2 text-sm text-muted-foreground'>Updating...</div>}
         <div className='rounded-md border'>
           <Table>
             <TableHeader>
@@ -263,12 +213,7 @@ export function ApplicationsList({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -279,29 +224,19 @@ export function ApplicationsList({
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
+                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className='h-24 text-center'>
+                  <TableCell colSpan={columns.length} className='h-24 text-center'>
                     <p className='text-lg font-medium text-muted-foreground'>
                       No applications found
                       {hasActiveFilters ? ' matching your filters.' : '.'}
                     </p>
                     {hasActiveFilters && (
-                      <Button
-                        variant='link'
-                        onClick={handleClearFilters}
-                        className='mt-2'>
+                      <Button variant='link' onClick={handleClearFilters} className='mt-2'>
                         Clear all filters
                       </Button>
                     )}

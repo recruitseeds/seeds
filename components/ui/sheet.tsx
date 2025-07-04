@@ -1,10 +1,10 @@
 'use client'
 
 import * as SheetPrimitive from '@radix-ui/react-dialog'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { type VariantProps, cva } from 'class-variance-authority'
 import { X } from 'lucide-react'
 import * as React from 'react'
-import { ReactNode, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 
 import {
   DropdownMenu as BaseDropdownMenu,
@@ -62,56 +62,45 @@ interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
-const SheetContent = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Content>,
-  SheetContentProps
->(({ side = 'right', className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-      onCloseAutoFocus={(e) => {
-        e.preventDefault()
-        document.body.focus()
-        props.onCloseAutoFocus?.(e)
-      }}>
-      <SheetPrimitive.Close className='absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary'>
-        <X className='h-4 w-4' />
-        <span className='sr-only'>Close</span>
-      </SheetPrimitive.Close>
-      {children}
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
+  ({ side = 'right', className, children, ...props }, ref) => {
+    const hasTitle = React.Children.toArray(children).some((child) => {
+      return React.isValidElement(child) && child.type === SheetTitle
+    })
+
+    return (
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetPrimitive.Content
+          ref={ref}
+          className={cn(sheetVariants({ side }), className)}
+          {...props}
+          onCloseAutoFocus={(e) => {
+            e.preventDefault()
+            document.body.focus()
+            props.onCloseAutoFocus?.(e)
+          }}>
+          {!hasTitle && <SheetTitle className='sr-only'>Sheet Dialog</SheetTitle>}
+          <SheetPrimitive.Close className="ring-offset-background data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-sm focus:outline-2 focus:outline-offset-1 focus:outline-brand-subtle focus:ring-brand focus:ring-[1px] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+            <X className='size-4' />
+            <span className='sr-only'>Close</span>
+          </SheetPrimitive.Close>
+          {children}
+        </SheetPrimitive.Content>
+      </SheetPortal>
+    )
+  }
+)
+
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
-const SheetHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      'flex flex-col space-y-2 text-center sm:text-left',
-      className
-    )}
-    {...props}
-  />
+const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
 )
 SheetHeader.displayName = 'SheetHeader'
 
-const SheetFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
-      className
-    )}
-    {...props}
-  />
+const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...props} />
 )
 SheetFooter.displayName = 'SheetFooter'
 
@@ -119,11 +108,7 @@ const SheetTitle = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <SheetPrimitive.Title
-    ref={ref}
-    className={cn('text-lg font-semibold text-foreground', className)}
-    {...props}
-  />
+  <SheetPrimitive.Title ref={ref} className={cn('text-lg font-semibold text-foreground', className)} {...props} />
 ))
 SheetTitle.displayName = SheetPrimitive.Title.displayName
 
@@ -131,11 +116,7 @@ const SheetDescription = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <SheetPrimitive.Description
-    ref={ref}
-    className={cn('text-sm text-muted-foreground', className)}
-    {...props}
-  />
+  <SheetPrimitive.Description ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
 ))
 SheetDescription.displayName = SheetPrimitive.Description.displayName
 
@@ -177,11 +158,7 @@ interface HeaderItem {
   className?: string
 }
 
-type SheetDropdownMenuItemType =
-  | RegularDropdownItem
-  | SheetDropdownItem
-  | SeparatorItem
-  | HeaderItem
+type SheetDropdownMenuItemType = RegularDropdownItem | SheetDropdownItem | SeparatorItem | HeaderItem
 
 interface SheetDropdownMenuProps {
   align?: 'start' | 'center' | 'end'
@@ -250,24 +227,15 @@ function SheetDropdownMenu({
   })
 
   const currentSheetItem =
-    activeSheet !== null && items[activeSheet].type === 'item'
-      ? (items[activeSheet] as SheetDropdownItem)
-      : null
+    activeSheet !== null && items[activeSheet].type === 'item' ? (items[activeSheet] as SheetDropdownItem) : null
 
   return (
     <>
-      <BaseDropdownMenu
-        open={isDropdownOpen}
-        onOpenChange={setIsDropdownOpen}
-        {...props}>
+      <BaseDropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen} {...props}>
         <DropdownMenuTrigger asChild disabled={disabled}>
           {trigger}
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align={align}
-          side={side}
-          sideOffset={sideOffset}
-          className={props.className}>
+        <DropdownMenuContent align={align} side={side} sideOffset={sideOffset} className={props.className}>
           {header && <DropdownMenuLabel>{header}</DropdownMenuLabel>}
           {processedItems.map((item, index) => {
             if (item.type === 'separator') {
@@ -275,9 +243,7 @@ function SheetDropdownMenu({
             }
             if (item.type === 'header') {
               return (
-                <DropdownMenuLabel
-                  key={`header-${index}`}
-                  className={item.className}>
+                <DropdownMenuLabel key={`header-${index}`} className={item.className}>
                   {item.label}
                 </DropdownMenuLabel>
               )
@@ -292,9 +258,7 @@ function SheetDropdownMenu({
                 {regularItem.leftSlot}
                 <span>{regularItem.label}</span>
                 {regularItem.shortcut && (
-                  <span className='ml-auto text-xs tracking-widest opacity-60'>
-                    {regularItem.shortcut}
-                  </span>
+                  <span className='ml-auto text-xs tracking-widest opacity-60'>{regularItem.shortcut}</span>
                 )}
               </DropdownMenuItem>
             )
@@ -310,11 +274,7 @@ function SheetDropdownMenu({
           }}>
           <SheetContent
             side={currentSheetItem.sheet?.side || 'right'}
-            className={
-              currentSheetItem.sheet?.width
-                ? `w-full ${currentSheetItem.sheet.width}`
-                : undefined
-            }>
+            className={currentSheetItem.sheet?.width ? `w-full ${currentSheetItem.sheet.width}` : undefined}>
             {typeof currentSheetItem.sheet.sheetContent === 'function'
               ? currentSheetItem.sheet.sheetContent({
                   closeSheet: handleCloseSheet,

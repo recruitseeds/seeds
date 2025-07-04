@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -17,14 +11,7 @@ import { FileManager } from './file-manager'
 import { Skills } from './skills'
 import { WorkExperience } from './work-experience'
 
-const validTabs = [
-  'applications',
-  'experience',
-  'education',
-  'skills',
-  'files',
-  'contact',
-] as const
+const validTabs = ['applications', 'experience', 'education', 'skills', 'files', 'contact'] as const
 type ValidTab = (typeof validTabs)[number]
 const DEFAULT_TAB: ValidTab = 'applications'
 
@@ -43,17 +30,14 @@ interface CandidateProfilePropsWithData {
   educationData: RouterOutputs['candidate']['listEducation']
   skillsData: RouterOutputs['candidate']['listSkills']
   contactData: RouterOutputs['candidate']['getContactInfo'] | null
+  filesData: RouterOutputs['candidate']['listFiles']
 }
 
 type CandidateProfilePropsWithoutData = object
 
-type CandidateProfileProps =
-  | CandidateProfilePropsWithData
-  | CandidateProfilePropsWithoutData
+type CandidateProfileProps = CandidateProfilePropsWithData | CandidateProfilePropsWithoutData
 
-function hasData(
-  props: CandidateProfileProps
-): props is CandidateProfilePropsWithData {
+function hasData(props: CandidateProfileProps): props is CandidateProfilePropsWithData {
   return 'initialApplicationsData' in props
 }
 
@@ -63,9 +47,7 @@ export function CandidateProfile(props: CandidateProfileProps) {
   const searchParams = useSearchParams()
   const currentTabParam = searchParams.get('tab')
   const activeTab =
-    currentTabParam && validTabs.includes(currentTabParam as ValidTab)
-      ? (currentTabParam as ValidTab)
-      : DEFAULT_TAB
+    currentTabParam && validTabs.includes(currentTabParam as ValidTab) ? (currentTabParam as ValidTab) : DEFAULT_TAB
 
   const handleTabChange = (value: string) => {
     const newTab = value as ValidTab
@@ -86,44 +68,29 @@ export function CandidateProfile(props: CandidateProfileProps) {
   const tabContent = (
     <>
       <TabsContent value='applications' className='mt-0'>
-        <ApplicationsList
-          {...(hasData(props)
-            ? { initialApplicationsData: props.initialApplicationsData }
-            : {})}
-        />
+        <ApplicationsList {...(hasData(props) ? { initialApplicationsData: props.initialApplicationsData } : {})} />
       </TabsContent>
       <TabsContent value='experience' className='mt-0'>
-        <WorkExperience
-          {...(hasData(props)
-            ? { initialExperiencesData: props.workExperiencesData }
-            : {})}
-        />
+        <WorkExperience {...(hasData(props) ? { initialExperiencesData: props.workExperiencesData } : {})} />
       </TabsContent>
       <TabsContent value='education' className='mt-0'>
-        <Education
-          {...(hasData(props)
-            ? { initialEducationData: props.educationData }
-            : {})}
-        />
+        <Education {...(hasData(props) ? { initialEducationData: props.educationData } : {})} />
       </TabsContent>
       <TabsContent value='skills' className='mt-0'>
-        <Skills
-          {...(hasData(props) ? { initialSkillsData: props.skillsData } : {})}
-        />
+        <Skills {...(hasData(props) ? { initialSkillsData: props.skillsData } : {})} />
       </TabsContent>
       <TabsContent value='files' className='mt-0'>
-        <FileManager />
+        {/* 2. Pass the initialFilesData prop to the FileManager */}
+        <FileManager {...(hasData(props) ? { initialFilesData: props.filesData } : {})} />
       </TabsContent>
       <TabsContent value='contact' className='mt-0'>
-        <ContactInfo
-          {...(hasData(props) ? { initialContactData: props.contactData } : {})}
-        />
+        <ContactInfo {...(hasData(props) ? { contactData: props.contactData } : { contactData: null })} />
       </TabsContent>
     </>
   )
 
   return (
-    <>
+    <div>
       <div className='sm:hidden mb-6'>
         <Select value={activeTab} onValueChange={handleTabChange}>
           <SelectTrigger className='w-full'>
@@ -154,6 +121,6 @@ export function CandidateProfile(props: CandidateProfileProps) {
           <div className='mt-6'>{tabContent}</div>
         </Tabs>
       </div>
-    </>
+    </div>
   )
 }

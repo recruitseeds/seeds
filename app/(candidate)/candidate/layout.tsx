@@ -1,22 +1,13 @@
 import { ClientAvatarUpload } from '@/components/candidate/avatar-upload'
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { getServerTRPCCaller } from '@/trpc/server'
 import { Calendar, MapPin } from 'lucide-react'
 import type React from 'react'
 import { Suspense } from 'react'
 
-const getInitials = (
-  firstName?: string | null,
-  lastName?: string | null
-): string => {
+const getInitials = (firstName?: string | null, lastName?: string | null): string => {
   if (firstName && lastName) {
     return `${firstName[0]}${lastName[0]}`.toUpperCase()
   }
@@ -30,8 +21,7 @@ const getInitials = (
 }
 
 type ProfileLayoutData = RouterOutputs['candidate']['getProfile']
-type ApplicationSummaryData =
-  RouterOutputs['candidate']['getApplicationSummary']
+type ApplicationSummaryData = RouterOutputs['candidate']['getApplicationSummary']
 
 function ApplicationSummaryLoadingSkeleton() {
   return (
@@ -44,9 +34,7 @@ function ApplicationSummaryLoadingSkeleton() {
         <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
           <div className='flex flex-col items-center justify-center p-3 bg-secondary/50 rounded-lg'>
             <div className='text-2xl font-bold'>0</div>
-            <div className='text-sm text-muted-foreground'>
-              Total Applications
-            </div>
+            <div className='text-sm text-muted-foreground'>Total Applications</div>
           </div>
           <div className='flex flex-col items-center justify-center p-3 bg-warning/50 rounded-lg'>
             <div className='text-2xl font-bold text-warning-foreground'>0</div>
@@ -82,7 +70,7 @@ async function ApplicationSummary() {
   }
 
   return (
-    <Card className='flex-1 shadow-none' flat>
+    <Card className='flex-1 shadow-none border-none' flat>
       <CardHeader className='pb-2'>
         <CardTitle>Application Summary</CardTitle>
         <CardDescription>Overview of your job applications</CardDescription>
@@ -91,26 +79,18 @@ async function ApplicationSummary() {
         <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
           <div className='flex flex-col items-center justify-center p-3 bg-secondary/50 rounded-lg'>
             <div className='text-2xl font-bold'>{summary.total}</div>
-            <div className='text-sm text-muted-foreground'>
-              Total Applications
-            </div>
+            <div className='text-sm text-muted-foreground'>Total Applications</div>
           </div>
           <div className='flex flex-col items-center justify-center p-3 bg-warning/50 rounded-lg'>
-            <div className='text-2xl font-bold text-warning-foreground'>
-              {summary.inReview}
-            </div>
+            <div className='text-2xl font-bold text-warning-foreground'>{summary.inReview}</div>
             <div className='text-sm text-muted-foreground'>In Review</div>
           </div>
           <div className='flex flex-col items-center justify-center p-3 bg-info/50 rounded-lg'>
-            <div className='text-2xl font-bold text-info-foreground'>
-              {summary.interviews}
-            </div>
+            <div className='text-2xl font-bold text-info-foreground'>{summary.interviews}</div>
             <div className='text-sm text-muted-foreground'>Interviews</div>
           </div>
           <div className='flex flex-col items-center justify-center p-3 bg-success/50 rounded-lg'>
-            <div className='text-2xl font-bold text-success-foreground'>
-              {summary.offers}
-            </div>
+            <div className='text-2xl font-bold text-success-foreground'>{summary.offers}</div>
             <div className='text-sm text-muted-foreground'>Offers</div>
           </div>
         </div>
@@ -119,11 +99,7 @@ async function ApplicationSummary() {
   )
 }
 
-export default async function CandidateProfileLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function CandidateProfileLayout({ children }: { children: React.ReactNode }) {
   const caller = await getServerTRPCCaller()
   let profileData: ProfileLayoutData | null = null
 
@@ -140,18 +116,13 @@ export default async function CandidateProfileLayout({
           <ClientAvatarUpload
             userId={profileData?.id || ''}
             initialAvatarUrl={profileData?.avatar_url}
-            fallbackInitials={getInitials(
-              profileData?.first_name,
-              profileData?.last_name
-            )}
+            fallbackInitials={getInitials(profileData?.first_name, profileData?.last_name)}
           />
           <div className='text-center'>
             <h1 className='text-2xl font-bold'>
               {profileData?.first_name || 'N/A'} {profileData?.last_name || ''}
             </h1>
-            <p className='text-muted-foreground'>
-              {profileData?.job_title || 'Job Title N/A'}
-            </p>
+            <p className='text-muted-foreground'>{profileData?.job_title || 'Job Title N/A'}</p>
           </div>
           <div className='flex flex-wrap gap-2 justify-center'>
             {profileData?.location && (

@@ -88,6 +88,10 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(87.4% 0.007 164.7);
   --sidebar-ring: oklch(87.4% 0.007 164.7);
+
+  --shadow-button-primary: 0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08),
+    0px 0px 0px 1px rgb(0 0 0 / 0.06), inset 0px 1px 0px #fff, inset 0px 0px 2px 1px #fff,
+    inset 0px 1px 2px rgb(0 0 0 / 0.06), inset 0px -4px 8px -4px rgb(0 0 0 / 0.06);
 }
 
 .dark {
@@ -166,6 +170,10 @@
   --sidebar-accent-foreground: oklch(94.7% 0.0028 156.9);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  --shadow-button-primary: 0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08),
+    0px 0px 0px 1px rgb(0 0 0 / 0.06), inset 0px 1px 0px #fff, inset 0px 0px 2px 1px #fff,
+    inset 0px 1px 2px rgb(0 0 0 / 0.06), inset 0px -4px 8px -4px rgb(0 0 0 / 0.06);
 }
 
 @theme inline {
@@ -250,6 +258,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --shadow-button-primary: var(--shadow-button-primary);
+
   --breakpoint-menu-bar: 785px;
 }
 
@@ -266,10 +276,7 @@
   @apply text-foreground/90 mt-0;
 }
 
-.prose
-  :where(ul > li):not(
-    :where([class~='not-prose'], [class~='not-prose'] *)
-  )::marker {
+.prose :where(ul > li):not(:where([class~='not-prose'], [class~='not-prose'] *))::marker {
   @apply text-muted-foreground;
 }
 
@@ -277,8 +284,7 @@
   @apply text-brand;
 }
 
-.prose
-  :where(strong):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+.prose :where(strong):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground;
 }
 

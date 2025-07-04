@@ -11,14 +11,27 @@ function Card({ className, flat, ...props }: CardProps) {
     <div
       data-slot='card'
       className={cn(
-        'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
-        flat ? '' : 'outline outline-offset-4',
+        'bg-background text-card-foreground flex flex-col gap-6 rounded-xl border py-6',
+        flat ? '' : '',
         className
       )}
       {...props}
     />
   )
 }
+// function Card({ className, flat, ...props }: CardProps) {
+//   return (
+//     <div
+//       data-slot='card'
+//       className={cn(
+//         'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+//         flat ? '' : 'outline outline-offset-4',
+//         className
+//       )}
+//       {...props}
+//     />
+//   )
+// }
 
 function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return <div data-slot='card-header' className={cn('flex flex-col gap-1.5 px-6', className)} {...props} />

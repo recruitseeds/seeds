@@ -155,8 +155,16 @@ export async function getCandidateWorkExperienceByCandidateId(
   return data || []
 }
 
-export async function getCandidateFilesByCandidateId(supabase: Client, candidateId: string): Promise<CandidateFile[]> {
-  const { data, error } = await supabase.from('candidate_files').select('*').eq('candidate_id', candidateId)
+export async function getCandidateFilesByCandidateId(
+  supabase: SupabaseClient<Database>,
+  candidateId: string
+): Promise<Tables<'candidate_files'>[]> {
+  const { data, error } = await supabase
+    .from('candidate_files')
+    .select('*')
+    .eq('candidate_id', candidateId)
+    .order('is_default_resume', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching candidate files:', error)
@@ -179,7 +187,9 @@ export async function getCandidateContactInfo(
 }> {
   const { data, error } = await supabase
     .from('candidate_profiles')
-    .select('phone_number, location, personal_website_url, linkedin_url, github_url, twitter_url, bio')
+    .select(
+      'first_name, last_name, phone_number, location, personal_website_url, linkedin_url, github_url, twitter_url, bio'
+    )
     .eq('id', userId)
     .single()
 
@@ -188,4 +198,97 @@ export async function getCandidateContactInfo(
   }
 
   return { data, error }
+}
+
+export type CandidateSkill = Tables<'candidate_skills'>
+
+export async function getCandidateSkills(
+  supabase: Client,
+  candidateId: string
+): Promise<{
+  data: CandidateSkill[] | null
+  error: PostgrestError | null
+}> {
+  const { data, error } = await supabase
+    .from('candidate_skills')
+    .select('*')
+    .eq('candidate_id', candidateId)
+    .order('category_name', { ascending: true })
+    .order('skill_name', { ascending: true })
+
+  if (error) {
+    console.error(`Error fetching skills for candidate ${candidateId}:`, error)
+  }
+
+  return { data, error }
+}
+
+export interface SkillCategory {
+  id: string
+  name: string
+  skills: Array<{
+    id: string
+    name: string
+    proficiency_level: string
+  }>
+}
+
+export async function getCandidateSkillsGrouped(
+  supabase: Client,
+  candidateId: string
+): Promise<{
+  data: SkillCategory[] | null
+  error: PostgrestError | null
+}> {
+  const { data: skills, error } = await getCandidateSkills(supabase, candidateId)
+
+  if (error || !skills) {
+    return { data: null, error }
+  }
+
+  const grouped = skills.reduce((acc, skill) => {
+    const categoryName = skill.category_name || 'Uncategorized'
+
+    if (!acc[categoryName]) {
+      acc[categoryName] = {
+        id: categoryName.toLowerCase().replace(/\s+/g, '-'),
+        name: categoryName,
+        skills: [],
+      }
+    }
+
+    acc[categoryName].skills.push({
+      id: skill.id,
+      name: skill.skill_name,
+      proficiency_level: typeof skill.proficiency_level === 'string' ? skill.proficiency_level : 'intermediate',
+    })
+
+    return acc
+  }, {} as Record<string, SkillCategory>)
+
+  return { data: Object.values(grouped), error: null }
+}
+
+export const getContactInfo = async (supabase: SupabaseClient, userId: string) => {
+  const { data, error } = await supabase
+    .from('candidate_profiles')
+    .select(
+      `
+      phone_number,
+      location,
+      personal_website_url,
+      linkedin_url,
+      github_url,
+      twitter_url,
+      bio
+    `
+    )
+    .eq('id', userId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    throw error
+  }
+
+  return data
 }
