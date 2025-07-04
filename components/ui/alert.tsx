@@ -1,5 +1,5 @@
-import { cva, type VariantProps } from 'class-variance-authority'
-import * as React from 'react'
+import { type VariantProps, cva } from 'class-variance-authority'
+import type * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -10,12 +10,12 @@ const alertVariants = cva(
       variant: {
         default: 'bg-background text-foreground',
         destructive:
-          'bg-destructive-subtle border-destructive-border text-destructive-vibrant *:data-[slot=alert-description]:text-destructive-vibrant',
+          'bg-destructive-subtle/30 border-destructive-border text-destructive-vibrant *:data-[slot=alert-description]:text-destructive-vibrant',
         success:
-          'bg-success border-success-border text-success-foreground *:data-[slot=alert-description]:text-success-foreground',
+          'bg-success/30 border-success-border text-success-foreground *:data-[slot=alert-description]:text-success-foreground',
         warning:
-          'bg-warning text-warning-foreground border-warning-border *:data-[slot=alert-description]:text-warning-foreground',
-        info: 'bg-info text-info-foreground *:data-[slot=alert-description]:text-info-foreground border-info-border',
+          'bg-warning/30 text-warning-foreground border-warning-border *:data-[slot=alert-description]:text-warning-foreground',
+        info: 'bg-info/30 text-info-foreground *:data-[slot=alert-description]:text-info-foreground border-info-border',
       },
     },
     defaultVariants: {
@@ -24,38 +24,21 @@ const alertVariants = cva(
   }
 )
 
-function Alert({
-  className,
-  variant,
-  ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof alertVariants>) {
-  return (
-    <div
-      data-slot='alert'
-      role='alert'
-      className={cn(alertVariants({ variant }), className)}
-      {...props}
-    />
-  )
+function Alert({ className, variant, ...props }: React.ComponentProps<'div'> & VariantProps<typeof alertVariants>) {
+  return <div data-slot='alert' role='alert' className={cn(alertVariants({ variant }), className)} {...props} />
 }
 
 function AlertTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot='alert-title'
-      className={cn(
-        'col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight',
-        className
-      )}
+      className={cn('col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight', className)}
       {...props}
     />
   )
 }
 
-function AlertDescription({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+function AlertDescription({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot='alert-description'

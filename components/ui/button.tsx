@@ -2,26 +2,23 @@
 
 import { cn } from '@/lib/utils'
 import { Slot } from '@radix-ui/react-slot'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { type VariantProps, cva } from 'class-variance-authority'
 import * as React from 'react'
 
 const buttonVariants = cva(
   [
-    'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium',
+    'inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium',
     'disabled:pointer-events-none disabled:opacity-50',
     "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
     'cursor-pointer relative select-none transform-gpu',
     'focus:!outline-none focus:!ring-0 active:!outline-none active:!ring-0',
-    'after:pointer-events-none after:absolute after:-inset-[3px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand',
-    // Remove the fixed after:rounded style to allow dynamic application
-    'before:pointer-events-none before:absolute before:inset-0 before:z-[1] before:opacity-0 before:transition-opacity before:bg-gradient-to-b before:from-white/[0.12]',
+    'after:pointer-events-none after:absolute after:-inset-[3px] after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand after:rounded-[calc(var(--button-radius)+3px)]',
+    'before:pointer-events-none before:absolute before:inset-0 before:z-[1] before:opacity-0 before:transition-opacity before:bg-gradient-to-b before:from-white/[0.12] before:rounded-[var(--button-radius)]',
   ],
   {
     variants: {
       variant: {
-        default: [
-          'bg-primary text-primary-foreground hover:bg-[var(--primary-hover)] active:bg-primary-active',
-        ],
+        default: ['bg-primary text-primary-foreground hover:bg-[var(--primary-hover)] active:bg-primary-active'],
         destructive: [
           'bg-destructive text-destructive-foreground',
           'hover:before:opacity-100 active:before:opacity-30',
@@ -31,19 +28,9 @@ const buttonVariants = cva(
           'hover:bg-secondary hover:text-secondary-foreground',
           'active:bg-secondary-active',
         ],
-        secondary: [
-          'bg-secondary text-secondary-foreground',
-          'hover:bg-secondary-hover active:bg-secondary-active',
-        ],
-        ghost: [
-          'bg-transparent',
-          'hover:bg-secondary hover:text-accent-foreground',
-          'active:bg-secondary-active',
-        ],
-        link: [
-          'text-primary bg-transparent p-0 h-auto',
-          'underline-offset-4 hover:underline',
-        ],
+        secondary: ['bg-secondary text-secondary-foreground', 'hover:bg-secondary-hover active:bg-secondary-active'],
+        ghost: ['bg-transparent', 'hover:bg-secondary hover:text-accent-foreground', 'active:bg-secondary-active'],
+        link: ['text-primary bg-transparent p-0 h-auto', 'underline-offset-4 hover:underline'],
         brand: [
           'bg-brand text-brand-foreground',
           'hover:before:opacity-100 active:bg-brand-active',
@@ -68,14 +55,8 @@ const buttonActiveVariants = cva('', {
   variants: {
     variant: {
       default: ['bg-primary/90 text-background', 'before:opacity-0'],
-      destructive: [
-        'bg-destructive/90 text-destructive-foreground',
-        'before:opacity-0',
-      ],
-      outline: [
-        'bg-secondary-active text-secondary-foreground',
-        'border border-input',
-      ],
+      destructive: ['bg-destructive/90 text-destructive-foreground', 'before:opacity-0'],
+      outline: ['bg-secondary-active text-secondary-foreground', 'border border-input'],
       secondary: ['bg-secondary-active text-secondary-foreground'],
       ghost: ['bg-secondary-active text-accent-foreground'],
       link: ['text-primary underline'],
@@ -87,49 +68,37 @@ const buttonActiveVariants = cva('', {
   },
 })
 
-interface ButtonProps
-  extends React.ComponentProps<'button'>,
-    VariantProps<typeof buttonVariants> {
+const radiusMap = {
+  'rounded-none': '0px',
+  'rounded-sm': '2px',
+  rounded: '4px',
+  'rounded-md': '6px',
+  'rounded-lg': '8px',
+  'rounded-xl': '12px',
+  'rounded-2xl': '16px',
+  'rounded-3xl': '24px',
+  'rounded-full': '9999px',
+} as const
+
+interface ButtonProps extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
   active?: boolean
   activeClassName?: string
   asChild?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      active = false,
-      activeClassName,
-      asChild = false,
-      ...props
-    },
-    ref
-  ) => {
+  ({ className, variant, size, active = false, activeClassName, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button'
 
-    // Function to extract the border radius from className
-    const getButtonRadius = (className: string = '') => {
-      if (className.includes('rounded-full')) return 'rounded-full'
-      if (className.includes('rounded-xl')) return 'rounded-xl'
-      if (className.includes('rounded-lg')) return 'rounded-lg'
-      if (className.includes('rounded-md')) return 'rounded-md'
-      if (className.includes('rounded-sm')) return 'rounded-sm'
-      if (className.includes('rounded-none')) return 'rounded-none'
+    const allClasses = cn(buttonVariants({ variant, size }), className)
 
-      // Default radius based on size
-      if (size) {
-        // All sizes use rounded-md by default in your original code
-        return 'rounded-md'
-      }
-
-      return 'rounded-md' // Default fallback
+    const getButtonRadius = (classes: string) => {
+      const radiusClasses = Object.keys(radiusMap) as Array<keyof typeof radiusMap>
+      const foundRadius = radiusClasses.find((radius) => classes.includes(radius))
+      return foundRadius ? radiusMap[foundRadius] : radiusMap['rounded-md']
     }
 
-    // Get the appropriate radius for both the button and its focus state
-    const buttonRadius = getButtonRadius(className)
+    const buttonRadius = getButtonRadius(allClasses)
 
     return (
       <Comp
@@ -138,28 +107,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-state={active ? 'active' : 'inactive'}
         style={
           {
-            '--button-radius':
-              buttonRadius === 'rounded-none'
-                ? '0'
-                : buttonRadius === 'rounded-sm'
-                ? '0.125rem'
-                : buttonRadius === 'rounded-md'
-                ? '9px'
-                : buttonRadius === 'rounded-lg'
-                ? '0.5rem'
-                : buttonRadius === 'rounded-xl'
-                ? '0.75rem'
-                : buttonRadius === 'rounded-full'
-                ? '9999px'
-                : '0.375rem',
+            '--button-radius': buttonRadius,
           } as React.CSSProperties
         }
         className={cn(
           buttonVariants({ variant, size }),
           active && buttonActiveVariants({ variant }),
           active && activeClassName,
-          'after:rounded-[var(--button-radius)]',
-          'before:rounded-[var(--button-radius)]',
           className
         )}
         {...props}

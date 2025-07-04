@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/poppy'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
@@ -14,12 +14,7 @@ interface DatePickerProps {
   placeholder?: string
 }
 
-export default function DatePicker({
-  selected,
-  onSelect,
-  disabled,
-  placeholder = 'Pick a date',
-}: DatePickerProps) {
+export function DatePicker({ selected, onSelect, disabled, placeholder = 'Pick a date' }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -34,15 +29,8 @@ export default function DatePicker({
           {selected ? format(selected, 'PPP') : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className='w-auto p-0 bg-background border rounded-md z-50'
-        align='start'>
-        <Calendar
-          mode='single'
-          selected={selected}
-          onSelect={onSelect}
-          disabled={disabled}
-        />
+      <PopoverContent className='w-auto p-0 bg-background border rounded-md z-50' align='start'>
+        <Calendar mode='single' selected={selected} onSelect={onSelect} disabled={disabled} initialFocus />
       </PopoverContent>
     </Popover>
   )

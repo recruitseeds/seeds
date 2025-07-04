@@ -1,15 +1,8 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import DatePicker from '@/components/ui/date-picker'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { DatePicker } from '@/components/ui/date-picker'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatDateToYYYYMMDD, parseDateString } from '@/lib/dates'
@@ -21,13 +14,7 @@ import type { TRPCClientErrorLike } from '@trpc/client'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-const applicationStatusEnum = z.enum([
-  'applied',
-  'in-review',
-  'interview',
-  'rejected',
-  'offer',
-])
+const applicationStatusEnum = z.enum(['applied', 'in-review', 'interview', 'rejected', 'offer'])
 const applicationSourceEnum = z.enum(['platform', 'manual', 'import'])
 
 const createApplicationSchema = z.object({
@@ -52,10 +39,7 @@ interface CreateCandidateApplicationFormProps {
   onClose?: () => void
 }
 
-export function CreateCandidateApplicationForm({
-  onApplicationCreated,
-  onClose,
-}: CreateCandidateApplicationFormProps) {
+export function CreateCandidateApplicationForm({ onApplicationCreated, onClose }: CreateCandidateApplicationFormProps) {
   const trpcClient = useTRPC()
   const queryClient = useQueryClient()
   const today = formatDateToYYYYMMDD(new Date())
@@ -72,9 +56,7 @@ export function CreateCandidateApplicationForm({
   const createApplicationMutation = useMutation(
     trpcClient.candidate.createApplication.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries(
-          trpcClient.candidate.listApplications.queryFilter()
-        )
+        await queryClient.invalidateQueries(trpcClient.candidate.listApplications.queryFilter())
         onApplicationCreated?.()
         form.reset({
           status: 'applied',
@@ -96,31 +78,24 @@ export function CreateCandidateApplicationForm({
 
     const payload = {
       ...data,
-      application_date: appDate
-        ? appDate.toISOString()
-        : new Date().toISOString(),
+      application_date: appDate ? appDate.toISOString() : new Date().toISOString(),
       next_step_date: nextStepDate ? nextStepDate.toISOString() : null,
     }
 
     createApplicationMutation.mutate(payload)
   }
 
-  const isSubmitting =
-    form.formState.isSubmitting || createApplicationMutation.isPending
+  const isSubmitting = form.formState.isSubmitting || createApplicationMutation.isPending
 
   return (
     <ScrollArea className='h-full'>
       <div className='mb-6'>
         <h2 className='text-xl font-semibold'>Add New Application</h2>
-        <p className='text-sm text-muted-foreground'>
-          Manually enter the details for a new job application.
-        </p>
+        <p className='text-sm text-muted-foreground'>Manually enter the details for a new job application.</p>
       </div>
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className='space-y-4 px-3 pb-4'>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 px-3 pb-4'>
           <FormField
             control={form.control}
             name='job_title'
@@ -157,9 +132,7 @@ export function CreateCandidateApplicationForm({
                 <FormLabel>Application Date</FormLabel>
                 <DatePicker
                   selected={parseDateString(field.value)}
-                  onSelect={(date) =>
-                    field.onChange(date ? formatDateToYYYYMMDD(date) : today)
-                  }
+                  onSelect={(date) => field.onChange(date ? formatDateToYYYYMMDD(date) : today)}
                   placeholder='Select application date'
                   disabled={isSubmitting}
                 />
@@ -175,11 +148,7 @@ export function CreateCandidateApplicationForm({
               <FormItem>
                 <FormLabel>Application URL</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder='https://example.com/jobs/123'
-                    {...field}
-                    value={field.value || ''}
-                  />
+                  <Input placeholder='https://example.com/jobs/123' {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -193,11 +162,7 @@ export function CreateCandidateApplicationForm({
               <FormItem>
                 <FormLabel>Contact Person</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder='Jane Smith'
-                    {...field}
-                    value={field.value || ''}
-                  />
+                  <Input placeholder='Jane Smith' {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -211,12 +176,7 @@ export function CreateCandidateApplicationForm({
               <FormItem>
                 <FormLabel>Contact Email</FormLabel>
                 <FormControl>
-                  <Input
-                    type='email'
-                    placeholder='jane.smith@example.com'
-                    {...field}
-                    value={field.value || ''}
-                  />
+                  <Input type='email' placeholder='jane.smith@example.com' {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -230,11 +190,7 @@ export function CreateCandidateApplicationForm({
               <FormItem>
                 <FormLabel>Salary Range</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder='$80,000 - $100,000'
-                    {...field}
-                    value={field.value || ''}
-                  />
+                  <Input placeholder='$80,000 - $100,000' {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -242,6 +198,9 @@ export function CreateCandidateApplicationForm({
           />
 
           <div className='flex justify-end gap-2 pt-6'>
+            <Button type='submit' disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Application'}
+            </Button>
             <Button
               type='button'
               variant='outline'
@@ -251,9 +210,6 @@ export function CreateCandidateApplicationForm({
               }}
               disabled={isSubmitting}>
               Cancel
-            </Button>
-            <Button type='submit' disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Application'}
             </Button>
           </div>
         </form>

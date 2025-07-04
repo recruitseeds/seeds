@@ -42,9 +42,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
           {steps.map((step, index) => (
             <Steps.Item key={step.id} index={index} className='relative z-10'>
               <Steps.Trigger asChild>
-                <Link
-                  href={step.id}
-                  className='flex flex-col items-center w-8 text-center no-underline'>
+                <Link href={step.id} className='flex flex-col items-center w-8 text-center no-underline'>
                   <Steps.Indicator
                     className={`flex h-8 w-8 items-center justify-center rounded-full border-1 ${
                       index < currentStep
@@ -61,9 +59,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                   </Steps.Indicator>
                   <div
                     className={`mt-1.5 w-max max-w-[60px] text-xs font-medium ${
-                      index <= currentStep
-                        ? 'text-foreground'
-                        : 'text-muted-foreground'
+                      index <= currentStep ? 'text-foreground' : 'text-muted-foreground'
                     } transition-colors duration-300 ease-in-out`}>
                     {step.title}
                   </div>

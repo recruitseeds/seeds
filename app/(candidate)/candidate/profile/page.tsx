@@ -6,12 +6,7 @@ export const metadata: Metadata = {
   title: 'Candidate Profile | Seeds',
 }
 
-type ApplicationStatus =
-  | 'applied'
-  | 'in-review'
-  | 'interview'
-  | 'rejected'
-  | 'offer'
+type ApplicationStatus = 'applied' | 'in-review' | 'interview' | 'rejected' | 'offer'
 
 interface CandidateProfilePageProps {
   searchParams: {
@@ -23,23 +18,14 @@ interface CandidateProfilePageProps {
   }
 }
 
-export default async function CandidateProfilePage({
-  searchParams,
-}: CandidateProfilePageProps) {
+export default async function CandidateProfilePage({ searchParams }: CandidateProfilePageProps) {
   const page = searchParams?.page ? Number.parseInt(searchParams.page, 10) : 1
-  const pageSize = searchParams?.pageSize
-    ? Number.parseInt(searchParams.pageSize, 10)
-    : 10
+  const pageSize = searchParams?.pageSize ? Number.parseInt(searchParams.pageSize, 10) : 10
   const search = searchParams?.search || undefined
   const statusParam = searchParams?.status
 
-  let status: ApplicationStatus | undefined = undefined
-  if (
-    statusParam &&
-    ['applied', 'in-review', 'interview', 'rejected', 'offer'].includes(
-      statusParam
-    )
-  ) {
+  let status: ApplicationStatus | undefined
+  if (statusParam && ['applied', 'in-review', 'interview', 'rejected', 'offer'].includes(statusParam)) {
     status = statusParam as ApplicationStatus
   }
 
@@ -51,6 +37,7 @@ export default async function CandidateProfilePage({
     educationData,
     skillsData,
     contactData,
+    filesData, // <-- Add this
   ] = await Promise.all([
     caller.candidate.listApplications({
       page: page > 0 ? page : 1,
@@ -62,6 +49,7 @@ export default async function CandidateProfilePage({
     caller.candidate.listEducation(),
     caller.candidate.listSkills(),
     caller.candidate.getContactInfo().catch(() => null),
+    caller.candidate.listFiles(), // <-- Add this fetch
   ])
 
   return (
@@ -72,6 +60,7 @@ export default async function CandidateProfilePage({
         educationData={educationData}
         skillsData={skillsData}
         contactData={contactData}
+        filesData={filesData}
       />
     </HydrateClient>
   )

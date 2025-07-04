@@ -1,6 +1,6 @@
 import { Slot } from '@radix-ui/react-slot'
-import { cva, type VariantProps } from 'class-variance-authority'
-import * as React from 'react'
+import { type VariantProps, cva } from 'class-variance-authority'
+import type * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -9,19 +9,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
-        secondary:
-          'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
-        destructive:
-          'bg-destructive-subtle text-destructive-vibrant border-destructive-border',
-        outline:
-          'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        default: 'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
+        secondary: 'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+        destructive: 'bg-destructive-subtle text-destructive-vibrant border-destructive-border',
+        outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
         success: 'bg-success text-success-foreground border-success-border',
         info: 'bg-info text-info-foreground border-info-border',
         warning: 'bg-warning text-warning-foreground border-warning-border',
-        brand:
-          'bg-brand-subtle text-brand-subtle-foreground border-brand-border',
+        brand: 'bg-brand-subtle text-brand-subtle-foreground border-brand-border',
       },
     },
     defaultVariants: {
@@ -35,17 +30,10 @@ function Badge({
   variant,
   asChild = false,
   ...props
-}: React.ComponentProps<'span'> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+}: React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : 'span'
 
-  return (
-    <Comp
-      data-slot='badge'
-      className={cn(badgeVariants({ variant }), className)}
-      {...props}
-    />
-  )
+  return <Comp data-slot='badge' className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
 export { Badge, badgeVariants }
