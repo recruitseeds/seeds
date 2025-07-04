@@ -9,20 +9,22 @@ export const metadata: Metadata = {
 type ApplicationStatus = 'applied' | 'in-review' | 'interview' | 'rejected' | 'offer'
 
 interface CandidateProfilePageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string
     pageSize?: string
     tab?: string
     search?: string
     status?: string
-  }
+  }>
 }
 
 export default async function CandidateProfilePage({ searchParams }: CandidateProfilePageProps) {
-  const page = searchParams?.page ? Number.parseInt(searchParams.page, 10) : 1
-  const pageSize = searchParams?.pageSize ? Number.parseInt(searchParams.pageSize, 10) : 10
-  const search = searchParams?.search || undefined
-  const statusParam = searchParams?.status
+  const params = await searchParams
+
+  const page = params?.page ? Number.parseInt(params.page, 10) : 1
+  const pageSize = params?.pageSize ? Number.parseInt(params.pageSize, 10) : 10
+  const search = params?.search || undefined
+  const statusParam = params?.status
 
   let status: ApplicationStatus | undefined
   if (statusParam && ['applied', 'in-review', 'interview', 'rejected', 'offer'].includes(statusParam)) {
@@ -31,14 +33,7 @@ export default async function CandidateProfilePage({ searchParams }: CandidatePr
 
   const caller = await getServerTRPCCaller()
 
-  const [
-    applicationsData,
-    workExperiencesData,
-    educationData,
-    skillsData,
-    contactData,
-    filesData, // <-- Add this
-  ] = await Promise.all([
+  const [applicationsData, workExperiencesData, educationData, skillsData, contactData, filesData] = await Promise.all([
     caller.candidate.listApplications({
       page: page > 0 ? page : 1,
       pageSize: pageSize > 0 ? pageSize : 10,
@@ -49,7 +44,7 @@ export default async function CandidateProfilePage({ searchParams }: CandidatePr
     caller.candidate.listEducation(),
     caller.candidate.listSkills(),
     caller.candidate.getContactInfo().catch(() => null),
-    caller.candidate.listFiles(), // <-- Add this fetch
+    caller.candidate.listFiles(),
   ])
 
   return (

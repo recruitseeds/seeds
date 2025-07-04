@@ -10,14 +10,12 @@ interface CandidateApplicationActionsDropdownProps {
   onActionComplete?: () => void
 }
 
-export function CandidateApplicationActionsDropdown({
-  onActionComplete,
-}: CandidateApplicationActionsDropdownProps) {
+export function CandidateApplicationActionsDropdown({ onActionComplete }: CandidateApplicationActionsDropdownProps) {
   return (
     <SheetDropdownMenu
       align='end'
       trigger={
-        <Button size='sm'>
+        <Button size='sm' className='rounded-[5px]'>
           <PlusIcon className='size-4 mr-1' /> Add Application
         </Button>
       }
@@ -28,10 +26,7 @@ export function CandidateApplicationActionsDropdown({
           leftSlot: <FileTextIcon className='mr-2 size-4' />,
           sheet: {
             sheetContent: ({ closeSheet }) => (
-              <CreateCandidateApplicationForm
-                onApplicationCreated={onActionComplete}
-                onClose={closeSheet}
-              />
+              <CreateCandidateApplicationForm onApplicationCreated={onActionComplete} onClose={closeSheet} />
             ),
             width: 'sm:max-w-2xl',
             onClose: () => console.log('Sheet closed'),
@@ -43,10 +38,7 @@ export function CandidateApplicationActionsDropdown({
           leftSlot: <UploadCloudIcon className='mr-2 size-4' />,
           sheet: {
             sheetContent: ({ closeSheet }) => (
-              <ImportCandidateApplicationsContent
-                onApplicationsImported={onActionComplete}
-                onClose={closeSheet}
-              />
+              <ImportCandidateApplicationsContent onApplicationsImported={onActionComplete} onClose={closeSheet} />
             ),
             width: 'sm:max-w-2xl',
           },
