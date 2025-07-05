@@ -1,5 +1,3 @@
-// src/trpc/routers/candidate.ts
-
 import { R2_BUCKET_NAME, getS3Client, uploadFileToR2AndRecord } from '@/lib/s3-client'
 import {
   createCandidateApplication,
@@ -10,6 +8,7 @@ import {
   deleteCandidateEducation,
   deleteCandidateSkill,
   deleteCandidateWorkExperience,
+  updateCandidateApplication,
   updateCandidateEducation,
   updateCandidateProfile,
   updateCandidateWorkExperience,
@@ -34,6 +33,13 @@ import { candidateProcedure, createTRPCRouter } from '../init'
 const applicationStatusEnum = z.enum(['applied', 'in-review', 'interview', 'rejected', 'offer'])
 const applicationSourceEnum = z.enum(['platform', 'manual', 'import'])
 
+const nextStepSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  date: z.string().datetime().optional().nullable(),
+  completed: z.boolean().default(false),
+})
+
 const baseApplicationSchema = {
   job_title: z.string().min(1, 'Job title is required.'),
   company_name: z.string().min(1, 'Company name is required.'),
@@ -44,6 +50,7 @@ const baseApplicationSchema = {
   contact_person: z.string().optional().nullable(),
   next_step_date: z.string().datetime().optional().nullable(),
   next_step_description: z.string().optional().nullable(),
+  next_steps: z.array(nextStepSchema).optional().nullable(),
   salary_range: z.string().optional().nullable(),
   source: applicationSourceEnum.optional().default('manual'),
   status: applicationStatusEnum.optional().default('applied'),
@@ -65,6 +72,39 @@ export const candidateRouter = createTRPCRouter({
     }
     return data
   }),
+
+  updateApplication: candidateProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        job_title: z.string().min(1).optional(),
+        company_name: z.string().min(1).optional(),
+        application_date: z.string().datetime().optional(),
+        application_url: z.string().url().optional().nullable(),
+        company_logo_url: z.string().url().optional().nullable(),
+        contact_email: z.string().email().optional().nullable(),
+        contact_person: z.string().optional().nullable(),
+        next_step_date: z.string().datetime().optional().nullable(),
+        next_step_description: z.string().optional().nullable(),
+        next_steps: z.array(nextStepSchema).optional().nullable(),
+        salary_range: z.string().optional().nullable(),
+        status: applicationStatusEnum.optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...updateData } = input
+
+      const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, value]) => value !== undefined))
+
+      try {
+        return await updateCandidateApplication(ctx.supabase, ctx.user.id, id, cleanUpdateData)
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error instanceof Error ? error.message : 'Failed to update application',
+        })
+      }
+    }),
 
   updateProfile: candidateProcedure
     .input(

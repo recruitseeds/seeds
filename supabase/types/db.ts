@@ -75,6 +75,7 @@ export type Database = {
           job_title: string
           next_step_date: string | null
           next_step_description: string | null
+          next_steps: Json | null
           salary_range: string | null
           source: Database['public']['Enums']['candidate_application_source']
           status: Database['public']['Enums']['candidate_application_status']
@@ -94,6 +95,7 @@ export type Database = {
           job_title: string
           next_step_date?: string | null
           next_step_description?: string | null
+          next_steps?: Json | null
           salary_range?: string | null
           source?: Database['public']['Enums']['candidate_application_source']
           status: Database['public']['Enums']['candidate_application_status']
@@ -113,6 +115,7 @@ export type Database = {
           job_title?: string
           next_step_date?: string | null
           next_step_description?: string | null
+          next_steps?: Json | null
           salary_range?: string | null
           source?: Database['public']['Enums']['candidate_application_source']
           status?: Database['public']['Enums']['candidate_application_status']

@@ -70,7 +70,7 @@ async function ApplicationSummary() {
   }
 
   return (
-    <Card className='flex-1 shadow-none border-none' flat>
+    <Card className='flex-1 shadow-none border-none outline-none'>
       <CardHeader className='pb-2'>
         <CardTitle>Application Summary</CardTitle>
         <CardDescription>Overview of your job applications</CardDescription>
