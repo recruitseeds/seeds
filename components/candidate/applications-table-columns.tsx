@@ -1,12 +1,10 @@
-import { EditExperienceDialog } from '@/components/candidate/edit-experience-dialog'
+import { EditExperienceDialog } from '@/components/candidate/edit-application-dialog'
 import { formatDate } from '@/lib/dates'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import type { ColumnDef } from '@tanstack/react-table'
 import { type ApplicationStatus, getStatusBadge } from './applications-badge'
 
-export type Application = NonNullable<
-  RouterOutputs['candidate']['listApplications']['data']
->[number]
+export type Application = NonNullable<RouterOutputs['candidate']['listApplications']['data']>[number]
 
 export const columns: ColumnDef<Application>[] = [
   {
@@ -42,24 +40,19 @@ export const columns: ColumnDef<Application>[] = [
   {
     accessorKey: 'job_title',
     header: 'Position',
-    cell: ({ row }) => (
-      <div className='font-medium'>{row.getValue('job_title') || 'N/A'}</div>
-    ),
+    cell: ({ row }) => <div className='font-medium'>{row.getValue('job_title') || 'N/A'}</div>,
   },
   {
     accessorKey: 'application_date',
     header: 'Applied Date',
     cell: ({ row }) => (
-      <div className='text-sm text-muted-foreground'>
-        {formatDate(row.getValue('application_date'))}
-      </div>
+      <div className='text-sm text-muted-foreground'>{formatDate(row.getValue('application_date'))}</div>
     ),
   },
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) =>
-      getStatusBadge(row.getValue('status') as ApplicationStatus),
+    cell: ({ row }) => getStatusBadge(row.getValue('status') as ApplicationStatus),
   },
   {
     id: 'nextStep',
@@ -69,9 +62,7 @@ export const columns: ColumnDef<Application>[] = [
       if (app.next_step_description && app.next_step_date) {
         return (
           <div className='bg-muted/50 px-3 py-1.5 rounded text-xs'>
-            <span className='font-medium text-foreground'>
-              {app.next_step_description}:
-            </span>{' '}
+            <span className='font-medium text-foreground'>{app.next_step_description}:</span>{' '}
             {formatDate(app.next_step_date)}
           </div>
         )

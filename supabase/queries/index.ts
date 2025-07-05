@@ -20,7 +20,29 @@ export async function getCandidateApplicationsPaginated(
 
   let query = client
     .from('candidate_applications')
-    .select('*', { count: 'exact' })
+    .select(
+      `
+      id,
+      candidate_id,
+      job_title,
+      company_name,
+      company_logo_url,
+      status,
+      application_date,
+      next_step_description,
+      next_step_date,
+      next_steps,
+      source,
+      job_id,
+      application_url,
+      contact_person,
+      contact_email,
+      salary_range,
+      created_at,
+      updated_at
+    `,
+      { count: 'exact' }
+    )
     .eq('candidate_id', candidateId)
     .order('application_date', { ascending: false })
 
@@ -35,6 +57,11 @@ export async function getCandidateApplicationsPaginated(
   query = query.range(offset, offset + pageSize - 1)
 
   const { data, error, count } = await query
+
+  // Add debug logging
+  if (data) {
+    console.log('Query result - first application next_steps:', data[0]?.next_steps)
+  }
 
   return { data, error, count }
 }

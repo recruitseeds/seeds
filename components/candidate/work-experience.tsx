@@ -405,7 +405,7 @@ export function WorkExperience(props: WorkExperienceProps) {
                 <div className='space-y-2'>
                   <Label htmlFor='start_date'>Start Date</Label>
                   <DatePicker
-                    selected={formData.start_date ? new Date(formData.start_date + 'T12:00:00') : undefined}
+                    selected={formData.start_date ? new Date(`${formData.start_date}T12:00:00`) : undefined}
                     onSelect={(date) =>
                       setFormData({
                         ...formData,
@@ -435,7 +435,7 @@ export function WorkExperience(props: WorkExperienceProps) {
                   <div className='space-y-2'>
                     <Label htmlFor='end_date'>End Date</Label>
                     <DatePicker
-                      selected={formData.end_date ? new Date(formData.end_date + 'T12:00:00') : undefined}
+                      selected={formData.end_date ? new Date(`${formData.end_date}T12:00:00`) : undefined}
                       onSelect={(date) =>
                         setFormData({
                           ...formData,

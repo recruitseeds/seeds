@@ -413,6 +413,69 @@ export async function createCandidateApplication(
   return insertedData
 }
 
+export type UpdateCandidateApplicationParams = TablesUpdate<'candidate_applications'> & {
+  id: string
+}
+
+export async function updateCandidateApplication(
+  supabase: Client,
+  candidateId: string,
+  applicationId: string,
+  updateData: Partial<TablesUpdate<'candidate_applications'>>
+): Promise<Tables<'candidate_applications'>> {
+  console.log('updateCandidateApplication called with:', {
+    candidateId,
+    applicationId,
+    updateData,
+  })
+
+  const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, value]) => value !== undefined))
+
+  console.log('cleanUpdateData:', cleanUpdateData)
+
+  if (Object.keys(cleanUpdateData).length === 0) {
+    console.log('No data to update, fetching existing data')
+    const { data: existingData, error: fetchError } = await supabase
+      .from('candidate_applications')
+      .select('*')
+      .eq('id', applicationId)
+      .eq('candidate_id', candidateId)
+      .single()
+
+    if (fetchError || !existingData) {
+      throw new Error(`Application with ID ${applicationId} not found or not owned by candidate ${candidateId}.`)
+    }
+    return existingData
+  }
+
+  console.log('Updating application with data:', cleanUpdateData)
+
+  const { data: updatedData, error } = await supabase
+    .from('candidate_applications')
+    .update(cleanUpdateData)
+    .eq('id', applicationId)
+    .eq('candidate_id', candidateId)
+    .select('*')
+    .single()
+
+  console.log('Supabase update result:', { updatedData, error })
+
+  if (error) {
+    console.error('Supabase update error:', error)
+    if (error.code === 'PGRST116') {
+      throw new Error(`Application with ID ${applicationId} not found or not owned by candidate ${candidateId}.`)
+    }
+    throw new Error(`Failed to update application: ${error.message}`)
+  }
+
+  if (!updatedData) {
+    throw new Error(`Application with ID ${applicationId} not found after update.`)
+  }
+
+  console.log('Successfully updated application:', updatedData)
+  return updatedData
+}
+
 export async function createMultipleCandidateApplications(
   supabase: SupabaseClient<Database>,
   applications: CreateCandidateApplicationParams[]

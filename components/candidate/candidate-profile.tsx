@@ -60,11 +60,14 @@ export function CandidateProfile(props: CandidateProfileProps) {
     current.delete('search')
     current.delete('status')
 
+    if (newTab !== 'files' && current.has('section')) {
+      current.delete('section')
+    }
+
     const search = current.toString()
     const query = search ? `?${search}` : ''
     router.push(`${pathname}${query}`)
   }
-
   const tabContent = (
     <>
       <TabsContent value='applications' className='mt-0'>
