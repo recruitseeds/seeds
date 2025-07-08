@@ -199,7 +199,7 @@ export function CreateCandidateApplicationForm({ onApplicationCreated, onClose }
 
           <div className='flex justify-end gap-2 pt-6'>
             <Button type='submit' disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Application'}
+              {isSubmitting ? 'Save application' : 'Save application'}
             </Button>
             <Button
               type='button'

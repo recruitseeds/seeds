@@ -3,13 +3,7 @@ import { ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'
 import { UIText } from '../text'
-import {
-  MenuHeadingType,
-  MenuItem,
-  MenuItemType,
-  MenuSubType,
-  MenuTextType,
-} from './types'
+import type { MenuHeadingType, MenuItem, MenuItemType, MenuSubType, MenuTextType } from './types'
 
 function DrawerSeparator() {
   return (
@@ -48,22 +42,15 @@ function DrawerItem({ item, onClose }: DrawerItemProps) {
       disabled={item.disabled}
       onClick={(event) => {
         onClose()
-        // @ts-expect-error - event is not a valid argument for onSelect
         item.onSelect?.(event)
       }}
       className={cn(
-        'group relative flex w-full cursor-pointer items-center justify-start gap-2.5 rounded-[5px] border-none px-4 font-medium outline-none disabled:cursor-not-allowed disabled:opacity-50',
-        'md:h-8.5 h-10.5 text-base md:text-sm'
+        'group relative flex w-full cursor-pointer items-center justify-start gap-2.5 rounded-[5px] px-4 font-medium disabled:cursor-not-allowed disabled:opacity-50',
+        'md:h-8.5 h-10.5 text-base md:text-sm hover:bg-secondary border border-transparent hover:border-border hover:dark:shadow-[0px_1px_0px_rgb(255_255_255_/_0.05)]'
       )}>
-      {item.leftSlot && (
-        <span className='initial:text-neutral-400 scale-125 transition-colors'>
-          {item.leftSlot}
-        </span>
-      )}
+      {item.leftSlot && <span className='initial:text-neutral-400 scale-125 transition-colors'>{item.leftSlot}</span>}
       <span className='line-clamp-1 flex-1 text-left'>{item.label}</span>
-      {item.rightSlot && (
-        <span className='flex flex-none'>{item.rightSlot}</span>
-      )}
+      {item.rightSlot && <span className='flex flex-none'>{item.rightSlot}</span>}
     </button>
   )
 }
@@ -87,11 +74,7 @@ function DrawerSubItem({ item, onClose }: DrawerSubItemProps) {
           'group relative flex w-full cursor-pointer items-center justify-start gap-2.5 rounded-[5px] border-none px-4 font-medium outline-none disabled:cursor-not-allowed disabled:opacity-50',
           'md:h-8.5 h-10.5 text-base md:text-sm'
         )}>
-        {item.leftSlot && (
-          <span className='initial:text-neutral-400 scale-125 transition-colors'>
-            {item.leftSlot}
-          </span>
-        )}
+        {item.leftSlot && <span className='initial:text-neutral-400 scale-125 transition-colors'>{item.leftSlot}</span>}
         <span className='line-clamp-1 flex-1 text-left'>{item.label}</span>
         <span className='text-quaternary -mr-2 flex flex-none'>
           <ChevronRightIcon size={28} />
@@ -109,12 +92,7 @@ interface DrawerActionsProps {
   title?: string
 }
 
-function DrawerActions({
-  items,
-  onClose,
-  header,
-  title = 'Menu',
-}: DrawerActionsProps) {
+function DrawerActions({ items, onClose, header, title = 'Menu' }: DrawerActionsProps) {
   return (
     <DrawerPrimitive.Portal>
       <div className='relative isolate z-50'>
@@ -130,10 +108,8 @@ function DrawerActions({
             <DrawerPrimitive.Handle className='!h-1 !w-8 !rounded-full !bg-muted-foreground/70' />
           </div>
           {/* Add title here for accessibility */}
-          <DrawerPrimitive.Title className='sr-only'>
-            {title}
-          </DrawerPrimitive.Title>
-          <div className='scrollbar-hide pb-safe-offset-1 relative overflow-y-auto overflow-x-hidden'>
+          <DrawerPrimitive.Title className='sr-only'>{title}</DrawerPrimitive.Title>
+          <div className='scrollbar-hide pb-safe-offset-1 relative overflow-y-auto overflow-x-hidden space-y-[2px] px-2 my-2'>
             {header}
             {items.map((item, i) => {
               if ('separator' in item) return <DrawerSeparator key={i} />
@@ -141,10 +117,8 @@ function DrawerActions({
               if (item.type === 'sub') {
                 return <DrawerSubItem key={i} item={item} onClose={onClose} />
               }
-              if (item.type === 'heading')
-                return <DrawerHeading key={i} item={item} />
-              if (item.type === 'text')
-                return <DrawerText key={i} item={item} />
+              if (item.type === 'heading') return <DrawerHeading key={i} item={item} />
+              if (item.type === 'text') return <DrawerText key={i} item={item} />
               return <DrawerItem key={i} item={item} onClose={onClose} />
             })}
           </div>
@@ -178,12 +152,7 @@ export function MobileDrawerMenu({
       <DrawerPrimitive.Trigger asChild disabled={disabled}>
         {trigger}
       </DrawerPrimitive.Trigger>
-      <DrawerActions
-        title={title}
-        items={items}
-        onClose={() => onOpenChange(false)}
-        header={header}
-      />
+      <DrawerActions title={title} items={items} onClose={() => onOpenChange(false)} header={header} />
     </DrawerPrimitive.Root>
   )
 }

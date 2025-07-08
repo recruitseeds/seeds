@@ -2,7 +2,7 @@ import { Icon } from '@/components/ui/icon'
 import { Surface } from '@/components/ui/surface'
 import { Toolbar } from '@/components/ui/toolbar'
 import * as Popover from '@radix-ui/react-popover'
-import { BubbleMenu, Editor } from '@tiptap/react'
+import { BubbleMenu, type Editor } from '@tiptap/react'
 import { memo, useEffect, useState } from 'react'
 import { ColorPicker } from '../../panels/color-picker'
 import { ContentTypePicker } from './components/content-type-picker'
@@ -82,20 +82,10 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
       updateDelay={0}>
       <Toolbar.Wrapper>
         <MemoContentTypePicker options={blockOptions} />
-        <MemoFontFamilyPicker
-          onChange={commands.onSetFont}
-          value={states.currentFont || ''}
-        />
-        <MemoFontSizePicker
-          onChange={commands.onSetFontSize}
-          value={states.currentSize || ''}
-        />
+        <MemoFontFamilyPicker onChange={commands.onSetFont} value={states.currentFont || ''} />
+        <MemoFontSizePicker onChange={commands.onSetFontSize} value={states.currentSize || ''} />
         <Toolbar.Divider />
-        <MemoButton
-          tooltip='Bold'
-          tooltipShortcut={['Mod', 'B']}
-          onClick={commands.onBold}
-          active={states.isBold}>
+        <MemoButton tooltip='Bold' tooltipShortcut={['Mod', 'B']} onClick={commands.onBold} active={states.isBold}>
           <Icon name='Bold' />
         </MemoButton>
         <MemoButton
@@ -119,11 +109,7 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
           active={states.isStrike}>
           <Icon name='Strikethrough' />
         </MemoButton>
-        <MemoButton
-          tooltip='Code'
-          tooltipShortcut={['Mod', 'E']}
-          onClick={commands.onCode}
-          active={states.isCode}>
+        <MemoButton tooltip='Code' tooltipShortcut={['Mod', 'E']} onClick={commands.onCode} active={states.isCode}>
           <Icon name='Code' />
         </MemoButton>
         <MemoButton tooltip='Code block' onClick={commands.onCodeBlock}>
@@ -132,9 +118,7 @@ export const TextMenu = ({ editor }: TextMenuProps) => {
         <EditLinkPopover onSetLink={commands.onLink} />
         <Popover.Root>
           <Popover.Trigger asChild>
-            <MemoButton
-              active={!!states.currentHighlight}
-              tooltip='Highlight text'>
+            <MemoButton active={!!states.currentHighlight} tooltip='Highlight text'>
               <Icon name='Highlighter' />
             </MemoButton>
           </Popover.Trigger>

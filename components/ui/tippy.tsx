@@ -58,7 +58,7 @@ export function Tooltip(props: Props) {
               side={side}
               align={align}
               className={cn(
-                'text-foreground pointer-events-none flex max-w-sm flex-row gap-3 break-words rounded-md bg-background py-1 text-center text-[13px] font-normal shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]',
+                'text-background border border-border/20 pointer-events-none flex max-w-sm flex-row gap-3 break-words rounded-lg bg-foreground py-1 text-center text-[13px] font-normal shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)] z-10',
                 {
                   'px-2': !shortcut,
                   'pl-2.5 pr-1': !!shortcut && !!label,

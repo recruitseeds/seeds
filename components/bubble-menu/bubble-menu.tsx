@@ -1,17 +1,10 @@
-import { BubbleMenu, Editor, isTextSelection } from '@tiptap/react'
+import { BubbleMenu, type Editor, isTextSelection } from '@tiptap/react'
 import Link from 'next/link'
-import {
-  memo,
-  MouseEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { type MouseEvent, memo, useCallback, useEffect, useRef, useState } from 'react'
 import { isMobile } from 'react-device-detect'
 import { isValidUrl } from '../../lib/is-valid-url'
 import { Button } from '../ui/button'
-import { AnyEvent, LinkEditor } from '../ui/link-editor'
+import { type AnyEvent, LinkEditor } from '../ui/link-editor'
 import { Tooltip } from '../ui/tippy'
 
 import {
@@ -51,8 +44,7 @@ function buildMenuItems(items?: any): any {
 }
 
 function paragraphIcon(editor: Editor) {
-  if (editor.isActive('heading', { level: 1 }))
-    return <Heading1Icon size={20} />
+  if (editor.isActive('heading', { level: 1 })) return <Heading1Icon size={20} />
   if (editor.isActive('heading', { level: 2 })) return <Heading2Icon />
   if (editor.isActive('heading', { level: 3 })) return <Heading3Icon />
   return <TextCapitalizeIcon />
@@ -136,11 +128,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
 
     const keydown = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        if (
-          !editor?.isFocused ||
-          editor.view.state.selection.from === editor.view.state.selection.to
-        )
-          return
+        if (!editor?.isFocused || editor.view.state.selection.from === editor.view.state.selection.to) return
         e.stopPropagation()
         if (linkEditorOpen) {
           closeLinkEditor()
@@ -183,12 +171,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
       label: 'Heading 1',
       onSelect: (e) => {
         e.stopPropagation()
-        editor
-          .chain()
-          .splitNearHardBreaks()
-          .setHeading({ level: 1 })
-          .focus()
-          .run()
+        editor.chain().splitNearHardBreaks().setHeading({ level: 1 }).focus().run()
       },
       className: 'font-bold !text-lg',
       kbd: 'mod+alt+1',
@@ -198,12 +181,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
       label: 'Heading 2',
       onSelect: (e) => {
         e.stopPropagation()
-        editor
-          .chain()
-          .splitNearHardBreaks()
-          .setHeading({ level: 2 })
-          .focus()
-          .run()
+        editor.chain().splitNearHardBreaks().setHeading({ level: 2 }).focus().run()
       },
       className: 'font-bold',
       kbd: 'mod+alt+2',
@@ -213,12 +191,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
       label: 'Heading 3',
       onSelect: (e) => {
         e.stopPropagation()
-        editor
-          .chain()
-          .splitNearHardBreaks()
-          .setHeading({ level: 3 })
-          .focus()
-          .run()
+        editor.chain().splitNearHardBreaks().setHeading({ level: 3 }).focus().run()
       },
       className: 'font-semibold',
       kbd: 'mod+alt+3',
@@ -293,29 +266,17 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
           const isText = isTextSelection(selection)
 
           if (!isText) return false
-          const isEmpty =
-            selection.empty ||
-            (isText && doc.textBetween(from, to).length === 0)
+          const isEmpty = selection.empty || (isText && doc.textBetween(from, to).length === 0)
 
           if (isEmpty) return false
-          if (
-            ['postNoteAttachment', 'comment', 'codeBlock'].some((name) =>
-              editor.isActive(name)
-            )
-          )
-            return false
+          if (['postNoteAttachment', 'comment', 'codeBlock'].some((name) => editor.isActive(name))) return false
           return true
         }}>
         <div
           ref={containerRef}
           className='text-foreground bg-background flex cursor-default items-center gap-1 rounded-lg p-1 shadow-lg border dark:border-none dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]'>
           {linkEditorOpen ? (
-            <LinkEditor
-              url={url}
-              onChangeUrl={setUrl}
-              onSaveLink={saveLink}
-              onRemoveLink={removeLink}
-            />
+            <LinkEditor url={url} onChangeUrl={setUrl} onSaveLink={saveLink} onRemoveLink={removeLink} />
           ) : (
             <>
               {enableHeaders && (
@@ -323,12 +284,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
                   align='start'
                   items={paragraphItems}
                   trigger={
-                    <BubbleMenuButton
-                      onClick={blurEditor}
-                      icon={paragraphIcon(editor)}
-                      tooltip='Paragraph'
-                      dropdown
-                    />
+                    <BubbleMenuButton onClick={blurEditor} icon={paragraphIcon(editor)} tooltip='Paragraph' dropdown />
                   }
                   desktop={{
                     container: containerRef.current,
@@ -392,14 +348,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
                 <DropdownMenu
                   align='start'
                   items={listItems}
-                  trigger={
-                    <BubbleMenuButton
-                      onClick={blurEditor}
-                      icon={listIcon(editor)}
-                      tooltip='List'
-                      dropdown
-                    />
-                  }
+                  trigger={<BubbleMenuButton onClick={blurEditor} icon={listIcon(editor)} tooltip='List' dropdown />}
                   desktop={{
                     container: containerRef.current,
                     width: 'w-50',
@@ -458,12 +407,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
         }}>
         <div className='text-foreground flex gap-1 rounded-lg bg-background p-1 items-center shadow-lg dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]'>
           {linkEditorOpen ? (
-            <LinkEditor
-              url={url}
-              onChangeUrl={setUrl}
-              onSaveLink={saveLink}
-              onRemoveLink={removeLink}
-            />
+            <LinkEditor url={url} onChangeUrl={setUrl} onSaveLink={saveLink} onRemoveLink={removeLink} />
           ) : (
             <>
               <Tooltip label='Edit link'>
@@ -475,17 +419,13 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
                 </Button>
               </Tooltip>
               <Tooltip label='Delete link'>
-                <Button
-                  onClick={removeLink}
-                  className='size-6 hover:bg-primary-hover active:bg-primary-active'>
+                <Button onClick={removeLink} className='size-6 hover:bg-primary-hover active:bg-primary-active'>
                   <TrashIcon />
                 </Button>
               </Tooltip>
               {!!url && isValidUrl(url) && (
                 <Tooltip label='Open in new tab'>
-                  <Button
-                    asChild
-                    className='size-6 hover:bg-primary-hover active:bg-primary-active'>
+                  <Button asChild className='size-6 hover:bg-primary-hover active:bg-primary-active'>
                     <Link href={url} target='_blank'>
                       <ExternalLinkIcon className='size-4' />
                     </Link>

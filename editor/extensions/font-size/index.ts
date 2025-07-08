@@ -1,4 +1,4 @@
-import { Attributes, Extension } from '@tiptap/core'
+import { type Attributes, Extension } from '@tiptap/core'
 import '@tiptap/extension-text-style'
 
 declare module '@tiptap/core' {
@@ -34,8 +34,7 @@ export const FontSize = Extension.create({
         types: this.options.types,
         attributes: {
           fontSize: {
-            parseHTML: (element) =>
-              element.style.fontSize.replace(/['"]+/g, ''),
+            parseHTML: (element) => element.style.fontSize.replace(/['"]+/g, ''),
             renderHTML: (attributes) => {
               if (!attributes.fontSize) {
                 return {}
@@ -60,10 +59,7 @@ export const FontSize = Extension.create({
       unsetFontSize:
         () =>
         ({ chain }) =>
-          chain()
-            .setMark('textStyle', { fontSize: null })
-            .removeEmptyTextStyle()
-            .run(),
+          chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run(),
     }
   },
 })

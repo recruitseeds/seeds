@@ -4,8 +4,8 @@ import { cache } from 'react'
 import superjson from 'superjson'
 
 interface UserMetadata {
-  role?: 'candidate' | 'company'
-  company_id?: string
+  role?: 'candidate' | 'organization'
+  organization_id?: string
 }
 
 export const createTRPCContext = cache(async () => {
@@ -15,26 +15,26 @@ export const createTRPCContext = cache(async () => {
   } = await supabase.auth.getSession()
 
   let userRole: UserMetadata['role'] | undefined = undefined
-  let companyId: string | undefined = undefined
+  let organizationId: string | undefined = undefined
 
   if (session?.user?.user_metadata) {
     const metadata = session.user.user_metadata as UserMetadata
     userRole = metadata.role
 
-    if (userRole === 'company') {
-      companyId = metadata.company_id
+    if (userRole === 'organization') {
+      organizationId = metadata.organization_id
 
-      // Option 2: Query a table linking users to companies
+      // Option 2: Query a table linking users to organizations
       // This is generally more robust if a user could potentially be linked
-      // to companies in more complex ways or if you have a dedicated profiles table.
-      // if (session.user.id && !companyId) { // Check if not already found
+      // to organizations in more complex ways or if you have a dedicated profiles table.
+      // if (session.user.id && !organizationId) { // Check if not already found
       //   const { data: profileData } = await supabase
-      //     .from('user_profiles') // or 'company_users', etc.
-      //     .select('company_id')
+      //     .from('user_profiles') // or 'organization_users', etc.
+      //     .select('organization_id')
       //     .eq('user_id', session.user.id)
       //     .single();
       //   if (profileData) {
-      //     companyId = profileData.company_id;
+      //     organizationId = profileData.organization_id;
       //   }
       // }
     }
@@ -44,19 +44,17 @@ export const createTRPCContext = cache(async () => {
     session,
     user: session?.user,
     userRole,
-    companyId,
+    organizationId,
     supabase,
   }
 })
 
-const t = initTRPC
-  .context<Awaited<ReturnType<typeof createTRPCContext>>>()
-  .create({
-    transformer: superjson,
-    errorFormatter({ shape }) {
-      return shape
-    },
-  })
+const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().create({
+  transformer: superjson,
+  errorFormatter({ shape }) {
+    return shape
+  },
+})
 
 export const createTRPCRouter = t.router
 export const createCallerFactory = t.createCallerFactory
@@ -89,24 +87,27 @@ export const candidateProcedure = protectedProcedure.use(async (opts) => {
   return opts.next(opts)
 })
 
-export const companyProcedure = protectedProcedure.use(async (opts) => {
-  const { userRole, companyId, user } = opts.ctx
+export const organizationProcedure = protectedProcedure.use(async (opts) => {
+  const { userRole, organizationId, user } = opts.ctx
 
-  if (userRole !== 'company') {
+  if (userRole !== 'organization') {
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: 'Access restricted to company representatives.',
+      message: 'Access restricted to organization representatives.',
     })
   }
 
-  if (!companyId) {
-    console.error(
-      `Company user ${user.id} does not have a companyId in context.`
-    )
+  if (!organizationId) {
     throw new TRPCError({
       code: 'PRECONDITION_FAILED',
-      message: 'Company information is not fully set up for this account.',
+      message: 'Organization information is not fully set up for this account.',
     })
   }
-  return opts.next(opts)
+
+  return opts.next({
+    ctx: {
+      ...opts.ctx,
+      organizationId,
+    },
+  })
 })
