@@ -1,18 +1,18 @@
 'use client'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -20,8 +20,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { useTRPC } from '@/trpc/client'
+import { useQuery } from '@tanstack/react-query'
 import { SquarePen } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
+
+// Helper function to format role names
+const getRoleDisplayName = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    admin: 'Administrator',
+    recruiter: 'Recruiter',
+    hiring_manager: 'Hiring Manager',
+    member: 'Team Member',
+  }
+  return roleMap[role] || role
+}
 
 const initialFormData = {
   jobTitle: '',
@@ -34,37 +48,38 @@ const initialFormData = {
   experienceLevel: '',
 }
 
-function JobDetailsForm({ formData, setFormData }) {
+interface JobDetailsFormProps {
+  formData: typeof initialFormData
+  setFormData: (data: typeof initialFormData) => void
+  hiringManagers: Array<{ id: string; user_id: string; role: string }>
+}
+
+function JobDetailsForm({ formData, setFormData, hiringManagers }: JobDetailsFormProps) {
   return (
     <div className='space-y-4 px-1'>
       <div className='space-y-2'>
-        <Label htmlFor='job-title'>Job Title</Label>
+        <Label htmlFor='job-title'>Job Title *</Label>
         <Input
           id='job-title'
           placeholder='e.g. Senior Software Engineer'
           value={formData.jobTitle}
-          onChange={(e) =>
-            setFormData({ ...formData, jobTitle: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+          required
         />
       </div>
       <div className='space-y-2'>
-        <Label>Job Type</Label>
-        <Select
-          value={formData.jobType}
-          onValueChange={(value) =>
-            setFormData({ ...formData, jobType: value })
-          }>
+        <Label>Job Type *</Label>
+        <Select value={formData.jobType} onValueChange={(value) => setFormData({ ...formData, jobType: value })}>
           <SelectTrigger>
             <SelectValue placeholder='Select job type' />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value='full-time'>Full-time</SelectItem>
-              <SelectItem value='part-time'>Part-time</SelectItem>
+              <SelectItem value='full_time'>Full-time</SelectItem>
+              <SelectItem value='part_time'>Part-time</SelectItem>
               <SelectItem value='contract'>Contract</SelectItem>
-              <SelectItem value='freelance'>Freelance</SelectItem>
               <SelectItem value='internship'>Internship</SelectItem>
+              <SelectItem value='temporary'>Temporary</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -77,32 +92,23 @@ function JobDetailsForm({ formData, setFormData }) {
             min={0}
             placeholder='Min'
             value={formData.salaryMin}
-            onChange={(e) =>
-              setFormData({ ...formData, salaryMin: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
           />
           <Input
             type='number'
             placeholder='Max'
             value={formData.salaryMax}
-            onChange={(e) =>
-              setFormData({ ...formData, salaryMax: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
           />
         </div>
-        <Select
-          value={formData.salaryType}
-          onValueChange={(value) =>
-            setFormData({ ...formData, salaryType: value })
-          }>
+        <Select value={formData.salaryType} onValueChange={(value) => setFormData({ ...formData, salaryType: value })}>
           <SelectTrigger className='w-full'>
             <SelectValue placeholder='Salary Type' />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value='annual'>Annual</SelectItem>
-              <SelectItem value='hourly'>Hourly</SelectItem>
-              <SelectItem value='monthly'>Monthly</SelectItem>
+              <SelectItem value='salary'>Annual Salary</SelectItem>
+              <SelectItem value='hourly'>Hourly Rate</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -111,28 +117,26 @@ function JobDetailsForm({ formData, setFormData }) {
         <Label>Hiring Manager</Label>
         <Select
           value={formData.hiringManager}
-          onValueChange={(value) =>
-            setFormData({ ...formData, hiringManager: value })
-          }>
+          onValueChange={(value) => setFormData({ ...formData, hiringManager: value })}>
           <SelectTrigger>
             <SelectValue placeholder='Select hiring manager' />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value='john-doe'>John Doe</SelectItem>
-              <SelectItem value='jane-smith'>Jane Smith</SelectItem>
-              <SelectItem value='alex-johnson'>Alex Johnson</SelectItem>
+              {hiringManagers
+                .filter((manager) => manager.role === 'hiring_manager' || manager.role === 'admin')
+                .map((manager) => (
+                  <SelectItem key={manager.id} value={manager.id}>
+                    User ID: {manager.user_id.slice(0, 8)}... ({getRoleDisplayName(manager.role)})
+                  </SelectItem>
+                ))}
             </SelectGroup>
           </SelectContent>
         </Select>
       </div>
       <div className='space-y-2'>
         <Label>Department</Label>
-        <Select
-          value={formData.department}
-          onValueChange={(value) =>
-            setFormData({ ...formData, department: value })
-          }>
+        <Select value={formData.department} onValueChange={(value) => setFormData({ ...formData, department: value })}>
           <SelectTrigger>
             <SelectValue placeholder='Select department' />
           </SelectTrigger>
@@ -153,9 +157,7 @@ function JobDetailsForm({ formData, setFormData }) {
         <Label>Experience Level</Label>
         <Select
           value={formData.experienceLevel}
-          onValueChange={(value) =>
-            setFormData({ ...formData, experienceLevel: value })
-          }>
+          onValueChange={(value) => setFormData({ ...formData, experienceLevel: value })}>
           <SelectTrigger>
             <SelectValue placeholder='Select experience level' />
           </SelectTrigger>
@@ -164,6 +166,7 @@ function JobDetailsForm({ formData, setFormData }) {
               <SelectItem value='entry'>Entry Level</SelectItem>
               <SelectItem value='mid'>Mid-Level</SelectItem>
               <SelectItem value='senior'>Senior</SelectItem>
+              <SelectItem value='lead'>Lead</SelectItem>
               <SelectItem value='executive'>Executive</SelectItem>
             </SelectGroup>
           </SelectContent>
@@ -173,49 +176,106 @@ function JobDetailsForm({ formData, setFormData }) {
   )
 }
 
-export function JobProfileSheet() {
-  const [formData, setFormData] = useState(initialFormData)
+interface JobProfileSheetProps {
+  editor?: any
+  onJobDataChange?: (data: any) => void
+  jobData?: any
+}
+
+export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfileSheetProps) {
+  const [formData, setFormData] = useState(jobData || initialFormData)
   const [open, setOpen] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const trpcClient = useTRPC()
+
+  const { data: hiringManagers = [] } = useQuery(trpcClient.organization.getOrganizationUsers.queryOptions())
 
   const handleSave = () => {
-    console.log('Saving form data:', formData)
+    if (!formData.jobTitle.trim()) {
+      toast.error('Job title is required')
+      return
+    }
+    if (!formData.jobType) {
+      toast.error('Job type is required')
+      return
+    }
+
+    const jobData = {
+      title: formData.jobTitle,
+      job_type: formData.jobType as 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary',
+      department: formData.department || null,
+      experience_level: (formData.experienceLevel as 'entry' | 'mid' | 'senior' | 'lead' | 'executive') || null,
+      hiring_manager_id: formData.hiringManager || null,
+      salary_min: formData.salaryMin ? Number.parseInt(formData.salaryMin, 10) : null,
+      salary_max: formData.salaryMax ? Number.parseInt(formData.salaryMax, 10) : null,
+      salary_type: (formData.salaryType as 'salary' | 'hourly') || null,
+    }
+
+    onJobDataChange?.(jobData)
     setOpen(false)
+    toast.success('Job details saved locally')
+  }
+
+  const handleDiscard = () => {
+    setShowDiscardDialog(true)
+  }
+
+  const handleClearAll = () => {
+    editor?.commands.clearContent()
+    setFormData(initialFormData)
+    onJobDataChange?.(null)
+    setOpen(false)
+    setShowDiscardDialog(false)
+    toast.success('Content cleared')
+  }
+
+  const handleSaveLocally = () => {
+    handleSave()
+    setShowDiscardDialog(false)
   }
 
   return (
-    <div className='fixed bottom-6 right-6 z-50'>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant='default'
-            size='lg'
-            className='shadow-lg rounded-full px-6'>
-            Complete job profile
-            <SquarePen className='size-4' />
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          side='right'
-          className='sm:max-w-2xl w-full h-[100dvh] overflow-y-auto p-6'>
-          <SheetHeader className='mb-4'>
-            <SheetTitle>Job Details</SheetTitle>
-            <SheetDescription>
-              Enter the required information for this job posting.
-            </SheetDescription>
-          </SheetHeader>
-          <JobDetailsForm formData={formData} setFormData={setFormData} />
-          <SheetFooter className='mt-6 flex flex-col gap-2 p-0 px-1'>
-            <Button onClick={handleSave} className='w-full'>
-              Save
+    <>
+      <div className='fixed bottom-6 right-6 z-50'>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant='default' size='lg' className='shadow-lg rounded-full px-6'>
+              Complete job profile
+              <SquarePen className='size-4' />
             </Button>
-            <SheetClose asChild>
-              <Button variant='outline' className='w-full'>
-                Cancel
+          </SheetTrigger>
+          <SheetContent side='right' className='sm:max-w-2xl w-full h-[100dvh] overflow-y-auto p-6'>
+            <SheetHeader className='mb-4'>
+              <SheetTitle>Job Details</SheetTitle>
+              <SheetDescription>Enter the required information for this job posting.</SheetDescription>
+            </SheetHeader>
+            <JobDetailsForm formData={formData} setFormData={setFormData} hiringManagers={hiringManagers} />
+            <SheetFooter className='mt-6 flex flex-col gap-2 p-0 px-1'>
+              <Button onClick={handleSave} className='w-full'>
+                Save Details
               </Button>
-            </SheetClose>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </div>
+              <Button variant='outline' onClick={handleDiscard} className='w-full'>
+                Discard
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle>Discard changes?</DialogTitle>
+            <DialogDescription>You have unsaved changes. What would you like to do?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={handleSaveLocally}>Save Locally</Button>
+            <Button onClick={handleClearAll} variant='destructive'>
+              Clear All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

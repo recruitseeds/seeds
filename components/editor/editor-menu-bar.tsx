@@ -1,9 +1,7 @@
-'use client'
-
 import { useUploader } from '@/editor/extensions/image-upload/view/hooks'
-import { Editor } from '@tiptap/react'
-import { Ellipsis, Heading1, Heading2, Heading3, Type } from 'lucide-react'
-import { ChangeEvent, memo, useRef } from 'react'
+import type { Editor } from '@tiptap/react'
+import { Ellipsis, Heading1, Heading2, Heading3, Loader2, Type } from 'lucide-react'
+import { type ChangeEvent, memo, useRef } from 'react'
 import { isMobile } from 'react-device-detect'
 import { BubbleMenuButton } from '../bubble-menu/bubble-menu-button'
 import { Button } from '../ui/button'
@@ -24,15 +22,12 @@ function paragraphIcon(editor: Editor) {
 
 function alignmentIcon(editor: Editor) {
   if (editor.isActive({ textAlign: 'left' })) return <Icon name='AlignLeft' />
-  if (editor.isActive({ textAlign: 'center' }))
-    return <Icon name='AlignCenter' />
+  if (editor.isActive({ textAlign: 'center' })) return <Icon name='AlignCenter' />
   if (editor.isActive({ textAlign: 'right' })) return <Icon name='AlignRight' />
   return <Icon name='AlignLeft' />
 }
 
-const EditorMenuBarDivider = () => (
-  <div className='h-full min-h-[1.5rem] w-[1px] mx-1 first:ml-0 last:mr-0 bg-border' />
-)
+const EditorMenuBarDivider = () => <div className='h-full min-h-[1.5rem] w-[1px] mx-1 first:ml-0 last:mr-0 bg-border' />
 
 function isTruthy<T>(value: T | null | undefined | false | 0 | ''): value is T {
   return Boolean(value)
@@ -43,7 +38,21 @@ function buildMenuItems(items?: any): any {
   return items?.filter(isTruthy) ?? []
 }
 
-export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
+interface EditorMenuBarProps {
+  editor: Editor
+  onSave?: (status: 'draft' | 'published') => void
+  onDiscard?: () => void
+  hasJobData?: boolean
+  isLoading?: boolean
+}
+
+export const EditorMenuBar = ({
+  editor,
+  onSave,
+  onDiscard,
+  hasJobData = false,
+  isLoading = false,
+}: EditorMenuBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const commands = useTextmenuCommands(editor)
   const states = useTextmenuStates(editor)
@@ -68,6 +77,19 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
     }
   }
 
+  // Check if editor has meaningful content
+  const hasEditorContent = () => {
+    const content = editor?.getJSON()
+    if (!content || !content.content || content.content.length === 0) return false
+
+    return content.content.some((node: any) => {
+      if (node.content && node.content.length > 0) {
+        return node.content.some((child: any) => child.text && child.text.trim().length > 0)
+      }
+      return false
+    })
+  }
+
   const paragraphItems = buildMenuItems([
     {
       type: 'item',
@@ -84,12 +106,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
       label: 'Heading 1',
       onSelect: (e) => {
         e.stopPropagation()
-        editor
-          .chain()
-          .splitNearHardBreaks()
-          .setHeading({ level: 1 })
-          .focus()
-          .run()
+        editor.chain().splitNearHardBreaks().setHeading({ level: 1 }).focus().run()
       },
       className: 'font-bold !text-lg',
       kbd: 'mod+alt+1',
@@ -99,12 +116,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
       label: 'Heading 2',
       onSelect: (e) => {
         e.stopPropagation()
-        editor
-          .chain()
-          .splitNearHardBreaks()
-          .setHeading({ level: 2 })
-          .focus()
-          .run()
+        editor.chain().splitNearHardBreaks().setHeading({ level: 2 }).focus().run()
       },
       className: 'font-bold',
       kbd: 'mod+alt+2',
@@ -114,12 +126,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
       label: 'Heading 3',
       onSelect: (e) => {
         e.stopPropagation()
-        editor
-          .chain()
-          .splitNearHardBreaks()
-          .setHeading({ level: 3 })
-          .focus()
-          .run()
+        editor.chain().splitNearHardBreaks().setHeading({ level: 3 }).focus().run()
       },
       className: 'font-semibold',
       kbd: 'mod+alt+3',
@@ -162,17 +169,19 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
       label: 'Save',
       onSelect: (e) => {
         e.stopPropagation()
-        // Add your save logic here if needed
+        onSave?.(hasJobData ? 'published' : 'draft')
       },
+      disabled: !hasEditorContent() || isLoading,
     },
     {
       type: 'item',
-      label: 'Cancel',
+      label: 'Discard',
       onSelect: (e) => {
         e.stopPropagation()
-        // Add your cancel logic here if needed
+        onDiscard?.()
       },
       className: 'font-normal',
+      disabled: isLoading,
     },
   ])
 
@@ -184,20 +193,13 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
             align='start'
             items={paragraphItems}
             trigger={
-              <BubbleMenuButton
-                onClick={blurEditor}
-                icon={paragraphIcon(editor)}
-                tooltip='Paragraph'
-                dropdown
-              />
+              <BubbleMenuButton onClick={blurEditor} icon={paragraphIcon(editor)} tooltip='Paragraph' dropdown />
             }
             desktop={{
               container: containerRef.current,
               width: 'w-50',
             }}
           />
-
-          {/* Text formatting group */}
           <div className='flex items-center gap-[2px]'>
             <MemoButton
               tooltip='Bold'
@@ -205,9 +207,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
               onClick={commands.onBold}
               active={states.isBold}
               className={
-                states.isBold
-                  ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white'
-                  : ''
+                states.isBold ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white' : ''
               }>
               <Icon name='Bold' />
             </MemoButton>
@@ -217,9 +217,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
               onClick={commands.onItalic}
               active={states.isItalic}
               className={
-                states.isItalic
-                  ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white'
-                  : ''
+                states.isItalic ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white' : ''
               }>
               <Icon name='Italic' />
             </MemoButton>
@@ -229,9 +227,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
               onClick={commands.onUnderline}
               active={states.isUnderline}
               className={
-                states.isUnderline
-                  ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white'
-                  : ''
+                states.isUnderline ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white' : ''
               }>
               <Icon name='Underline' />
             </MemoButton>
@@ -241,15 +237,11 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
               onClick={commands.onStrike}
               active={states.isStrike}
               className={
-                states.isStrike
-                  ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white'
-                  : ''
+                states.isStrike ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white' : ''
               }>
               <Icon name='Strikethrough' />
             </MemoButton>
           </div>
-
-          {/* Code formatting group */}
           <div className='flex items-center gap-[2px]'>
             <MemoButton
               tooltip='Code'
@@ -257,61 +249,38 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
               onClick={commands.onCode}
               active={states.isCode}
               className={
-                states.isCode
-                  ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white'
-                  : ''
+                states.isCode ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white' : ''
               }>
               <Icon name='Code' />
             </MemoButton>
             <MemoButton
               tooltip='Code block'
+              tooltipShortcut={['Mod', 'Alt', 'C']}
               onClick={commands.onCodeBlock}
               active={states.isCodeBlock}
               className={
-                states.isCodeBlock
-                  ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white'
-                  : ''
+                states.isCodeBlock ? 'bg-important hover:bg-important-hover active:bg-important-active !text-white' : ''
               }>
               <Icon name='FileCode' />
             </MemoButton>
           </div>
-
           <EditorMenuBarDivider />
-
-          {/* Alignment dropdown */}
           <DropdownMenu
             align='start'
             items={alignmentItems}
             trigger={
-              <BubbleMenuButton
-                onClick={blurEditor}
-                icon={alignmentIcon(editor)}
-                tooltip='Alignment'
-                dropdown
-              />
+              <BubbleMenuButton onClick={blurEditor} icon={alignmentIcon(editor)} tooltip='Alignment' dropdown />
             }
             desktop={{
               container: containerRef.current,
               width: 'w-50',
             }}
           />
-
           <EditorMenuBarDivider />
-
-          {/* Image upload */}
-          <MemoButton
-            tooltip='Upload image'
-            onClick={() => fileInputRef.current?.click()}>
+          <MemoButton tooltip='Upload image' onClick={() => fileInputRef.current?.click()}>
             <Icon name='Image' />
           </MemoButton>
-
-          <input
-            type='file'
-            accept='image/*'
-            ref={fileInputRef}
-            className='hidden'
-            onChange={handleImageUpload}
-          />
+          <input type='file' accept='image/*' ref={fileInputRef} className='hidden' onChange={handleImageUpload} />
         </div>
       </div>
 
@@ -321,7 +290,7 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
             align='end'
             items={actionItems}
             trigger={
-              <Button variant='ghost' size='icon'>
+              <Button variant='ghost' size='icon' disabled={isLoading}>
                 <Ellipsis className='size-4' />
               </Button>
             }
@@ -331,12 +300,16 @@ export const EditorMenuBar = ({ editor }: { editor: Editor }) => {
             }}
           />
         </div>
-
         <div className='hidden menu-bar:flex items-center gap-2'>
-          <Button variant='ghost' size='sm'>
-            Cancel
+          <Button variant='ghost' size='sm' onClick={onDiscard} disabled={isLoading}>
+            Discard
           </Button>
-          <Button variant='brand' size='sm'>
+          <Button
+            variant='brand'
+            size='sm'
+            onClick={() => onSave?.(hasJobData ? 'published' : 'draft')}
+            disabled={!hasEditorContent() || isLoading}>
+            {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
             Save
           </Button>
         </div>

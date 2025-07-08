@@ -198,7 +198,7 @@ export function ApplicationDialogTimeline({ application }: ExperienceDialogTimel
     return {
       timelineItems: items,
       isManualApplication: isManual,
-      currentStep: activeStep - 1,
+      currentStep: activeStep,
     }
   }, [application])
 

@@ -74,6 +74,7 @@ export const ExtensionKit = () => [
     },
   }),
   DetailsContent,
+  // TaskList,
   DetailsSummary,
   CodeBlock,
   TextStyle,

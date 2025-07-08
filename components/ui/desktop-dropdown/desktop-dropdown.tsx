@@ -1,33 +1,17 @@
-import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
-
-// import { downloadFile } from '../Button'
 import { cn } from '@/lib/utils'
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { DismissibleLayer } from '../dismissible-layer'
 import { KeyboardShortcut } from '../keyboard-shortcut'
-import {
-  MenuHeadingType,
-  MenuItem,
-  MenuItemType,
-  MenuSubType,
-  MenuTextType,
-} from '../menu/types'
+import type { MenuHeadingType, MenuItem, MenuItemType, MenuSubType, MenuTextType } from '../menu/types'
 import { UIText } from '../text'
 import { CONTAINER_STYLES } from '../utils/consts'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DropdownMenuPortalProps
-  extends Pick<
-    DropdownMenuPrimitive.DropdownMenuPortalProps,
-    'children' | 'container'
-  > {}
+  extends Pick<DropdownMenuPrimitive.DropdownMenuPortalProps, 'children' | 'container'> {}
 
 function DropdownMenuPortal({ children, ...rest }: DropdownMenuPortalProps) {
-  return (
-    <DropdownMenuPrimitive.Portal {...rest}>
-      {children}
-    </DropdownMenuPrimitive.Portal>
-  )
+  return <DropdownMenuPrimitive.Portal {...rest}>{children}</DropdownMenuPrimitive.Portal>
 }
 
 function DropdownMenuSeparator() {
@@ -77,8 +61,7 @@ function DropdownMenuItem({ item }: DropdownMenuItemProps) {
           'pr-2': item.rightSlot && !item.kbd,
           'pr-1.5': item.kbd && !item.rightSlot,
           'pr-3': !item.rightSlot && !item.kbd,
-          'data-[highlighted]:bg-red-500 data-[highlighted]:text-white':
-            item.destructive,
+          'data-[highlighted]:bg-red-500 data-[highlighted]:text-white': item.destructive,
           'data-[highlighted]:bg-secondary border border-transparent focus:shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]':
             !item.destructive,
         },
@@ -88,16 +71,13 @@ function DropdownMenuItem({ item }: DropdownMenuItemProps) {
         {item.leftSlot && (
           <span
             className={cn('initial:text-tertiary flex-none transition-colors', {
-              'group-[[data-highlighted]]:text-primary group-[[data-highlighted]]:dark':
-                item.destructive,
+              'group-[[data-highlighted]]:text-primary group-[[data-highlighted]]:dark': item.destructive,
             })}>
             {item.leftSlot}
           </span>
         )}
         <span className='line-clamp-1 flex-1'>{item.label}</span>
-        {item.rightSlot && (
-          <span className='flex flex-none'>{item.rightSlot}</span>
-        )}
+        {item.rightSlot && <span className='flex flex-none'>{item.rightSlot}</span>}
         {item.kbd && <KeyboardShortcut shortcut={item.kbd} />}
       </div>
     </DropdownMenuPrimitive.Item>
@@ -109,11 +89,7 @@ interface DropdownMenuSubItemProps extends React.PropsWithChildren {
   width?: MenuWidth
 }
 
-function DropdownMenuSubItem({
-  children,
-  item,
-  width,
-}: DropdownMenuSubItemProps) {
+function DropdownMenuSubItem({ children, item, width }: DropdownMenuSubItemProps) {
   return (
     <DropdownMenuPrimitive.Sub>
       <DropdownMenuPrimitive.SubTrigger
@@ -130,11 +106,7 @@ function DropdownMenuSubItem({
         )}
         disabled={item.disabled}>
         <div className='relative flex flex-1 transform-gpu items-center gap-2'>
-          {item.leftSlot && (
-            <span className='initial:text-tertiary flex-none transition-colors'>
-              {item.leftSlot}
-            </span>
-          )}
+          {item.leftSlot && <span className='initial:text-tertiary flex-none transition-colors'>{item.leftSlot}</span>}
           <span className='line-clamp-1 flex-1'>{item.label}</span>
 
           <span className='text-muted-foreground -mr-2 flex flex-none'>
@@ -144,12 +116,7 @@ function DropdownMenuSubItem({
       </DropdownMenuPrimitive.SubTrigger>
 
       <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.SubContent
-          className={cn(
-            'text-primary bg-background rounded-lg border p-1 shadow-md dark:shadow-[0px_0px_0px_0.5px_rgba(0,0,0,1),_0px_4px_4px_rgba(0,0,0,0.24)]',
-            width
-          )}
-          collisionPadding={8}>
+        <DropdownMenuPrimitive.SubContent className={cn('', width)} collisionPadding={8}>
           {children}
         </DropdownMenuPrimitive.SubContent>
       </DropdownMenuPrimitive.Portal>
@@ -166,8 +133,7 @@ function DropdownMenuActions({ items, width }: DropdownMenuActionsProps) {
   return items.map((item, i) => {
     if (item.type === 'separator') return <DropdownMenuSeparator key={i} />
 
-    if (item.type === 'heading')
-      return <DropdownMenuHeading key={i} item={item} />
+    if (item.type === 'heading') return <DropdownMenuHeading key={i} item={item} />
 
     if (item.type === 'text') return <DropdownMenuText key={i} item={item} />
 
@@ -213,10 +179,7 @@ export function DesktopDropdownMenu({
   modal,
 }: DropdownMenuProps) {
   return (
-    <DropdownMenuPrimitive.Root
-      open={open}
-      onOpenChange={onOpenChange}
-      modal={modal}>
+    <DropdownMenuPrimitive.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <DropdownMenuPrimitive.Trigger asChild disabled={disabled}>
         {trigger}
       </DropdownMenuPrimitive.Trigger>

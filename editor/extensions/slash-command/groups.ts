@@ -1,4 +1,4 @@
-import { Group } from './types'
+import type { Group } from './types'
 
 export const GROUPS: Group[] = [
   {
@@ -107,11 +107,7 @@ export const GROUPS: Group[] = [
         description: 'Insert a table',
         shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => {
-          editor
-            .chain()
-            .focus()
-            .insertTable({ rows: 3, cols: 3, withHeaderRow: false })
-            .run()
+          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run()
         },
       },
       {
