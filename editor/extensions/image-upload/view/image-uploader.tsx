@@ -2,14 +2,10 @@ import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
-import { ChangeEvent, useCallback } from 'react'
+import { type ChangeEvent, useCallback } from 'react'
 import { useDropZone, useFileUpload, useUploader } from './hooks'
 
-export const ImageUploader = ({
-  onUpload,
-}: {
-  onUpload: (url: string) => void
-}) => {
+export const ImageUploader = ({ onUpload }: { onUpload: (url: string) => void }) => {
   const { loading, uploadFile } = useUploader({ onUpload })
   const { handleUploadClick, ref } = useFileUpload()
   const { draggedInside, onDrop, onDragEnter, onDragLeave } = useDropZone({
@@ -17,8 +13,7 @@ export const ImageUploader = ({
   })
 
   const onFileChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) =>
-      e.target.files ? uploadFile(e.target.files[0]) : null,
+    (e: ChangeEvent<HTMLInputElement>) => (e.target.files ? uploadFile(e.target.files[0]) : null),
     [uploadFile]
   )
 
@@ -42,20 +37,13 @@ export const ImageUploader = ({
       onDragOver={onDragEnter}
       onDragLeave={onDragLeave}
       contentEditable={false}>
-      <Icon
-        name='Image'
-        className='w-12 h-12 mb-4 text-black dark:text-white opacity-20'
-      />
+      <Icon name='Image' className='w-12 h-12 mb-4 text-black dark:text-white opacity-20' />
       <div className='flex flex-col items-center justify-center gap-2'>
         <div className='text-sm font-medium text-center text-neutral-400 dark:text-neutral-500'>
           {draggedInside ? 'Drop image here' : 'Drag and drop or'}
         </div>
         <div>
-          <Button
-            disabled={draggedInside}
-            onClick={handleUploadClick}
-            variant='default'
-            size='sm'>
+          <Button disabled={draggedInside} onClick={handleUploadClick} variant='default' size='sm'>
             <Icon name='Upload' />
             Upload an image
           </Button>

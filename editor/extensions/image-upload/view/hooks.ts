@@ -1,12 +1,8 @@
 import { API } from '@/lib/api'
-import { DragEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { type DragEvent, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 
-export const useUploader = ({
-  onUpload,
-}: {
-  onUpload: (url: string) => void
-}) => {
+export const useUploader = ({ onUpload }: { onUpload: (url: string) => void }) => {
   const [loading, setLoading] = useState(false)
 
   const uploadFile = useCallback(
@@ -17,8 +13,7 @@ export const useUploader = ({
 
         onUpload(url)
       } catch (errPayload: any) {
-        const error =
-          errPayload?.response?.data?.error || 'Something went wrong'
+        const error = errPayload?.response?.data?.error || 'Something went wrong'
         toast.error(error)
       }
       setLoading(false)
@@ -39,11 +34,7 @@ export const useFileUpload = () => {
   return { ref: fileInput, handleUploadClick }
 }
 
-export const useDropZone = ({
-  uploader,
-}: {
-  uploader: (file: File) => void
-}) => {
+export const useDropZone = ({ uploader }: { uploader: (file: File) => void }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false)
   const [draggedInside, setDraggedInside] = useState<boolean>(false)
 

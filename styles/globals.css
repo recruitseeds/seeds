@@ -1,8 +1,6 @@
 @import 'tailwindcss';
-
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -92,6 +90,16 @@
   --shadow-button-primary: 0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08),
     0px 0px 0px 1px rgb(0 0 0 / 0.06), inset 0px 1px 0px #fff, inset 0px 0px 2px 1px #fff,
     inset 0px 1px 2px rgb(0 0 0 / 0.06), inset 0px -4px 8px -4px rgb(0 0 0 / 0.06);
+
+  --tt-color-highlight-gray: oklch(92% 0 0);
+  --tt-color-highlight-brown: oklch(93% 0.04 60);
+  --tt-color-highlight-orange: oklch(94% 0.07 75);
+  --tt-color-highlight-yellow: oklch(97% 0.08 100);
+  --tt-color-highlight-green: oklch(95% 0.08 150);
+  --tt-color-highlight-blue: oklch(93% 0.07 250);
+  --tt-color-highlight-purple: oklch(93% 0.07 300);
+  --tt-color-highlight-pink: oklch(93% 0.08 340);
+  --tt-color-highlight-red: oklch(93% 0.09 25);
 }
 
 .dark {
@@ -174,6 +182,16 @@
   --shadow-button-primary: 0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08),
     0px 0px 0px 1px rgb(0 0 0 / 0.06), inset 0px 1px 0px #fff, inset 0px 0px 2px 1px #fff,
     inset 0px 1px 2px rgb(0 0 0 / 0.06), inset 0px -4px 8px -4px rgb(0 0 0 / 0.06);
+
+  --tt-color-highlight-gray: oklch(35% 0 0);
+  --tt-color-highlight-brown: oklch(45% 0.06 60);
+  --tt-color-highlight-orange: oklch(50% 0.1 75);
+  --tt-color-highlight-yellow: oklch(55% 0.12 100);
+  --tt-color-highlight-green: oklch(40% 0.1 150);
+  --tt-color-highlight-blue: oklch(40% 0.1 250);
+  --tt-color-highlight-purple: oklch(45% 0.1 300);
+  --tt-color-highlight-pink: oklch(45% 0.12 340);
+  --tt-color-highlight-red: oklch(45% 0.13 25);
 }
 
 @theme inline {
@@ -273,6 +291,14 @@
 }
 
 .prose :where(h2):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  @apply text-foreground/90 mt-0;
+}
+
+.prose :where(h3):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+  @apply text-foreground/90 mt-0;
+}
+
+.prose :where(h4):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground/90 mt-0;
 }
 

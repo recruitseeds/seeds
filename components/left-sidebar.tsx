@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  BarChart,
-  Briefcase,
-  Clipboard,
-  Home,
-  Messages,
-  PenTool,
-} from '@/components/icons'
+import { BarChart, Briefcase, Clipboard, Home, Messages, PenTool } from '@/components/icons'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -33,26 +26,13 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import { sidebarData } from '@/data/data'
-import {
-  Blocks,
-  CalendarClock,
-  CircleHelp,
-  LogOut,
-  MessageCircleQuestion,
-  Settings,
-} from 'lucide-react'
+import { Blocks, CalendarClock, CircleHelp, LogOut, MessageCircleQuestion, Settings } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 
 const Logo = (props) => (
-  <svg
-    width='24'
-    height='24'
-    viewBox='0 0 24 24'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-    {...props}>
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' {...props}>
     <path
       d='M22 13L16.2933 15.8534C14.7191 16.6405 13.932 17.034 13.1064 17.1889C12.3752 17.3261 11.6248 17.3261 10.8936 17.1889C10.068 17.034 9.28094 16.6405 7.70675 15.8534L2 13M22 18L16.2933 20.8534C14.7191 21.6405 13.932 22.034 13.1064 22.1889C12.3752 22.3261 11.6248 22.3261 10.8936 22.1889C10.068 22.034 9.28094 21.6405 7.70675 20.8534L2 18M5.72433 9.86217L9.13783 11.5689C10.1873 12.0936 10.712 12.356 11.2624 12.4593C11.7499 12.5507 12.2501 12.5507 12.7376 12.4593C13.288 12.356 13.8127 12.0936 14.8622 11.5689L18.2757 9.86217C20.1181 8.94095 21.0393 8.48035 21.3349 7.85705C21.5922 7.31464 21.5922 6.68536 21.3349 6.14295C21.0393 5.51965 20.1181 5.05905 18.2757 4.13783L14.8622 2.43108C13.8127 1.90635 13.288 1.64399 12.7376 1.54073C12.2501 1.44927 11.7499 1.44927 11.2624 1.54073C10.712 1.64399 10.1873 1.90635 9.13783 2.43108L5.72433 4.13783C3.88191 5.05905 2.96069 5.51965 2.66508 6.14295C2.40782 6.68536 2.40782 7.31464 2.66508 7.85705C2.96069 8.48035 3.88191 8.94095 5.72433 9.86217Z'
       stroke='currentColor'
@@ -111,8 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenu>
                 {item.items.map((subItem) => {
                   const Icon = IconMap[subItem.icon as IconName] || Home
-                  const hasSubItems =
-                    subItem.subItems && subItem.subItems.length > 0
+                  const hasSubItems = subItem.subItems && subItem.subItems.length > 0
                   const isActive = isItemOrSubItemActive(subItem)
 
                   return (
@@ -136,9 +115,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           <SidebarMenuSub>
                             {subItem.subItems.map((childItem) => (
                               <SidebarMenuSubItem key={childItem.title}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={pathname === childItem.url}>
+                                <SidebarMenuSubButton asChild isActive={pathname === childItem.url}>
                                   <a href={childItem.url}>{childItem.title}</a>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -159,9 +136,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <div className='flex flex-col gap-2 border rounded-lg p-2 mb-5 shadow-xs'>
               <p className='text-sm'>Learn more</p>
-              <p className='text-xs text-muted-foreground'>
-                Read more about maximizing your stuff in our docs.
-              </p>
+              <p className='text-xs text-muted-foreground'>Read more about maximizing your stuff in our docs.</p>
               <Button
                 size='sm'
                 className='w-full bg-important hover:bg-important-hover active:bg-important-active shadow-shadow-accent
@@ -181,15 +156,9 @@ const SidebarSettingsDropdown = () => (
   <div className='flex justify-between items-center'>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant='ghost'
-          className='hover:bg-transparent size-6 !rounded-full'
-          size='icon'>
+        <Button variant='ghost' className='hover:bg-transparent size-6 !rounded-full' size='icon'>
           <Avatar className='size-6'>
-            <AvatarImage
-              src='https://github.com/alexwhitmore.png'
-              alt='alexwhitmore'
-            />
+            <AvatarImage src='https://github.com/alexwhitmore.png' alt='alexwhitmore' />
             <AvatarFallback>AW</AvatarFallback>
           </Avatar>
         </Button>
