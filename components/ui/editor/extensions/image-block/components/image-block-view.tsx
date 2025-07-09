@@ -25,28 +25,46 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
   const imageWrapperRef = useRef<HTMLDivElement>(null)
   const { src, width, align, alt } = node.attrs
 
+  const isFullWidth = width === '100%'
+
   const wrapperClassName = cn(
-    'relative', // Add relative positioning for potential overlays
-    align === 'left' ? 'ml-0' : 'ml-auto',
-    align === 'right' ? 'mr-0' : 'mr-auto',
-    align === 'center' && 'mx-auto'
+    'relative flex', // Always use flex for consistent layout
+    {
+      'justify-start': align === 'left',
+      'justify-center': align === 'center',
+      'justify-end': align === 'right',
+    }
   )
 
+  const imageClassName = cn('block cursor-pointer hover:opacity-90 transition-opacity rounded-md', {
+    // When full width, image should fill the container
+    'w-full': isFullWidth,
+    // When not full width, image should size naturally but not exceed container
+    'max-w-full h-auto': !isFullWidth,
+  })
+
   const onClick = useCallback(() => {
-    editor.commands.setNodeSelection(getPos())
-  }, [getPos, editor.commands])
+    const pos = getPos()
+    editor.commands.setNodeSelection(pos)
+    editor.commands.focus()
+  }, [getPos, editor])
 
   return (
     <NodeViewWrapper>
-      <div className={wrapperClassName} style={{ width }} data-drag-handle>
-        <div contentEditable={false} ref={imageWrapperRef}>
-          <img
-            className='block cursor-pointer hover:opacity-90 transition-opacity'
-            src={src}
-            alt={alt || ''}
-            onClick={onClick}
-            draggable={false}
-          />
+      <div
+        className={wrapperClassName}
+        style={{
+          width: '100%', // Container always full width
+        }}
+        data-drag-handle>
+        <div
+          contentEditable={false}
+          ref={imageWrapperRef}
+          style={{
+            width: isFullWidth ? '100%' : width,
+            transition: 'width 0.2s ease', // Smooth width transitions
+          }}>
+          <img className={imageClassName} src={src} alt={alt || ''} onClick={onClick} draggable={false} />
         </div>
       </div>
     </NodeViewWrapper>

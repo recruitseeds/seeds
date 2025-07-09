@@ -1,4 +1,3 @@
-import { ImageBlockWidth } from '@/editor/extensions/image-block/components/image-block-width'
 import {
   Dialog,
   DialogContent,
@@ -34,7 +33,7 @@ import { initialContent } from '@/data/initial-content'
 import { useCursorVisibility } from '@/hooks/use-cursor-visibility'
 import { useMobile } from '@/hooks/use-mobile'
 import { useWindowSize } from '@/hooks/use-window-size'
-import { API } from '@/lib/api'
+import { uploadImage } from '@/lib/api'
 import { useTRPC } from '@/trpc/client'
 import type { AppRouter } from '@/trpc/routers/_app'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -131,19 +130,18 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
         onDrop: (currentEditor, files, pos) => {
           files.forEach(async (file) => {
-            const url = await API.uploadImage(file)
+            const url = await uploadImage(file)
+
             currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run()
           })
         },
         onPaste: (currentEditor, files) => {
           files.forEach(async (file) => {
             const url = await API.uploadImage(file)
+
             return currentEditor
               .chain()
-              .setImageBlockAt({
-                pos: currentEditor.state.selection.anchor,
-                src: url,
-              })
+              .setImageBlockAt({ pos: currentEditor.state.selection.anchor, src: url })
               .focus()
               .run()
           })
