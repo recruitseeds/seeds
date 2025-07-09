@@ -1,5 +1,6 @@
 import { EditExperienceDialog } from '@/components/candidate/edit-application-dialog'
 import { formatDate } from '@/lib/dates'
+import { parseNextSteps } from '@/lib/next-steps'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import type { ColumnDef } from '@tanstack/react-table'
 import { type ApplicationStatus, getStatusBadge } from './applications-badge'
@@ -59,6 +60,24 @@ export const columns: ColumnDef<Application>[] = [
     header: 'Next Step',
     cell: ({ row }) => {
       const app = row.original
+
+      const parsedSteps = parseNextSteps(app.next_steps ?? null)
+
+      if (parsedSteps && parsedSteps.length > 0) {
+        const nextIncompleteStep = parsedSteps.find((step) => !step.completed)
+
+        if (nextIncompleteStep) {
+          return (
+            <div className='bg-muted/50 px-3 py-1.5 rounded text-xs'>
+              <span className='font-medium text-foreground'>{nextIncompleteStep.description}:</span>{' '}
+              {nextIncompleteStep.date ? formatDate(nextIncompleteStep.date) : 'No date set'}
+            </div>
+          )
+        }
+
+        return null
+      }
+
       if (app.next_step_description && app.next_step_date) {
         return (
           <div className='bg-muted/50 px-3 py-1.5 rounded text-xs'>
@@ -67,6 +86,7 @@ export const columns: ColumnDef<Application>[] = [
           </div>
         )
       }
+
       return null
     },
   },
@@ -76,7 +96,12 @@ export const columns: ColumnDef<Application>[] = [
       const app = row.original
       return (
         <div className='flex items-center justify-end'>
-          <EditExperienceDialog application={app} />
+          <EditExperienceDialog
+            application={{
+              ...app,
+              next_steps: parseNextSteps(app.next_steps ?? null),
+            }}
+          />
         </div>
       )
     },

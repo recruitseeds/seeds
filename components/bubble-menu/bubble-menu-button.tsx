@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { ChevronDown as ChevronDownIcon } from 'lucide-react'
-import { forwardRef, MouseEvent } from 'react'
+import { type MouseEvent, forwardRef } from 'react'
 import { ConditionalWrap } from '../../lib/conditional-wrap'
 import { Button } from '../ui/button'
 import { UIText } from '../ui/text'
@@ -17,20 +17,8 @@ interface BubbleMenuProps extends React.ComponentPropsWithRef<'button'> {
   dropdown?: boolean
 }
 
-export const BubbleMenuButton = forwardRef<
-  BubbleMenuButtonElement,
-  BubbleMenuProps
->(function BubbleMenuButton(
-  {
-    icon,
-    isActive = false,
-    onClick,
-    title,
-    tooltip,
-    shortcut,
-    dropdown,
-    ...props
-  }: BubbleMenuProps,
+export const BubbleMenuButton = forwardRef<BubbleMenuButtonElement, BubbleMenuProps>(function BubbleMenuButton(
+  { icon, isActive = false, onClick, title, tooltip, shortcut, dropdown, ...props }: BubbleMenuProps,
   ref
 ) {
   return (
@@ -48,8 +36,7 @@ export const BubbleMenuButton = forwardRef<
         onClick={onClick}
         variant='ghost'
         className={cn('', {
-          'bg-important hover:bg-important-hover active:bg-important-active !text-white':
-            isActive,
+          'bg-important hover:bg-important-hover active:bg-important-active !text-white': isActive,
         })}>
         {icon}
         {title && (

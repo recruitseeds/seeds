@@ -1,4 +1,4 @@
-import { mergeAttributes, Range } from '@tiptap/core'
+import { type Range, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 
 import { Image } from '../image'
@@ -8,10 +8,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     imageBlock: {
       setImageBlock: (attributes: { src: string }) => ReturnType
-      setImageBlockAt: (attributes: {
-        src: string
-        pos: number | Range
-      }) => ReturnType
+      setImageBlockAt: (attributes: { src: string; pos: number | Range }) => ReturnType
       setImageBlockAlign: (align: 'left' | 'center' | 'right') => ReturnType
       setImageBlockWidth: (width: number) => ReturnType
     }
