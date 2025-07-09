@@ -2,12 +2,10 @@
 
 import { cn } from '@/lib/utils'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-import * as React from 'react'
+import type * as React from 'react'
 
 const isMac =
-  typeof window !== 'undefined'
-    ? /macintosh|mac os x|mac_powerpc/i.test(navigator.userAgent.toLowerCase())
-    : false
+  typeof window !== 'undefined' ? /macintosh|mac os x|mac_powerpc/i.test(navigator.userAgent.toLowerCase()) : false
 
 const ShortcutKey = ({ children }: { children: string }) => {
   const className =
@@ -40,21 +38,10 @@ export function TooltipProvider({
   children: React.ReactNode
   delayDuration?: number
 }) {
-  return (
-    <TooltipPrimitive.Provider delayDuration={delayDuration}>
-      {children}
-    </TooltipPrimitive.Provider>
-  )
+  return <TooltipPrimitive.Provider delayDuration={delayDuration}>{children}</TooltipPrimitive.Provider>
 }
 
-export function Tooltip({
-  children,
-  enabled = true,
-  title,
-  shortcut,
-  delayDuration = 500,
-  className,
-}: TooltipProps) {
+export function Tooltip({ children, enabled = true, title, shortcut, delayDuration = 500, className }: TooltipProps) {
   if (!enabled) {
     return <>{children}</>
   }

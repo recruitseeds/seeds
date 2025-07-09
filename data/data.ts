@@ -25,6 +25,10 @@ export const sidebarData = {
               url: '/jobs/pipelines',
             },
             {
+              title: 'Drafts',
+              url: '/jobs/drafts',
+            },
+            {
               title: 'Settings',
               url: '/jobs/settings',
             },
@@ -35,19 +39,13 @@ export const sidebarData = {
           url: '/templates',
           isActive: false,
           icon: 'Clipboard',
-          subItems: [
-            {
-              title: 'Create',
-              url: '/templates/create',
-            },
-          ],
         },
-        {
-          title: 'Drafts',
-          url: '/drafts',
-          isActive: false,
-          icon: 'UserRoundPen',
-        },
+        // {
+        //   title: 'Drafts',
+        //   url: '/drafts',
+        //   isActive: false,
+        //   icon: 'UserRoundPen',
+        // },
         {
           title: 'Messages',
           url: '/messages',
@@ -127,7 +125,7 @@ export const jobs: Job[] = [
 
 export const departments = ['Engineering', 'Growth', 'Design']
 
-import { Candidate } from '@/components/columns'
+import type { Candidate } from '@/components/columns'
 export const data: Candidate[] = [
   {
     id: '728ed52f',

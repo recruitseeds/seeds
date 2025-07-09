@@ -15,9 +15,7 @@ declare global {
   }
 }
 
-export const useBlockEditor = (
-  options: Partial<Omit<EditorOptions, 'extensions'>> = {}
-) => {
+export const useBlockEditor = (options: Partial<Omit<EditorOptions, 'extensions'>> = {}) => {
   const editor = useEditor({
     ...options,
     immediatelyRender: false,
@@ -33,9 +31,7 @@ export const useBlockEditor = (
         options.onCreate(ctx)
       }
     },
-    extensions: [...ExtensionKit()].filter(
-      (e): e is AnyExtension => e !== undefined
-    ),
+    extensions: [...ExtensionKit()].filter((e): e is AnyExtension => e !== undefined),
     editorProps: {
       attributes: {
         autocomplete: 'off',
@@ -53,15 +49,13 @@ export const useBlockEditor = (
       if (!ctx.editor?.storage.collaborationCursor?.users) {
         return []
       }
-      return ctx.editor.storage.collaborationCursor.users.map(
-        (user: EditorUser) => {
-          const names = user.name?.split(' ')
-          const firstName = names?.[0]
-          const lastName = names?.[names.length - 1]
-          const initials = `${firstName?.[0] || '?'}${lastName?.[0] || '?'}`
-          return { ...user, initials: initials.length ? initials : '?' }
-        }
-      )
+      return ctx.editor.storage.collaborationCursor.users.map((user: EditorUser) => {
+        const names = user.name?.split(' ')
+        const firstName = names?.[0]
+        const lastName = names?.[names.length - 1]
+        const initials = `${firstName?.[0] || '?'}${lastName?.[0] || '?'}`
+        return { ...user, initials: initials.length ? initials : '?' }
+      })
     },
   })
 

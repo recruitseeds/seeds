@@ -423,18 +423,9 @@ export async function updateCandidateApplication(
   applicationId: string,
   updateData: Partial<TablesUpdate<'candidate_applications'>>
 ): Promise<Tables<'candidate_applications'>> {
-  console.log('updateCandidateApplication called with:', {
-    candidateId,
-    applicationId,
-    updateData,
-  })
-
   const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, value]) => value !== undefined))
 
-  console.log('cleanUpdateData:', cleanUpdateData)
-
   if (Object.keys(cleanUpdateData).length === 0) {
-    console.log('No data to update, fetching existing data')
     const { data: existingData, error: fetchError } = await supabase
       .from('candidate_applications')
       .select('*')
@@ -448,8 +439,6 @@ export async function updateCandidateApplication(
     return existingData
   }
 
-  console.log('Updating application with data:', cleanUpdateData)
-
   const { data: updatedData, error } = await supabase
     .from('candidate_applications')
     .update(cleanUpdateData)
@@ -458,10 +447,7 @@ export async function updateCandidateApplication(
     .select('*')
     .single()
 
-  console.log('Supabase update result:', { updatedData, error })
-
   if (error) {
-    console.error('Supabase update error:', error)
     if (error.code === 'PGRST116') {
       throw new Error(`Application with ID ${applicationId} not found or not owned by candidate ${candidateId}.`)
     }
@@ -472,7 +458,6 @@ export async function updateCandidateApplication(
     throw new Error(`Application with ID ${applicationId} not found after update.`)
   }
 
-  console.log('Successfully updated application:', updatedData)
   return updatedData
 }
 
