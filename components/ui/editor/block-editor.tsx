@@ -1,8 +1,4 @@
-import { Link } from '@/components/tiptap-extension/link-extension'
-import { Selection } from '@/components/tiptap-extension/selection-extension'
-import { TrailingNode } from '@/components/tiptap-extension/trailing-node-extension'
-import '@/components/tiptap-node/image-node/image-node.css'
-import { ImageUploadNode } from '@/components/tiptap-node/image-upload-node/image-upload-node-extension'
+import { ImageBlockWidth } from '@/editor/extensions/image-block/components/image-block-width'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +15,12 @@ import {
   ColorHighlightPopoverButton,
   ColorHighlightPopoverContent,
 } from '@/components/ui/editor/color-highlight-popover'
+import { ImageBlock } from '@/components/ui/editor/extensions/image-block'
+import { ImageBlockMenu } from '@/components/ui/editor/extensions/image-block/components/image-block-menu'
+import { ImageUpload } from '@/components/ui/editor/extensions/image-upload'
+import { Link } from '@/components/ui/editor/extensions/link-extension'
+import { Selection } from '@/components/ui/editor/extensions/selection-extension'
+import { TrailingNode } from '@/components/ui/editor/extensions/trailing-node-extension'
 import { HeadingDropdownMenu } from '@/components/ui/editor/heading-dropdown-menu'
 import { ImageUploadButton } from '@/components/ui/editor/image-upload-button'
 import { LinkButton, LinkContent, LinkPopover } from '@/components/ui/editor/link-popover'
@@ -32,10 +34,11 @@ import { initialContent } from '@/data/initial-content'
 import { useCursorVisibility } from '@/hooks/use-cursor-visibility'
 import { useMobile } from '@/hooks/use-mobile'
 import { useWindowSize } from '@/hooks/use-window-size'
-import { MAX_FILE_SIZE, handleImageUpload } from '@/lib/tiptap-utils'
+import { API } from '@/lib/api'
 import { useTRPC } from '@/trpc/client'
 import type { AppRouter } from '@/trpc/routers/_app'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { FileHandler } from '@tiptap-pro/extension-file-handler'
 import { Highlight } from '@tiptap/extension-highlight'
 import { Image } from '@tiptap/extension-image'
 import { Subscript } from '@tiptap/extension-subscript'
@@ -51,88 +54,7 @@ import type { TRPCClientErrorLike } from '@trpc/client'
 import { ArrowLeftIcon, HighlighterIcon, LinkIcon, Loader2 } from 'lucide-react'
 import * as React from 'react'
 import { toast } from 'sonner'
-// Back to the original structure, but with a wrapper div to control layout
-const MainToolbarContent = ({
-  onHighlighterClick,
-  onLinkClick,
-  isMobile,
-  onSave,
-  onDiscard,
-  hasJobData,
-  isLoading,
-  isSaveDisabled,
-}: {
-  onHighlighterClick: () => void
-  onLinkClick: () => void
-  isMobile: boolean
-  onSave: (status: 'draft' | 'published') => void
-  onDiscard: () => void
-  hasJobData: boolean
-  isLoading: boolean
-  isSaveDisabled: boolean
-}) => {
-  return (
-    <>
-      <Spacer />
-      <ToolbarGroup>
-        <UndoRedoButton action='undo' />
-        <UndoRedoButton action='redo' />
-      </ToolbarGroup>
-      <ToolbarSeparator />
-      <ToolbarGroup>
-        <HeadingDropdownMenu levels={[1, 2, 3, 4]} />
-        <ListDropdownMenu types={['bulletList', 'orderedList', 'taskList']} />
-        <BlockquoteButton />
-        <CodeBlockButton />
-      </ToolbarGroup>
-      <ToolbarSeparator />
-      <ToolbarGroup>
-        <MarkButton type='bold' />
-        <MarkButton type='italic' />
-        <MarkButton type='strike' />
-        <MarkButton type='code' />
-        <MarkButton type='underline' />
-        {!isMobile ? <ColorHighlightPopover /> : <ColorHighlightPopoverButton onClick={onHighlighterClick} />}
-        {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
-      </ToolbarGroup>
-      <ToolbarSeparator />
-      <ToolbarGroup>
-        <MarkButton type='superscript' />
-        <MarkButton type='subscript' />
-      </ToolbarGroup>
-      <ToolbarSeparator />
-      <ToolbarGroup>
-        <TextAlignButton align='left' />
-        <TextAlignButton align='center' />
-        <TextAlignButton align='right' />
-        <TextAlignButton align='justify' />
-      </ToolbarGroup>
-      <ToolbarSeparator />
-      <ToolbarGroup>
-        <ImageUploadButton text='Add' />
-      </ToolbarGroup>
-      <Spacer />
-      <ToolbarSeparator />
-      <ToolbarGroup>
-        <div className='flex gap-2'>
-          <Button variant='ghost' size='sm' onClick={onDiscard} disabled={isLoading}>
-            Discard
-          </Button>
-          <Button
-            variant='brand'
-            size='sm'
-            onClick={() => onSave(hasJobData ? 'published' : 'draft')}
-            disabled={isSaveDisabled}>
-            {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-            Save
-          </Button>
-        </div>
-      </ToolbarGroup>
-      <Spacer />
-      {isMobile && <ToolbarSeparator />}
-    </>
-  )
-}
+
 const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; onBack: () => void }) => (
   <>
     <ToolbarGroup>
@@ -149,6 +71,7 @@ const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; 
     {type === 'highlighter' ? <ColorHighlightPopoverContent /> : <LinkContent />}
   </>
 )
+
 interface JobData {
   title: string
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
@@ -159,6 +82,7 @@ interface JobData {
 interface SimpleEditorProps {
   jobData?: JobData | null
 }
+
 export function BlockEditor({ jobData }: SimpleEditorProps) {
   const isMobile = useMobile()
   const windowSize = useWindowSize()
@@ -167,6 +91,7 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
   const toolbarRef = React.useRef<HTMLDivElement>(null)
   const trpcClient = useTRPC()
   const queryClient = useQueryClient()
+
   const createJobPostingMutation = useMutation(
     trpcClient.organization.createJobPosting.mutationOptions({
       onSuccess: async () => {
@@ -179,6 +104,7 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
       },
     })
   )
+
   const editor = useEditor({
     immediatelyRender: false,
     editorProps: {
@@ -199,25 +125,44 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
       Highlight.configure({ multicolor: true }),
       Image,
       Typography,
+      ImageBlock,
+      ImageUpload,
+      FileHandler.configure({
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+        onDrop: (currentEditor, files, pos) => {
+          files.forEach(async (file) => {
+            const url = await API.uploadImage(file)
+            currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run()
+          })
+        },
+        onPaste: (currentEditor, files) => {
+          files.forEach(async (file) => {
+            const url = await API.uploadImage(file)
+            return currentEditor
+              .chain()
+              .setImageBlockAt({
+                pos: currentEditor.state.selection.anchor,
+                src: url,
+              })
+              .focus()
+              .run()
+          })
+        },
+      }),
       Superscript,
       Subscript,
       Selection,
-      ImageUploadNode.configure({
-        accept: 'image/',
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error('Upload failed:', error),
-      }),
       TrailingNode,
       Link.configure({ openOnClick: false }),
     ],
     content: initialContent,
   })
+
   const bodyRect = useCursorVisibility({
     editor,
     overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
   })
+
   const hasEditorContent = () => {
     const content = editor?.getJSON()
     if (!content || !content.content || content.content.length === 0) return false
@@ -228,13 +173,16 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
       return false
     })
   }
+
   const hasRequiredJobData = () => {
     if (!jobData) return false
     return !!(jobData.title && jobData.title.trim().length > 0 && jobData.job_type)
   }
+
   const hasJobData = jobData !== null
   const isLoading = createJobPostingMutation.isPending
   const isSaveDisabled = !hasEditorContent() || !hasRequiredJobData() || isLoading
+
   const handleSave = (status: 'draft' | 'published' = 'draft') => {
     const content = editor?.getJSON() || null
     const finalStatus = jobData ? status : 'draft'
@@ -252,6 +200,7 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
         }
     createJobPostingMutation.mutate(payload)
   }
+
   const handleSaveAsDraftFromDialog = () => {
     const content = editor?.getJSON() || null
     const payload = jobData
@@ -269,19 +218,23 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
     createJobPostingMutation.mutate(payload)
     setShowDiscardDialog(false)
   }
+
   const handleDiscard = () => {
     setShowDiscardDialog(true)
   }
+
   const handleClearEditor = () => {
     editor?.commands.clearContent()
     setShowDiscardDialog(false)
     toast.success('Content cleared')
   }
+
   React.useEffect(() => {
     if (!isMobile && mobileView !== 'main') {
       setMobileView('main')
     }
   }, [isMobile, mobileView])
+
   if (!editor) {
     return (
       <div className='flex items-center justify-center'>
@@ -289,12 +242,11 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
       </div>
     )
   }
+
   return (
     <EditorContext.Provider value={{ editor }}>
       <div className='sticky top-0 z-40 border-b border-dashed bg-background'>
-        {/* Wrapper div to control the layout without breaking Toolbar's internal styling */}
         <div className='flex items-center'>
-          {/* Scrollable container for most toolbar items */}
           <div className='flex-1 min-w-0 overflow-x-auto'>
             <Toolbar
               ref={toolbarRef}
@@ -359,7 +311,6 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
               )}
             </Toolbar>
           </div>
-          {/* Fixed container for Save/Discard buttons */}
           {mobileView === 'main' && (
             <div className='flex-shrink-0 px-4 py-2 border-l border-dashed'>
               <div className='flex gap-2'>
@@ -380,6 +331,7 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
         </div>
       </div>
       <EditorContent editor={editor} role='presentation' className='simple-editor-content' />
+      <ImageBlockMenu editor={editor} />
       <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>

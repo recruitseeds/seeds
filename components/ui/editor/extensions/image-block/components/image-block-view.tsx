@@ -15,16 +15,21 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
     node: Node & {
       attrs: {
         src: string
+        width: string
+        align: 'left' | 'center' | 'right'
+        alt?: string
       }
     }
   }
+
   const imageWrapperRef = useRef<HTMLDivElement>(null)
-  const { src } = node.attrs
+  const { src, width, align, alt } = node.attrs
 
   const wrapperClassName = cn(
-    node.attrs.align === 'left' ? 'ml-0' : 'ml-auto',
-    node.attrs.align === 'right' ? 'mr-0' : 'mr-auto',
-    node.attrs.align === 'center' && 'mx-auto'
+    'relative', // Add relative positioning for potential overlays
+    align === 'left' ? 'ml-0' : 'ml-auto',
+    align === 'right' ? 'mr-0' : 'mr-auto',
+    align === 'center' && 'mx-auto'
   )
 
   const onClick = useCallback(() => {
@@ -33,9 +38,15 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
 
   return (
     <NodeViewWrapper>
-      <div className={wrapperClassName} style={{ width: node.attrs.width }} data-drag-handle>
+      <div className={wrapperClassName} style={{ width }} data-drag-handle>
         <div contentEditable={false} ref={imageWrapperRef}>
-          <img className='block' src={src} alt='' onClick={onClick} />
+          <img
+            className='block cursor-pointer hover:opacity-90 transition-opacity'
+            src={src}
+            alt={alt || ''}
+            onClick={onClick}
+            draggable={false}
+          />
         </div>
       </div>
     </NodeViewWrapper>
