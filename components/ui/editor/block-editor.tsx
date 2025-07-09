@@ -29,7 +29,6 @@ import { Spacer } from '@/components/ui/editor/spacer'
 import { TextAlignButton } from '@/components/ui/editor/text-align-button'
 import { Toolbar, ToolbarGroup, ToolbarSeparator } from '@/components/ui/editor/toolbar'
 import { UndoRedoButton } from '@/components/ui/editor/undo-redo-button'
-import { initialContent } from '@/data/initial-content'
 import { useCursorVisibility } from '@/hooks/use-cursor-visibility'
 import { useMobile } from '@/hooks/use-mobile'
 import { useWindowSize } from '@/hooks/use-window-size'
@@ -51,6 +50,7 @@ import { EditorContent, EditorContext, useEditor } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import type { TRPCClientErrorLike } from '@trpc/client'
 import { ArrowLeftIcon, HighlighterIcon, LinkIcon, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { toast } from 'sonner'
 
@@ -72,34 +72,67 @@ const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; 
 )
 
 interface JobData {
+  id?: string
   title: string
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
   content?: unknown
   status?: 'draft' | 'published' | 'archived' | 'closed'
+  department?: string | null
+  experience_level?: string | null
+  hiring_manager_id?: string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_type?: string | null
 }
 
 interface SimpleEditorProps {
   jobData?: JobData | null
+  existingContent?: any // The content from the database
+  jobId?: string // The ID when editing an existing job
+  isEditing?: boolean // Whether we're editing an existing job
 }
 
-export function BlockEditor({ jobData }: SimpleEditorProps) {
+export function BlockEditor({ jobData, existingContent, jobId, isEditing = false }: SimpleEditorProps) {
   const isMobile = useMobile()
   const windowSize = useWindowSize()
+  const router = useRouter()
   const [mobileView, setMobileView] = React.useState<'main' | 'highlighter' | 'link'>('main')
   const [showDiscardDialog, setShowDiscardDialog] = React.useState(false)
   const toolbarRef = React.useRef<HTMLDivElement>(null)
   const trpcClient = useTRPC()
   const queryClient = useQueryClient()
 
+  // Determine if we're editing an existing job
+  const isEditingJob = isEditing || !!jobId
+
+  // Create job posting mutation
   const createJobPostingMutation = useMutation(
     trpcClient.organization.createJobPosting.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: async (data) => {
         await queryClient.invalidateQueries(trpcClient.organization.listJobPostings.queryFilter())
         toast.success('Job posting saved successfully!')
-        editor?.commands.clearContent()
+
+        // If it was a new job (not editing), navigate to the edit page
+        if (!isEditingJob) {
+          router.push(`/jobs/create/${data.id}`)
+        }
       },
       onError: (error: TRPCClientErrorLike<AppRouter>) => {
         toast.error(`Failed to save job posting: ${error.message}`)
+      },
+    })
+  )
+
+  // Update job posting mutation
+  const updateJobPostingMutation = useMutation(
+    trpcClient.organization.updateJobPosting.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpcClient.organization.listJobPostings.queryFilter())
+        await queryClient.invalidateQueries(trpcClient.organization.getJobPosting.queryFilter({ id: jobId! }))
+        toast.success('Job posting updated successfully!')
+      },
+      onError: (error: TRPCClientErrorLike<AppRouter>) => {
+        toast.error(`Failed to update job posting: ${error.message}`)
       },
     })
   )
@@ -131,14 +164,12 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
         onDrop: (currentEditor, files, pos) => {
           files.forEach(async (file) => {
             const url = await uploadImage(file)
-
             currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run()
           })
         },
         onPaste: (currentEditor, files) => {
           files.forEach(async (file) => {
-            const url = await API.uploadImage(file)
-
+            const url = await uploadImage(file)
             return currentEditor
               .chain()
               .setImageBlockAt({ pos: currentEditor.state.selection.anchor, src: url })
@@ -153,7 +184,6 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
       TrailingNode,
       Link.configure({ openOnClick: false }),
     ],
-    content: initialContent,
   })
 
   const bodyRect = useCursorVisibility({
@@ -178,42 +208,68 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
   }
 
   const hasJobData = jobData !== null
-  const isLoading = createJobPostingMutation.isPending
+  const isLoading = createJobPostingMutation.isPending || updateJobPostingMutation.isPending
   const isSaveDisabled = !hasEditorContent() || !hasRequiredJobData() || isLoading
 
   const handleSave = (status: 'draft' | 'published' = 'draft') => {
     const content = editor?.getJSON() || null
     const finalStatus = jobData ? status : 'draft'
-    const payload = jobData
-      ? {
-          ...jobData,
-          content,
-          status: finalStatus,
-        }
-      : {
-          title: 'Untitled',
-          job_type: 'full_time' as const,
-          content,
-          status: 'draft' as const,
-        }
-    createJobPostingMutation.mutate(payload)
+
+    if (isEditingJob && jobId) {
+      // Update existing job
+      const payload = {
+        id: jobId,
+        ...jobData,
+        content,
+        status: finalStatus,
+      }
+      updateJobPostingMutation.mutate(payload)
+    } else {
+      // Create new job
+      const payload = jobData
+        ? {
+            ...jobData,
+            content,
+            status: finalStatus,
+          }
+        : {
+            title: 'Untitled',
+            job_type: 'full_time' as const,
+            content,
+            status: 'draft' as const,
+          }
+      createJobPostingMutation.mutate(payload)
+    }
   }
 
   const handleSaveAsDraftFromDialog = () => {
     const content = editor?.getJSON() || null
-    const payload = jobData
-      ? {
-          ...jobData,
-          content,
-          status: 'draft' as const,
-        }
-      : {
-          title: 'Untitled',
-          job_type: 'full_time' as const,
-          content,
-          status: 'draft' as const,
-        }
-    createJobPostingMutation.mutate(payload)
+
+    if (isEditingJob && jobId) {
+      // Update existing job as draft
+      const payload = {
+        id: jobId,
+        ...jobData,
+        content,
+        status: 'draft' as const,
+      }
+      updateJobPostingMutation.mutate(payload)
+    } else {
+      // Create new job as draft
+      const payload = jobData
+        ? {
+            ...jobData,
+            content,
+            status: 'draft' as const,
+          }
+        : {
+            title: 'Untitled',
+            job_type: 'full_time' as const,
+            content,
+            status: 'draft' as const,
+          }
+      createJobPostingMutation.mutate(payload)
+    }
     setShowDiscardDialog(false)
   }
 
@@ -232,6 +288,13 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
       setMobileView('main')
     }
   }, [isMobile, mobileView])
+
+  // Update editor content when existingContent changes
+  React.useEffect(() => {
+    if (editor && existingContent) {
+      editor.commands.setContent(existingContent)
+    }
+  }, [editor, existingContent])
 
   if (!editor) {
     return (
@@ -321,7 +384,7 @@ export function BlockEditor({ jobData }: SimpleEditorProps) {
                   onClick={() => handleSave(hasJobData ? 'published' : 'draft')}
                   disabled={isSaveDisabled}>
                   {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-                  Save
+                  {isEditingJob ? 'Publish' : 'Save'}
                 </Button>
               </div>
             </div>
