@@ -1,5 +1,4 @@
 'use client'
-
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { usePathname } from 'next/navigation'
@@ -23,38 +22,34 @@ interface DashboardHeaderProps {
   showSidebar?: boolean
 }
 
-export function DashboardHeader({
-  overrideTitle,
-  showSidebar = true,
-}: DashboardHeaderProps) {
+export function DashboardHeader({ overrideTitle, showSidebar = true }: DashboardHeaderProps) {
   const pathname = usePathname()
 
-  // Compute the title directly without useMemo
   let title: string
+
   if (overrideTitle) {
     title = overrideTitle
   } else if (ROUTE_TITLES[pathname]) {
     title = ROUTE_TITLES[pathname]
   } else {
-    // Handle dynamic routes (e.g., /jobs/[id])
     const segments = pathname.split('/').filter(Boolean)
+
     if (segments.length > 0) {
       const lastSegment = segments[segments.length - 1]
-      // Check if the last segment is a dynamic ID (e.g., a number or UUID)
-      if (/^[0-9a-fA-F-]+$/.test(lastSegment)) {
-        // For dynamic routes like /jobs/[id], use a generic title
-        title =
-          segments.length > 1
-            ? `${segments[segments.length - 2]} Details`
-            : 'Details'
+
+      if (
+        segments.length >= 3 &&
+        segments[0] === 'jobs' &&
+        segments[1] === 'create' &&
+        /^[0-9a-fA-F-]+$/.test(lastSegment)
+      ) {
+        title = 'Create Job'
+      } else if (/^[0-9a-fA-F-]+$/.test(lastSegment)) {
+        title = segments.length > 1 ? `${segments[segments.length - 2]} Details` : 'Details'
       } else {
-        // Fallback: format the last segment
         title = lastSegment
           .replace(/[-_]/g, ' ')
-          .replace(
-            /\w\S*/g,
-            (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
-          )
+          .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase())
       }
     } else {
       title = 'Dashboard'
@@ -67,10 +62,7 @@ export function DashboardHeader({
         {showSidebar && (
           <>
             <SidebarTrigger className='-ml-1' />
-            <Separator
-              orientation='vertical'
-              className='mx-2 data-[orientation=vertical]:h-4'
-            />
+            <Separator orientation='vertical' className='mx-2 data-[orientation=vertical]:h-4' />
           </>
         )}
         <h1 className='text-base font-medium'>{title}</h1>

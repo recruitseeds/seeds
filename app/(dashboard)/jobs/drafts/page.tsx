@@ -9,11 +9,10 @@ export const metadata: Metadata = {
 export default async function DraftsServerPage() {
   const caller = await getServerTRPCCaller()
 
-  // Fetch initial drafts data on the server
   const draftsData = await caller.organization.listJobPostings({
     status: 'draft',
     page: 1,
-    pageSize: 50, // Get more since we're not paginating yet
+    pageSize: 50,
   })
 
   return (

@@ -87,12 +87,19 @@ interface JobData {
 
 interface SimpleEditorProps {
   jobData?: JobData | null
-  existingContent?: any // The content from the database
-  jobId?: string // The ID when editing an existing job
-  isEditing?: boolean // Whether we're editing an existing job
+  existingContent?: any
+  jobId?: string
+  isEditing?: boolean
+  isJobDataLoading?: boolean
 }
 
-export function BlockEditor({ jobData, existingContent, jobId, isEditing = false }: SimpleEditorProps) {
+export function BlockEditor({
+  jobData,
+  existingContent,
+  jobId,
+  isEditing = false,
+  isJobDataLoading = false,
+}: SimpleEditorProps) {
   const isMobile = useMobile()
   const windowSize = useWindowSize()
   const router = useRouter()
@@ -102,20 +109,13 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
   const trpcClient = useTRPC()
   const queryClient = useQueryClient()
 
-  // Determine if we're editing an existing job
   const isEditingJob = isEditing || !!jobId
 
-  // Create job posting mutation
   const createJobPostingMutation = useMutation(
     trpcClient.organization.createJobPosting.mutationOptions({
       onSuccess: async (data) => {
         await queryClient.invalidateQueries(trpcClient.organization.listJobPostings.queryFilter())
         toast.success('Job posting saved successfully!')
-
-        // If it was a new job (not editing), navigate to the edit page
-        if (!isEditingJob) {
-          router.push(`/jobs/create/${data.id}`)
-        }
       },
       onError: (error: TRPCClientErrorLike<AppRouter>) => {
         toast.error(`Failed to save job posting: ${error.message}`)
@@ -123,13 +123,18 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
     })
   )
 
-  // Update job posting mutation
   const updateJobPostingMutation = useMutation(
     trpcClient.organization.updateJobPosting.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: async (data, variables) => {
         await queryClient.invalidateQueries(trpcClient.organization.listJobPostings.queryFilter())
         await queryClient.invalidateQueries(trpcClient.organization.getJobPosting.queryFilter({ id: jobId! }))
-        toast.success('Job posting updated successfully!')
+
+        if (variables.status === 'draft') {
+          toast.success('Draft saved successfully!')
+          router.push('/jobs/drafts')
+        } else {
+          toast.success('Job posting published successfully!')
+        }
       },
       onError: (error: TRPCClientErrorLike<AppRouter>) => {
         toast.error(`Failed to update job posting: ${error.message}`)
@@ -207,37 +212,67 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
     return !!(jobData.title && jobData.title.trim().length > 0 && jobData.job_type)
   }
 
-  const hasJobData = jobData !== null
   const isLoading = createJobPostingMutation.isPending || updateJobPostingMutation.isPending
-  const isSaveDisabled = !hasEditorContent() || !hasRequiredJobData() || isLoading
+
+  const canPublish = (() => {
+    if (!hasEditorContent()) return false
+
+    if (isEditingJob) {
+      if (isJobDataLoading) return false
+      return hasRequiredJobData()
+    }
+
+    return hasRequiredJobData()
+  })()
+
+  const canSaveDraft = hasEditorContent()
 
   const handleSave = (status: 'draft' | 'published' = 'draft') => {
     const content = editor?.getJSON() || null
-    const finalStatus = jobData ? status : 'draft'
+
+    if (status === 'published' && !canPublish) {
+      toast.error('Please fill in all required job details before publishing')
+      return
+    }
+
+    if (status === 'draft' && !canSaveDraft) {
+      toast.error('Please add some content before saving')
+      return
+    }
 
     if (isEditingJob && jobId) {
-      // Update existing job
       const payload = {
         id: jobId,
         ...jobData,
         content,
-        status: finalStatus,
+        status,
       }
+
+      if (status === 'draft') {
+        payload.title = jobData?.title?.trim() || 'Untitled'
+        payload.job_type = (jobData?.job_type || 'full_time') as
+          | 'full_time'
+          | 'part_time'
+          | 'contract'
+          | 'internship'
+          | 'temporary'
+      }
+
       updateJobPostingMutation.mutate(payload)
     } else {
-      // Create new job
-      const payload = jobData
-        ? {
-            ...jobData,
-            content,
-            status: finalStatus,
-          }
-        : {
-            title: 'Untitled',
-            job_type: 'full_time' as const,
-            content,
-            status: 'draft' as const,
-          }
+      const payload =
+        jobData && hasRequiredJobData()
+          ? {
+              ...jobData,
+              content,
+              status,
+            }
+          : {
+              title: 'Untitled',
+              job_type: 'full_time' as const,
+              content,
+              status: 'draft' as const,
+            }
       createJobPostingMutation.mutate(payload)
     }
   }
@@ -245,30 +280,45 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
   const handleSaveAsDraftFromDialog = () => {
     const content = editor?.getJSON() || null
 
+    if (!canSaveDraft) {
+      toast.error('Please add some content before saving')
+      return
+    }
+
     if (isEditingJob && jobId) {
-      // Update existing job as draft
       const payload = {
         id: jobId,
         ...jobData,
+        title: jobData?.title?.trim() || 'Untitled',
+        job_type: (jobData?.job_type || 'full_time') as
+          | 'full_time'
+          | 'part_time'
+          | 'contract'
+          | 'internship'
+          | 'temporary',
         content,
         status: 'draft' as const,
       }
       updateJobPostingMutation.mutate(payload)
     } else {
-      // Create new job as draft
-      const payload = jobData
-        ? {
-            ...jobData,
-            content,
-            status: 'draft' as const,
-          }
-        : {
-            title: 'Untitled',
-            job_type: 'full_time' as const,
-            content,
-            status: 'draft' as const,
-          }
-      createJobPostingMutation.mutate(payload)
+      const payload =
+        jobData && hasRequiredJobData()
+          ? {
+              ...jobData,
+              content,
+              status: 'draft' as const,
+            }
+          : {
+              title: 'Untitled',
+              job_type: 'full_time' as const,
+              content,
+              status: 'draft' as const,
+            }
+      createJobPostingMutation.mutate(payload, {
+        onSuccess: () => {
+          router.push('/jobs/drafts')
+        },
+      })
     }
     setShowDiscardDialog(false)
   }
@@ -289,7 +339,6 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
     }
   }, [isMobile, mobileView])
 
-  // Update editor content when existingContent changes
   React.useEffect(() => {
     if (editor && existingContent) {
       editor.commands.setContent(existingContent)
@@ -381,10 +430,10 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
                 <Button
                   variant='brand'
                   size='sm'
-                  onClick={() => handleSave(hasJobData ? 'published' : 'draft')}
-                  disabled={isSaveDisabled}>
+                  onClick={() => handleSave('published')}
+                  disabled={!canPublish || isLoading}>
                   {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-                  {isEditingJob ? 'Publish' : 'Save'}
+                  Publish
                 </Button>
               </div>
             </div>
@@ -402,7 +451,7 @@ export function BlockEditor({ jobData, existingContent, jobId, isEditing = false
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={handleSaveAsDraftFromDialog} disabled={isLoading}>
+            <Button onClick={handleSaveAsDraftFromDialog} disabled={isLoading || !canSaveDraft}>
               Save as Draft
             </Button>
             <Button onClick={handleClearEditor} variant='destructive'>
