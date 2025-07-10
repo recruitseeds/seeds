@@ -1,17 +1,19 @@
 'use client'
 
+import { Container } from '@/components/container'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import type { Json } from '@/supabase/types/db'
 import { useTRPC } from '@/trpc/client'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Edit3, Plus, Trash2 } from 'lucide-react'
+import { Edit3, PenOff, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-// Helper function to format job type for display
 const formatJobType = (jobType: string) => {
   const typeMap: Record<string, string> = {
     full_time: 'Full-time',
@@ -23,7 +25,6 @@ const formatJobType = (jobType: string) => {
   return typeMap[jobType] || jobType
 }
 
-// Helper function to format department for display
 const formatDepartment = (department: string | null) => {
   if (!department) return null
   const deptMap: Record<string, string> = {
@@ -38,18 +39,29 @@ const formatDepartment = (department: string | null) => {
   return deptMap[department] || department
 }
 
-// Helper function to extract preview text from job content
-const extractPreviewText = (content: any): string => {
-  if (!content || !content.content) return ''
+const extractPreviewText = (content: Json): string => {
+  if (!content || typeof content !== 'object' || !('content' in content)) return ''
 
-  // Look for the first paragraph with actual text
-  for (const node of content.content) {
-    if (node.type === 'paragraph' && node.content) {
-      for (const textNode of node.content) {
-        if (textNode.type === 'text' && textNode.text) {
-          // Return first 100 characters with ellipsis
-          const text = textNode.text.trim()
-          return text.length > 100 ? `${text.substring(0, 100)}...` : text
+  const contentArray = content.content
+  if (!Array.isArray(contentArray)) return ''
+
+  for (const node of contentArray) {
+    if (typeof node === 'object' && node && 'type' in node && node.type === 'paragraph' && 'content' in node) {
+      const nodeContent = node.content
+      if (Array.isArray(nodeContent)) {
+        for (const textNode of nodeContent) {
+          if (
+            typeof textNode === 'object' &&
+            textNode &&
+            'type' in textNode &&
+            textNode.type === 'text' &&
+            'text' in textNode
+          ) {
+            const text = typeof textNode.text === 'string' ? textNode.text.trim() : ''
+            if (text) {
+              return text.length > 100 ? `${text.substring(0, 100)}...` : text
+            }
+          }
         }
       }
     }
@@ -57,7 +69,6 @@ const extractPreviewText = (content: any): string => {
   return ''
 }
 
-// Helper function to format relative time
 const formatRelativeTime = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
@@ -80,7 +91,7 @@ interface JobPosting {
   title: string
   job_type: string
   department: string | null
-  content: any
+  content: Json
   updated_at: string | null
   created_at: string | null
 }
@@ -109,40 +120,35 @@ function DraftCard({ job, isEditMode, isSelected, onSelect, onClick }: DraftCard
   }
 
   return (
-    <div className='relative'>
-      {isEditMode && (
-        <div className='absolute -top-2 -right-2 z-10'>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => onSelect(job.id, !!checked)}
-            className='h-5 w-5 border-2 border-white shadow-lg bg-white'
-          />
-        </div>
-      )}
+    <div className='relative p-2'>
+      <div className='absolute top-0 right-0 z-10 w-5 h-5'>
+        {isEditMode && (
+          <div className='w-full h-full flex items-center justify-center'>
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={(checked) => onSelect(job.id, !!checked)}
+              className='size-4 border bg-background dark:bg-foreground'
+            />
+          </div>
+        )}
+      </div>
       <Card
-        className={`cursor-pointer transition-all hover:shadow-md ${
-          isEditMode ? 'hover:border-gray-300' : 'hover:border-blue-300'
-        } ${isSelected ? 'border-blue-500 bg-blue-50' : ''}`}
+        className={`cursor-pointer ${isSelected ? 'border-primary/20 !bg-secondary/50' : ''} gap-0 bg-card h-full`}
         onClick={handleCardClick}>
         <CardHeader className='pb-3'>
           <div className='space-y-2'>
-            <h3 className='font-semibold text-lg leading-tight line-clamp-2'>{displayTitle}</h3>
-            <div className='flex flex-wrap gap-2'>
-              <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
-                {jobType}
-              </span>
-              {department && (
-                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800'>
-                  {department}
-                </span>
-              )}
+            <h3 className='font-semibold text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex items-start'>
+              {displayTitle}
+            </h3>
+            <div className='flex flex-wrap gap-2 min-h-[1.5rem]'>
+              <Badge variant='outline'>{jobType}</Badge>
+              {department && <Badge variant='outline'>{department}</Badge>}
             </div>
           </div>
         </CardHeader>
-        <CardContent className='pt-0'>
-          <div className='space-y-3'>
-            {previewText && <p className='text-sm text-gray-600 line-clamp-3'>{previewText}</p>}
-            <p className='text-xs text-gray-500'>Last modified {lastModified}</p>
+        <CardContent className='pt-0 flex-1 flex flex-col justify-end'>
+          <div className=''>
+            <p className='text-xs text-gray-500 min-h-[1rem] line-clamp-1'>Last modified {lastModified}</p>
           </div>
         </CardContent>
       </Card>
@@ -169,11 +175,10 @@ export function DraftsPage(props: DraftsPageProps) {
   const trpcClient = useTRPC()
   const queryClient = useQueryClient()
 
-  // Query parameters for drafts
   const queryInput = {
     status: 'draft' as const,
     page: 1,
-    pageSize: 50, // Get more since we're not paginating yet
+    pageSize: 50,
   }
 
   const queryOptionsObj = trpcClient.organization.listJobPostings.queryOptions(
@@ -181,10 +186,8 @@ export function DraftsPage(props: DraftsPageProps) {
     hasData(props) ? { initialData: props.initialDraftsData } : undefined
   )
 
-  // Fetch draft job postings
   const { data: draftsData, isLoading, error } = useQuery(queryOptionsObj)
 
-  // Delete job posting mutation
   const deleteJobsMutation = useMutation(
     trpcClient.organization.deleteJobPosting.mutationOptions({
       onSuccess: async () => {
@@ -218,15 +221,21 @@ export function DraftsPage(props: DraftsPageProps) {
     }
   }
 
+  const handleSelectAll = () => {
+    if (selectedJobs.size === drafts.length) {
+      setSelectedJobs(new Set())
+    } else {
+      setSelectedJobs(new Set(drafts.map((job) => job.id)))
+    }
+  }
+
   const handleDeleteSelected = async () => {
     if (selectedJobs.size === 0) return
 
-    // Delete jobs one by one (could be optimized with batch delete if available)
     for (const jobId of selectedJobs) {
       try {
         await deleteJobsMutation.mutateAsync({ id: jobId })
       } catch (error) {
-        // Error handling is done in the mutation onError
         break
       }
     }
@@ -240,14 +249,17 @@ export function DraftsPage(props: DraftsPageProps) {
     router.push('/jobs/create')
   }
 
+  const isAllSelected = selectedJobs.size === drafts.length && drafts.length > 0
+  const isSomeSelected = selectedJobs.size > 0 && selectedJobs.size < drafts.length
+
   if (isLoading) {
     return (
       <div className='container mx-auto py-8'>
         <div className='animate-pulse space-y-6'>
-          <div className='h-8 bg-gray-200 rounded w-1/3'></div>
+          <div className='h-8 bg-gray-200 rounded w-1/3' />
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className='h-40 bg-gray-200 rounded-lg'></div>
+            {Array.from({ length: 8 }, (_, i) => `skeleton-${crypto.randomUUID()}`).map((key) => (
+              <div key={key} className='h-40 bg-gray-200 rounded-lg' />
             ))}
           </div>
         </div>
@@ -267,66 +279,82 @@ export function DraftsPage(props: DraftsPageProps) {
   }
 
   return (
-    <div className='container mx-auto py-8'>
-      {/* Header */}
-      <div className='flex items-center justify-between mb-8'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-900'>Draft Job Postings</h1>
-          <p className='text-gray-600 mt-2'>
-            {drafts.length} draft{drafts.length !== 1 ? 's' : ''} ready for editing
-          </p>
-        </div>
-        <div className='flex items-center gap-3'>
-          <Button variant='outline' onClick={handleCreateJob} className='flex items-center gap-2'>
-            <Plus className='h-4 w-4' />
-            Create Job Post
-          </Button>
-          <Button variant='outline' onClick={handleEditModeToggle} className='flex items-center gap-2'>
-            <Edit3 className='h-4 w-4' />
-            {isEditMode ? 'Cancel' : 'Edit'}
-          </Button>
-          {isEditMode && selectedJobs.size > 0 && (
-            <Button
-              variant='destructive'
-              onClick={handleDeleteSelected}
-              disabled={deleteJobsMutation.isPending}
-              className='flex items-center gap-2'>
-              <Trash2 className='h-4 w-4' />
-              Delete ({selectedJobs.size})
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Draft Grid */}
-      {drafts.length === 0 ? (
-        <div className='text-center py-12'>
-          <div className='max-w-md mx-auto'>
-            <div className='mb-4'>
-              <Edit3 className='h-12 w-12 text-gray-400 mx-auto' />
+    <Container>
+      <div className='container mx-auto py-8'>
+        <div className='mb-4'>
+          <div className='flex justify-end'>
+            <div className='flex items-center gap-2'>
+              {isEditMode && selectedJobs.size > 0 && (
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  onClick={handleDeleteSelected}
+                  disabled={deleteJobsMutation.isPending}
+                  className='flex items-center gap-2 p-2 lg:px-3'>
+                  <Trash2 className='h-4 w-4' />
+                  <span className='hidden lg:inline'>Delete ({selectedJobs.size})</span>
+                </Button>
+              )}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleEditModeToggle}
+                disabled={drafts.length === 0}
+                className='flex items-center gap-2 p-2 lg:px-3'>
+                {isEditMode ? (
+                  <>
+                    <PenOff className='h-4 w-4' />
+                    <span className='hidden lg:inline'>Cancel</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit3 className='h-4 w-4' />
+                    <span className='hidden lg:inline'>Edit</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                variant='brand'
+                size='sm'
+                onClick={handleCreateJob}
+                className='flex items-center gap-2 p-2 lg:px-3'>
+                <Plus className='h-4 w-4' />
+                <span className='hidden lg:inline'>Create Job Post</span>
+              </Button>
             </div>
-            <h3 className='text-lg font-semibold text-gray-900 mb-2'>No drafts yet</h3>
-            <p className='text-gray-600 mb-6'>Start creating job postings and save them as drafts to see them here.</p>
-            <Button onClick={handleCreateJob} className='flex items-center gap-2'>
-              <Plus className='h-4 w-4' />
-              Create Your First Job Post
-            </Button>
           </div>
         </div>
-      ) : (
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-          {drafts.map((job) => (
-            <DraftCard
-              key={job.id}
-              job={job}
-              isEditMode={isEditMode}
-              isSelected={selectedJobs.has(job.id)}
-              onSelect={handleJobSelect}
-              onClick={() => handleJobClick(job.id)}
-            />
-          ))}
+
+        <div className='mb-4 h-10'>
+          {isEditMode && drafts.length > 0 && (
+            <div className='flex items-center gap-3 justify-end h-full'>
+              {selectedJobs.size > 0 && (
+                <span className='text-sm text-muted-foreground'>
+                  {selectedJobs.size} of {drafts.length} selected
+                </span>
+              )}
+              <Button variant='outline' size='sm' onClick={handleSelectAll} className='text-sm font-medium'>
+                {isAllSelected ? 'Deselect All' : 'Select All'}
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+
+        {drafts.length === 0 ? null : (
+          <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
+            {drafts.map((job) => (
+              <DraftCard
+                key={job.id}
+                job={job}
+                isEditMode={isEditMode}
+                isSelected={selectedJobs.has(job.id)}
+                onSelect={handleJobSelect}
+                onClick={() => handleJobClick(job.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </Container>
   )
 }
