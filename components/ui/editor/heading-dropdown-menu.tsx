@@ -116,7 +116,7 @@ export function HeadingDropdownMenu({
           tooltip='Text Format'
           {...props}>
           {getActiveIcon()}
-          <ChevronDown className='tiptap-button-dropdown-small' />
+          <ChevronDown />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

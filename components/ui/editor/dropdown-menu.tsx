@@ -213,7 +213,7 @@ export const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenu
       <FloatingFocusManager context={context.context} modal={false} initialFocus={0} returnFocus={true}>
         <div
           ref={ref}
-          className={`z-50 min-w-[8rem] overflow-hidden rounded-lg border bg-white p-1 text-gray-950 dark:bg-popover dark:text-gray-50 
+          className={`z-50 min-w-[8rem] overflow-hidden rounded-lg border  p-1 text-foreground bg-background 
           data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 
           data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 
           data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 

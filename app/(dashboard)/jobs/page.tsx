@@ -5,8 +5,8 @@ import { columns } from '@/components/jobs/columns'
 import { DataTable } from '@/components/jobs/data-table'
 import { Button } from '@/components/ui/button'
 import { jobTemplates } from '@/data/job-templates'
-import { JobPost, jobs } from '@/data/jobs-posts'
-import { Row } from '@tanstack/react-table'
+import { type JobPost, jobs } from '@/data/jobs-posts'
+import type { Row } from '@tanstack/react-table'
 
 // TODO: Further abstract the data table to be able to use it in other pages easier
 
@@ -29,8 +29,7 @@ export default function Jobs() {
         <div className='flex justify-end my-2'>
           <Button>Create new job post</Button>
         </div>
-        <div
-          className={hasJobs ? 'bg-secondary/20 rounded-lg py-4 border' : ''}>
+        <div className={hasJobs ? 'bg-secondary/20 rounded-lg py-4 border' : ''}>
           <DataTable
             columns={columns}
             data={jobs}

@@ -22,11 +22,11 @@ import {
 } from '@/components/ui/sheet'
 import { useTRPC } from '@/trpc/client'
 import { useQuery } from '@tanstack/react-query'
+import type { Editor } from '@tiptap/react'
 import { SquarePen } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-// Helper function to format role names
 const getRoleDisplayName = (role: string): string => {
   const roleMap: Record<string, string> = {
     admin: 'Administrator',
@@ -176,19 +176,58 @@ function JobDetailsForm({ formData, setFormData, hiringManagers }: JobDetailsFor
   )
 }
 
-interface JobProfileSheetProps {
-  editor?: any
-  onJobDataChange?: (data: any) => void
-  jobData?: any
+interface JobData {
+  id?: string
+  title: string
+  job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
+  department?: string | null
+  experience_level?: string | null
+  hiring_manager_id?: string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_type?: string | null
 }
 
-export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfileSheetProps) {
-  const [formData, setFormData] = useState(jobData || initialFormData)
+interface JobProfileSheetProps {
+  editor?: Editor
+  onJobDataChange?: (data: JobData | null) => void
+  jobData?: JobData | null
+  isEditing?: boolean
+}
+
+export function JobProfileSheet({ editor, onJobDataChange, jobData, isEditing = false }: JobProfileSheetProps) {
+  const [formData, setFormData] = useState(initialFormData)
   const [open, setOpen] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
   const trpcClient = useTRPC()
-
   const { data: hiringManagers = [] } = useQuery(trpcClient.organization.getOrganizationUsers.queryOptions())
+
+  // Initialize form data when jobData changes (for editing)
+  useEffect(() => {
+    if (jobData && !isInitialized) {
+      const transformedFormData = {
+        jobTitle: jobData.title || '',
+        jobType: jobData.job_type || '',
+        salaryMin: jobData.salary_min?.toString() || '',
+        salaryMax: jobData.salary_max?.toString() || '',
+        salaryType: jobData.salary_type || '',
+        hiringManager: jobData.hiring_manager_id || '',
+        department: jobData.department || '',
+        experienceLevel: jobData.experience_level || '',
+      }
+      setFormData(transformedFormData)
+      setIsInitialized(true)
+    }
+  }, [jobData, isInitialized])
+
+  // Reset initialization when jobData becomes null (for new jobs)
+  useEffect(() => {
+    if (!jobData) {
+      setIsInitialized(false)
+      setFormData(initialFormData)
+    }
+  }, [jobData])
 
   const handleSave = () => {
     if (!formData.jobTitle.trim()) {
@@ -199,7 +238,6 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfile
       toast.error('Job type is required')
       return
     }
-
     const jobData = {
       title: formData.jobTitle,
       job_type: formData.jobType as 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary',
@@ -210,7 +248,6 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfile
       salary_max: formData.salaryMax ? Number.parseInt(formData.salaryMax, 10) : null,
       salary_type: (formData.salaryType as 'salary' | 'hourly') || null,
     }
-
     onJobDataChange?.(jobData)
     setOpen(false)
     toast.success('Job details saved locally')
@@ -226,6 +263,7 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfile
     onJobDataChange?.(null)
     setOpen(false)
     setShowDiscardDialog(false)
+    setIsInitialized(false)
     toast.success('Content cleared')
   }
 
@@ -247,7 +285,9 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfile
           <SheetContent side='right' className='sm:max-w-2xl w-full h-[100dvh] overflow-y-auto p-6'>
             <SheetHeader className='mb-4'>
               <SheetTitle>Job Details</SheetTitle>
-              <SheetDescription>Enter the required information for this job posting.</SheetDescription>
+              <SheetDescription>
+                {isEditing ? 'Edit the job posting details.' : 'Enter the required information for this job posting.'}
+              </SheetDescription>
             </SheetHeader>
             <JobDetailsForm formData={formData} setFormData={setFormData} hiringManagers={hiringManagers} />
             <SheetFooter className='mt-6 flex flex-col gap-2 p-0 px-1'>
@@ -261,7 +301,6 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData }: JobProfile
           </SheetContent>
         </Sheet>
       </div>
-
       <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>

@@ -314,6 +314,14 @@
   @apply text-foreground;
 }
 
+input[type='range']::-webkit-slider-thumb {
+  @apply appearance-none h-4 w-4 rounded-full bg-brand cursor-pointer;
+}
+
+input[type='range']::-moz-range-thumb {
+  @apply appearance-none h-4 w-4 rounded-full bg-brand cursor-pointer border-none;
+}
+
 @layer base {
   * {
     @apply border-border;

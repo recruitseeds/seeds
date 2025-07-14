@@ -1,7 +1,7 @@
 'use client'
 
-import { JobPost } from '@/data/jobs-posts'
-import { ColumnDef } from '@tanstack/react-table'
+import type { JobPost } from '@/data/jobs-posts'
+import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -22,10 +22,7 @@ export const columns: ColumnDef<JobPost>[] = [
     id: 'select',
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label='Select all'
       />
@@ -42,33 +39,25 @@ export const columns: ColumnDef<JobPost>[] = [
   },
   {
     accessorKey: 'title',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Job Title' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Job Title' />,
     enableSorting: true,
     enableHiding: true,
   },
   {
     accessorKey: 'department',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Department' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Department' />,
     enableSorting: true,
     enableHiding: true,
   },
   {
     accessorKey: 'location',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Location' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Location' />,
     enableSorting: true,
     enableHiding: true,
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
     cell: ({ row }) => {
       const status = row.getValue('status') as string | undefined
 
@@ -77,9 +66,7 @@ export const columns: ColumnDef<JobPost>[] = [
         return <span className='status-badge unknown'>Unknown</span>
       }
 
-      return (
-        <span className={`status-badge ${status.toLowerCase()}`}>{status}</span>
-      )
+      return <span className={`status-badge ${status.toLowerCase()}`}>{status}</span>
     },
     enableSorting: true,
     meta: {
@@ -88,17 +75,13 @@ export const columns: ColumnDef<JobPost>[] = [
   },
   {
     accessorKey: 'datePosted',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Date Posted' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Date Posted' />,
     enableSorting: true,
     enableHiding: true,
   },
   {
     accessorKey: 'applicants',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Applicants' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Applicants' />,
     cell: ({ row }) => {
       const applicants = row.getValue('applicants') as number
       return <div>{applicants}</div>
@@ -108,9 +91,7 @@ export const columns: ColumnDef<JobPost>[] = [
   },
   {
     accessorKey: 'hiringManager',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Hiring Manager' />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Hiring Manager' />,
     enableSorting: true,
     enableHiding: true,
   },
@@ -156,9 +137,7 @@ export const columns: ColumnDef<JobPost>[] = [
               Share Job
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant='destructive'
-              onClick={() => console.log(`Delete job: ${job.id}`)}>
+            <DropdownMenuItem variant='destructive' onClick={() => console.log(`Delete job: ${job.id}`)}>
               Delete Job
             </DropdownMenuItem>
           </DropdownMenuContent>
