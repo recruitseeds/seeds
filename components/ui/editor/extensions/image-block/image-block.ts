@@ -1,5 +1,6 @@
 import { type Range, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
+
 import { Image } from '../image'
 import { ImageBlockView } from './components/image-block-view'
 
@@ -16,9 +17,13 @@ declare module '@tiptap/core' {
 
 export const ImageBlock = Image.extend({
   name: 'imageBlock',
+
   group: 'block',
+
   defining: true,
+
   isolating: true,
+
   draggable: true,
 
   addAttributes() {
@@ -57,8 +62,7 @@ export const ImageBlock = Image.extend({
   parseHTML() {
     return [
       {
-        // Allow any image that's not a data URL - this will work with any domain
-        tag: 'img:not([src^="data:"])',
+        tag: 'img[src*="tiptap.dev"]:not([src^="data:"]), img[src*="windows.net"]:not([src^="data:"])',
       },
     ]
   },
@@ -69,11 +73,9 @@ export const ImageBlock = Image.extend({
 
   addCommands() {
     return {
-      // In your ImageBlock extension's addCommands
       setImageBlock:
         (attrs) =>
         ({ commands }) => {
-          console.log('setImageBlock called with attrs:', attrs) // Add this debug log
           return commands.insertContent({
             type: 'imageBlock',
             attrs: { src: attrs.src },

@@ -12,7 +12,7 @@ export default function Page() {
     <SidebarProvider>
       <SidebarInset className='overflow-x-auto'>
         <div className='mb-20'>
-          <BlockEditor jobData={jobData} />
+          <BlockEditor jobData={jobData} isJobDataLoading={false} />
         </div>
       </SidebarInset>
       <JobProfileSheet onJobDataChange={setJobData} jobData={jobData} />

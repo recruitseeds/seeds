@@ -1,4 +1,4 @@
-import { API } from '@/lib/api'
+import { uploadImage } from '@/lib/api'
 import { type DragEvent, useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -9,7 +9,7 @@ export const useUploader = ({ onUpload }: { onUpload: (url: string) => void }) =
     async (file: File) => {
       setLoading(true)
       try {
-        const url = await API.uploadImage(file)
+        const url = await uploadImage(file)
 
         onUpload(url)
       } catch (errPayload: any) {
