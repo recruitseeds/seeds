@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { Json } from '@/supabase/types/db'
 import { useTRPC } from '@/trpc/client'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -39,29 +38,15 @@ const formatDepartment = (department: string | null) => {
   return deptMap[department] || department
 }
 
-const extractPreviewText = (content: Json): string => {
-  if (!content || typeof content !== 'object' || !('content' in content)) return ''
+const extractPreviewText = (content: any): string => {
+  if (!content || !content.content) return ''
 
-  const contentArray = content.content
-  if (!Array.isArray(contentArray)) return ''
-
-  for (const node of contentArray) {
-    if (typeof node === 'object' && node && 'type' in node && node.type === 'paragraph' && 'content' in node) {
-      const nodeContent = node.content
-      if (Array.isArray(nodeContent)) {
-        for (const textNode of nodeContent) {
-          if (
-            typeof textNode === 'object' &&
-            textNode &&
-            'type' in textNode &&
-            textNode.type === 'text' &&
-            'text' in textNode
-          ) {
-            const text = typeof textNode.text === 'string' ? textNode.text.trim() : ''
-            if (text) {
-              return text.length > 100 ? `${text.substring(0, 100)}...` : text
-            }
-          }
+  for (const node of content.content) {
+    if (node.type === 'paragraph' && node.content) {
+      for (const textNode of node.content) {
+        if (textNode.type === 'text' && textNode.text) {
+          const text = textNode.text.trim()
+          return text.length > 100 ? `${text.substring(0, 100)}...` : text
         }
       }
     }
@@ -91,7 +76,7 @@ interface JobPosting {
   title: string
   job_type: string
   department: string | null
-  content: Json
+  content: any
   updated_at: string | null
   created_at: string | null
 }
@@ -105,6 +90,7 @@ interface DraftCardProps {
 }
 
 function DraftCard({ job, isEditMode, isSelected, onSelect, onClick }: DraftCardProps) {
+  const router = useRouter()
   const displayTitle = job.title || 'Untitled'
   const jobType = formatJobType(job.job_type)
   const department = formatDepartment(job.department)
@@ -134,7 +120,12 @@ function DraftCard({ job, isEditMode, isSelected, onSelect, onClick }: DraftCard
       </div>
       <Card
         className={`cursor-pointer ${isSelected ? 'border-primary/20 !bg-secondary/50' : ''} gap-0 bg-card h-full`}
-        onClick={handleCardClick}>
+        onClick={handleCardClick}
+        onMouseEnter={() => {
+          if (!isEditMode) {
+            router.prefetch(`/jobs/create/${job.id}`)
+          }
+        }}>
         <CardHeader className='pb-3'>
           <div className='space-y-2'>
             <h3 className='font-semibold text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex items-start'>
@@ -258,8 +249,8 @@ export function DraftsPage(props: DraftsPageProps) {
         <div className='animate-pulse space-y-6'>
           <div className='h-8 bg-gray-200 rounded w-1/3' />
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-            {Array.from({ length: 8 }, (_, i) => `skeleton-${crypto.randomUUID()}`).map((key) => (
-              <div key={key} className='h-40 bg-gray-200 rounded-lg' />
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className='h-40 bg-gray-200 rounded-lg' />
             ))}
           </div>
         </div>

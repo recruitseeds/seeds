@@ -1,3 +1,4 @@
+import { ToolbarSkeleton } from '@/components/skeletons/toolbar'
 import {
   Dialog,
   DialogContent,
@@ -346,11 +347,7 @@ export function BlockEditor({
   }, [editor, existingContent])
 
   if (!editor) {
-    return (
-      <div className='flex items-center justify-center'>
-        <div className='animate-pulse'>Loading Editor...</div>
-      </div>
-    )
+    return <ToolbarSkeleton />
   }
 
   return (
@@ -420,6 +417,7 @@ export function BlockEditor({
                 />
               )}
             </Toolbar>
+            {/* <ToolbarSkeleton /> */}
           </div>
           {mobileView === 'main' && (
             <div className='flex-shrink-0 px-4 py-2 border-l border-dashed'>
