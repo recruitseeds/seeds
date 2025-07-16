@@ -15,38 +15,38 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-// Type for job posting data
+// Type for job posting data - matches your actual database structure
 export type JobPost = {
   id: string
   title: string
-  department: string
-  location: string
+  department: string | null
+  job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
   status: 'draft' | 'published' | 'archived' | 'closed'
-  datePosted: string
-  applicants: number
-  hiringManager: string
+  created_at: string
+  experience_level: 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | null
+  hiring_manager_id: string | null
+  salary_min: number | null
+  salary_max: number | null
 }
 
 export const columns: ColumnDef<JobPost>[] = [
   {
     id: 'select',
     header: ({ table }) => (
-      <div className='flex items-center justify-center w-10'>
+      <div className='flex items-center justify-center w-12'>
         <Checkbox
           checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label='Select all'
-          className='mx-auto'
         />
       </div>
     ),
     cell: ({ row }) => (
-      <div className='flex items-center justify-center w-10'>
+      <div className='flex items-center justify-center w-12'>
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label='Select row'
-          className='mx-auto'
           onClick={(e) => e.stopPropagation()} // Prevent row click when clicking checkbox
         />
       </div>
@@ -54,7 +54,7 @@ export const columns: ColumnDef<JobPost>[] = [
     enableSorting: false,
     enableHiding: false,
     meta: {
-      className: 'w-10 px-2', // Fixed width and proper padding for checkbox column
+      className: 'w-12 px-3', // Fixed width and centered padding for checkbox column
     },
   },
   {
@@ -94,21 +94,25 @@ export const columns: ColumnDef<JobPost>[] = [
     },
   },
   {
-    accessorKey: 'location',
+    accessorKey: 'job_type',
     header: ({ column }) => (
       <Button
         variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Location
+        Job Type
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
-    cell: ({ row }) => <div>{row.getValue('location')}</div>,
+    cell: ({ row }) => {
+      const jobType = row.getValue('job_type') as string
+      const formatted = jobType?.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'Not specified'
+      return <div className='capitalize'>{formatted}</div>
+    },
     enableSorting: true,
     enableHiding: true,
     meta: {
-      className: 'min-w-[150px]',
+      className: 'min-w-[120px]',
     },
   },
   {
@@ -152,18 +156,18 @@ export const columns: ColumnDef<JobPost>[] = [
     },
   },
   {
-    accessorKey: 'datePosted',
+    accessorKey: 'created_at',
     header: ({ column }) => (
       <Button
         variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Date Posted
+        Date Created
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue('datePosted'))
+      const date = new Date(row.getValue('created_at'))
       return (
         <div className='text-sm'>
           {date.toLocaleDateString('en-US', {
@@ -181,42 +185,24 @@ export const columns: ColumnDef<JobPost>[] = [
     },
   },
   {
-    accessorKey: 'applicants',
+    accessorKey: 'experience_level',
     header: ({ column }) => (
       <Button
         variant='ghost'
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Applicants
+        Experience
         <ArrowUpDown className='ml-2 h-4 w-4' />
       </Button>
     ),
     cell: ({ row }) => {
-      const count = row.getValue('applicants') as number
-      return <div className='text-center font-medium'>{count}</div>
+      const level = row.getValue('experience_level') as string
+      return <div className='capitalize'>{level || 'Not specified'}</div>
     },
     enableSorting: true,
     enableHiding: true,
     meta: {
-      className: 'w-[100px] text-center',
-    },
-  },
-  {
-    accessorKey: 'hiringManager',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Hiring Manager
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue('hiringManager')}</div>,
-    enableSorting: true,
-    enableHiding: true,
-    meta: {
-      className: 'min-w-[150px]',
+      className: 'w-[100px]',
     },
   },
   {
