@@ -1,6 +1,6 @@
 import { createJobPosting, deleteJobPosting, updateJobPosting } from '@/supabase/mutations/organization'
 import { getJobPostingById, getJobPostingsByOrganization, getOrganizationUsers } from '@/supabase/queries/organization'
-import type { TablesInsert } from '@/supabase/types/db'
+import type { Json, TablesInsert } from '@/supabase/types/db'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { createTRPCRouter, organizationProcedure } from '../init'
@@ -11,12 +11,91 @@ const salaryTypeEnum = z.enum(['salary', 'hourly'])
 const experienceLevelEnum = z.enum(['entry', 'mid', 'senior', 'lead', 'executive'])
 
 export const organizationRouter = createTRPCRouter({
+  listJobs: organizationProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        search: z.string().optional(),
+        status: jobStatusEnum.optional(),
+        sort: z.array(z.string()).length(2).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { cursor, limit, search, status, sort } = input
+      const organizationId = ctx.organizationId
+
+      let query = ctx.supabase
+        .from('job_postings')
+        .select(
+          `
+          id,
+          title,
+          job_type,
+          status,
+          department,
+          experience_level,
+          salary_min,
+          salary_max,
+          salary_type,
+          created_at,
+          updated_at
+        `,
+          { count: 'exact' }
+        )
+        .eq('organization_id', organizationId)
+
+      // Search filter
+      if (search) {
+        query = query.or(`title.ilike.%${search}%,department.ilike.%${search}%`)
+      }
+
+      // Status filter
+      if (status) {
+        query = query.eq('status', status)
+      }
+
+      // Sorting
+      if (sort && sort.length === 2) {
+        const [column, direction] = sort
+        query = query.order(column, { ascending: direction === 'asc' })
+      } else {
+        query = query.order('created_at', { ascending: false })
+      }
+
+      // Cursor pagination
+      if (cursor) {
+        query = query.lt('created_at', cursor)
+      }
+
+      query = query.limit(limit)
+
+      const { data, error, count } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch job postings',
+        })
+      }
+
+      const nextCursor = data && data.length === limit ? data[data.length - 1]?.created_at : undefined
+
+      return {
+        data: data || [],
+        meta: {
+          count: count || 0,
+          cursor: nextCursor,
+        },
+      }
+    }),
+
   createJobPosting: organizationProcedure
     .input(
       z.object({
         title: z.string().min(1, 'Job title is required'),
         job_type: jobTypeEnum,
-        content: z.any().optional(),
+        content: z.record(z.unknown()).optional(),
         department: z.string().optional().nullable(),
         experience_level: experienceLevelEnum.optional().nullable(),
         hiring_manager_id: z.string().uuid().optional().nullable(),
@@ -53,6 +132,7 @@ export const organizationRouter = createTRPCRouter({
 
       const params: TablesInsert<'job_postings'> = {
         ...input,
+        content: input.content as Json,
         organization_id: organizationId,
         created_by: orgUser.id, // Use organization_users.id instead of auth.users.id
       }
@@ -66,13 +146,14 @@ export const organizationRouter = createTRPCRouter({
         })
       }
     }),
+
   updateJobPosting: organizationProcedure
     .input(
       z.object({
         id: z.string().uuid(),
         title: z.string().min(1).optional(),
         job_type: jobTypeEnum.optional(),
-        content: z.any().optional(),
+        content: z.record(z.unknown()).optional(),
         department: z.string().optional().nullable(),
         experience_level: experienceLevelEnum.optional().nullable(),
         hiring_manager_id: z.string().uuid().optional().nullable(),
@@ -85,7 +166,10 @@ export const organizationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await updateJobPosting(ctx.supabase, input)
+        return await updateJobPosting(ctx.supabase, {
+          ...input,
+          content: input.content as Json,
+        })
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -93,6 +177,7 @@ export const organizationRouter = createTRPCRouter({
         })
       }
     }),
+
   getJobPosting: organizationProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
     const { data, error } = await getJobPostingById(ctx.supabase, input.id)
     if (error) {
@@ -103,6 +188,7 @@ export const organizationRouter = createTRPCRouter({
     }
     return data
   }),
+
   listJobPostings: organizationProcedure
     .input(
       z.object({
@@ -134,6 +220,7 @@ export const organizationRouter = createTRPCRouter({
       }
       return { data, count }
     }),
+
   deleteJobPosting: organizationProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
@@ -146,6 +233,7 @@ export const organizationRouter = createTRPCRouter({
       }
       return { success: true }
     }),
+
   getOrganizationUsers: organizationProcedure.query(async ({ ctx }) => {
     const organizationId = ctx.organizationId
     if (!organizationId) {
