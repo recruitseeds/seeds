@@ -1,40 +1,27 @@
 'use client'
 import { DataTableViewOptions } from '@/components/data-table/column-toggle'
 import { DataTablePagination } from '@/components/data-table/pagination'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import type { JobTemplate } from '@/data/job-templates'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { JobTemplate } from '@/data/job-templates'
-import {
-  ColumnDef,
-  ColumnFiltersState,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type Row,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  Row,
-  SortingState,
   useReactTable,
-  VisibilityState,
 } from '@tanstack/react-table'
 import { ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 
 declare module '@tanstack/table-core' {
   interface ColumnMeta<TData, TValue> {
@@ -96,27 +83,15 @@ export function DataTable<TData, TValue>({
               <div className='w-64'>
                 <Input
                   placeholder={filterPlaceholder}
-                  value={
-                    (table
-                      .getColumn(filterField)
-                      ?.getFilterValue() as string) ?? ''
-                  }
-                  onChange={(event) =>
-                    table
-                      .getColumn(filterField)
-                      ?.setFilterValue(event.target.value)
-                  }
+                  value={(table.getColumn(filterField)?.getFilterValue() as string) ?? ''}
+                  onChange={(event) => table.getColumn(filterField)?.setFilterValue(event.target.value)}
                 />
               </div>
             )}
             {table.getColumn('department') && (
               <div className='w-48'>
                 <Select
-                  onValueChange={(value) =>
-                    table
-                      .getColumn('department')
-                      ?.setFilterValue(value === 'all' ? '' : value)
-                  }
+                  onValueChange={(value) => table.getColumn('department')?.setFilterValue(value === 'all' ? '' : value)}
                   defaultValue=''>
                   <SelectTrigger>
                     <SelectValue placeholder='All Departments' />
@@ -135,11 +110,7 @@ export function DataTable<TData, TValue>({
             {table.getColumn('status') && (
               <div className='w-40'>
                 <Select
-                  onValueChange={(value) =>
-                    table
-                      .getColumn('status')
-                      ?.setFilterValue(value === 'all' ? '' : value)
-                  }
+                  onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'all' ? '' : value)}
                   defaultValue=''>
                   <SelectTrigger>
                     <SelectValue placeholder='All Statuses' />
@@ -167,15 +138,8 @@ export function DataTable<TData, TValue>({
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className={`whitespace-nowrap px-4 py-2 ${
-                        header.column.columnDef.meta?.className || ''
-                      }`}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      className={`whitespace-nowrap px-4 py-2 ${header.column.columnDef.meta?.className || ''}`}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -188,28 +152,19 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     onClick={() => onRowClick && onRowClick(row)}
-                    className={
-                      onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''
-                    }>
+                    className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={`whitespace-nowrap px-4 py-2 ${
-                          cell.column.columnDef.meta?.className || ''
-                        }`}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        className={`whitespace-nowrap px-4 py-2 ${cell.column.columnDef.meta?.className || ''}`}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className='h-24 text-center'>
+                  <TableCell colSpan={columns.length} className='h-24 text-center'>
                     No results found.
                   </TableCell>
                 </TableRow>
@@ -231,23 +186,15 @@ export function DataTable<TData, TValue>({
                     <div className='group relative flex items-start space-x-3 py-4'>
                       <div className='shrink-0'>
                         <span className='inline-flex size-10 items-center justify-center rounded-lg bg-brand-subtle'>
-                          <template.icon
-                            className='size-6 text-brand-subtle-foreground'
-                            aria-hidden='true'
-                          />
+                          <template.icon className='size-6 text-brand-subtle-foreground' aria-hidden='true' />
                         </span>
                       </div>
                       <div className='min-w-0 flex-1'>
                         <div className='text-sm font-medium'>
-                          <span
-                            aria-hidden='true'
-                            className='absolute inset-0'
-                          />
+                          <span aria-hidden='true' className='absolute inset-0' />
                           {template.title}
                         </div>
-                        <p className='text-xs text-muted-foreground'>
-                          {template.department}
-                        </p>
+                        <p className='text-xs text-muted-foreground'>{template.department}</p>
                       </div>
                       <div className='shrink-0 self-center'>
                         <ChevronRightIcon
@@ -263,10 +210,7 @@ export function DataTable<TData, TValue>({
           ) : null}
           <div className='mt-6 flex justify-between items-center'>
             <Button variant='link' className='pl-0'>
-              <Link
-                href='/jobs/create'
-                prefetch
-                className='text-sm font-medium'>
+              <Link href='/jobs/create' prefetch className='text-sm font-medium'>
                 Create a job without a template
                 <span aria-hidden='true'> →</span>
               </Link>
