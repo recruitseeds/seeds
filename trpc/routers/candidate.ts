@@ -175,7 +175,14 @@ export const candidateRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return updateCandidateEducation(ctx.supabase, ctx.user.id, input)
+      const cleanInput = {
+        ...input,
+        degree_name: input.degree_name ?? undefined,
+        field_of_study: input.field_of_study ?? undefined,
+        description: input.description ?? undefined,
+        end_date: input.end_date ?? undefined,
+      }
+      return updateCandidateEducation(ctx.supabase, ctx.user.id, cleanInput)
     }),
 
   deleteEducation: candidateProcedure
@@ -296,16 +303,7 @@ export const candidateRouter = createTRPCRouter({
         fileName: z.string(),
         fileMimeType: z.string(),
         fileContentBase64: z.string(),
-        fileCategoryForR2Path: z.enum([
-          'resume',
-          'cover_letter',
-          'transcript',
-          'other',
-          'portfolio',
-          'certification',
-          'reference',
-          'eligibility',
-        ]),
+        fileCategoryForR2Path: z.enum(['resume', 'cover_letter', 'transcript', 'other']),
         dbFileType: candidateFileTypeEnum,
       })
     )
