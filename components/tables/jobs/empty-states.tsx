@@ -1,50 +1,65 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { useJobFilterParams } from '@/hooks/use-job-filter-params'
-import { useJobParams } from '@/hooks/use-job-params'
+import { Card, CardContent } from '@/components/ui/card'
+import { Briefcase, Plus, Search, X } from 'lucide-react'
+import Link from 'next/link'
 
 export function EmptyState() {
-  const { setParams } = useJobParams()
-
   return (
-    <div className='flex items-center justify-center h-[350px]'>
-      <div className='flex flex-col items-center -mt-20'>
-        <div className='text-center mb-6 space-y-2'>
-          <h2 className='font-medium text-lg'>No job postings</h2>
-          <p className='text-[#606060] text-sm'>
-            You haven't created any job postings yet. <br />
-            Go ahead and create your first one.
-          </p>
+    <Card className='border-dashed'>
+      <CardContent className='flex flex-col items-center justify-center p-12 text-center'>
+        <div className='mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted'>
+          <Briefcase className='h-6 w-6 text-muted-foreground' />
         </div>
-        <Button
-          variant='outline'
-          onClick={() =>
-            setParams({
-              create: true,
-            })
-          }>
-          Create job posting
-        </Button>
-      </div>
-    </div>
+        <h2 className='mt-6 text-xl font-semibold'>No job postings yet</h2>
+        <p className='mt-2 text-sm text-muted-foreground max-w-sm'>
+          Create your first job posting to start attracting candidates to your organization.
+        </p>
+        <div className='mt-6'>
+          <Button asChild>
+            <Link href='/jobs/create'>
+              <Plus className='mr-2 h-4 w-4' />
+              Create Job Posting
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
-export function NoResults() {
-  const { setFilter } = useJobFilterParams()
+interface NoResultsProps {
+  search?: string
+  onClearFilters: () => void
+}
 
+export function NoResults({ search, onClearFilters }: NoResultsProps) {
   return (
-    <div className='flex items-center justify-center h-[350px]'>
-      <div className='flex flex-col items-center -mt-20'>
-        <div className='text-center mb-6 space-y-2'>
-          <h2 className='font-medium text-lg'>No results</h2>
-          <p className='text-[#606060] text-sm'>Try another search, or adjusting the filters</p>
+    <Card className='border-dashed'>
+      <CardContent className='flex flex-col items-center justify-center p-12 text-center'>
+        <div className='mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted'>
+          <Search className='h-6 w-6 text-muted-foreground' />
         </div>
-        <Button variant='outline' onClick={() => setFilter(null)}>
-          Clear filters
-        </Button>
-      </div>
-    </div>
+        <h2 className='mt-6 text-xl font-semibold'>No job postings found</h2>
+        <p className='mt-2 text-sm text-muted-foreground max-w-sm'>
+          {search
+            ? `No job postings match "${search}". Try adjusting your search terms or filters.`
+            : 'No job postings match your current filters. Try adjusting your search criteria.'}
+        </p>
+        <div className='mt-6 flex gap-2'>
+          <Button variant='outline' onClick={onClearFilters}>
+            <X className='mr-2 h-4 w-4' />
+            Clear Filters
+          </Button>
+          <Button asChild>
+            <Link href='/jobs/create'>
+              <Plus className='mr-2 h-4 w-4' />
+              Create Job Posting
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

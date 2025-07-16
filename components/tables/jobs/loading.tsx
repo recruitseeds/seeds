@@ -1,55 +1,79 @@
 'use client'
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
-import { JobTableHeader } from './data-table-header'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-const data = [...Array(10)].map((_, i) => ({ id: i.toString() }))
-
-export function JobTableLoading() {
+export function Loading() {
   return (
-    <div className='w-full'>
-      <div className='overflow-x-auto md:border-l md:border-r border-border'>
+    <div className='space-y-4'>
+      {/* Search and filters loading */}
+      <div className='flex items-center gap-4'>
+        <div className='flex-1'>
+          <Skeleton className='h-10 w-full' />
+        </div>
+        <Skeleton className='h-10 w-32' />
+      </div>
+
+      {/* Table loading */}
+      <div className='border rounded-lg'>
         <Table>
-          <JobTableHeader />
-          <TableBody className='border-l-0 border-r-0 border-t-0 border-b-0'>
-            {data?.map((row) => (
-              <TableRow key={row.id} className='h-[45px]'>
-                <TableCell className='w-[40px] min-w-[40px] sticky left-0 bg-background z-20'>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-[50px]'>
+                <Skeleton className='h-4 w-4' />
+              </TableHead>
+              <TableHead className='w-[300px]'>
+                <Skeleton className='h-4 w-20' />
+              </TableHead>
+              <TableHead>
+                <Skeleton className='h-4 w-16' />
+              </TableHead>
+              <TableHead>
+                <Skeleton className='h-4 w-16' />
+              </TableHead>
+              <TableHead>
+                <Skeleton className='h-4 w-20' />
+              </TableHead>
+              <TableHead>
+                <Skeleton className='h-4 w-16' />
+              </TableHead>
+              <TableHead>
+                <Skeleton className='h-4 w-16' />
+              </TableHead>
+              <TableHead className='w-[100px]'>
+                <Skeleton className='h-4 w-8' />
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 10 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell>
                   <Skeleton className='h-4 w-4' />
                 </TableCell>
-                <TableCell className='w-[280px] min-w-[280px] sticky left-[40px] bg-background z-20'>
+                <TableCell>
                   <div className='space-y-1'>
-                    <Skeleton className='h-4 w-[70%]' />
-                    <Skeleton className='h-3 w-[50%]' />
+                    <Skeleton className='h-4 w-48' />
+                    <Skeleton className='h-3 w-24' />
                   </div>
                 </TableCell>
-                <TableCell className='w-[140px]'>
-                  <Skeleton className='h-3.5 w-[60%]' />
+                <TableCell>
+                  <Skeleton className='h-5 w-16 rounded-full' />
                 </TableCell>
-                <TableCell className='w-[120px]'>
-                  <Skeleton className='h-5 w-[80%] rounded-full' />
+                <TableCell>
+                  <Skeleton className='h-5 w-16 rounded-full' />
                 </TableCell>
-                <TableCell className='w-[140px]'>
-                  <Skeleton className='h-5 w-[70%] rounded-full' />
+                <TableCell>
+                  <Skeleton className='h-4 w-20' />
                 </TableCell>
-                <TableCell className='w-[120px]'>
-                  <Skeleton className='h-5 w-[80%] rounded-full' />
+                <TableCell>
+                  <Skeleton className='h-4 w-24' />
                 </TableCell>
-                <TableCell className='w-[180px]'>
-                  <div className='flex items-center space-x-2'>
-                    <Skeleton className='h-6 w-6 rounded-full' />
-                    <Skeleton className='h-3.5 w-[60%]' />
-                  </div>
+                <TableCell>
+                  <Skeleton className='h-4 w-20' />
                 </TableCell>
-                <TableCell className='w-[140px]'>
-                  <Skeleton className='h-3.5 w-[70%]' />
-                </TableCell>
-                <TableCell className='w-[120px]'>
-                  <Skeleton className='h-3.5 w-[50%]' />
-                </TableCell>
-                <TableCell className='w-[100px] sticky right-0 bg-background z-30'>
-                  <Skeleton className='h-4 w-4 mx-auto' />
+                <TableCell>
+                  <Skeleton className='h-8 w-8' />
                 </TableCell>
               </TableRow>
             ))}

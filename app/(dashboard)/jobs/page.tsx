@@ -1,46 +1,48 @@
-'use client'
+import { JobsTable } from '@/components/tables/jobs/index'
+import { HydrateClient, getQueryClient, trpc } from '@/trpc/server'
+import type { Metadata } from 'next'
 
-import { Container } from '@/components/container'
-import { columns } from '@/components/jobs/columns'
-import { DataTable } from '@/components/jobs/data-table'
-import { Button } from '@/components/ui/button'
-import { jobTemplates } from '@/data/job-templates'
-import { type JobPost, jobs } from '@/data/jobs-posts'
-import type { Row } from '@tanstack/react-table'
+export const metadata: Metadata = {
+  title: 'Job Postings | Seeds ATS',
+}
 
-// TODO: Further abstract the data table to be able to use it in other pages easier
+interface JobsPageProps {
+  searchParams: Promise<{
+    page?: string
+    search?: string
+    status?: string
+    sort?: string
+  }>
+}
 
-export default function Jobs() {
-  const hasJobs = jobs.length > 0
+export default async function JobsPage({ searchParams }: JobsPageProps) {
+  const params = await searchParams
+  const queryClient = getQueryClient()
 
-  const handleRowClick = (row: Row<JobPost>) => {
-    console.log('Clicked job:', row.original)
-    // router.push(`/jobs/${row.original.id}`);
-  }
+  const page = params.page ? Number.parseInt(params.page, 10) : 1
+  const search = params.search || undefined
+  const status = params.status as 'draft' | 'published' | 'archived' | 'closed' | undefined
+  const sort = params.sort ? (params.sort.split(',') as [string, string]) : undefined
 
-  const handleCreateNewJob = () => {
-    console.log('Navigating to create new job...')
-    // router.push('/jobs/create');
-  }
+  await queryClient.prefetchInfiniteQuery(
+    trpc.organization.listJobs.infiniteQueryOptions({
+      search,
+      status,
+      sort,
+      limit: 50,
+    })
+  )
 
   return (
-    <Container className='w-full'>
-      <div className='pb-6'>
-        <div className='flex justify-end my-2'>
-          <Button>Create new job post</Button>
-        </div>
-        <div className={hasJobs ? 'bg-secondary/20 rounded-lg py-4 border' : ''}>
-          <DataTable
-            columns={columns}
-            data={jobs}
-            filterField='title'
-            filterPlaceholder='Filter by job title...'
-            onRowClick={handleRowClick}
-            onCreateNew={handleCreateNewJob}
-            templates={jobTemplates}
-          />
-        </div>
+    <div className='space-y-6'>
+      <div>
+        <h1 className='text-3xl font-bold tracking-tight'>Job Postings</h1>
+        <p className='text-muted-foreground'>Manage your organization's job postings and track applications.</p>
       </div>
-    </Container>
+
+      <HydrateClient>
+        <JobsTable initialSearch={search} initialStatus={status} initialSort={sort} />
+      </HydrateClient>
+    </div>
   )
 }
