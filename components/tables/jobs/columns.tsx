@@ -1,8 +1,21 @@
 'use client'
 
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -14,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useTRPC } from '@/trpc/client'
 
 // Type for job posting data - matches your actual database structure
 export type JobPost = {
@@ -27,6 +41,144 @@ export type JobPost = {
   hiring_manager_id: string | null
   salary_min: number | null
   salary_max: number | null
+}
+
+// Action cell component with delete confirmation
+function JobActionsCell({ job }: { job: JobPost }) {
+  const router = useRouter()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  const deleteJobMutation = useMutation(
+    trpc.organization.deleteJobPosting.mutationOptions({
+      onMutate: async () => {
+        // Close dialog immediately when mutation starts
+        setShowDeleteDialog(false)
+      },
+      onSuccess: () => {
+        // Invalidate queries to refresh the table
+        queryClient.invalidateQueries({
+          queryKey: [['organization', 'listJobPostings']],
+        })
+      },
+      onError: (error) => {
+        console.error('Failed to delete job:', error)
+        // Ensure dialog is closed on error too
+        setShowDeleteDialog(false)
+      },
+      onSettled: () => {
+        // Always ensure dialog is closed when mutation completes
+        setShowDeleteDialog(false)
+      },
+    })
+  )
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    router.push(`/jobs/create/${job.id}`)
+  }
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteJobMutation.mutate({ id: job.id })
+  }
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    forceCloseDialog()
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    // Only allow closing if not currently deleting
+    if (!deleteJobMutation.isPending) {
+      setShowDeleteDialog(open)
+    }
+  }
+
+  // Force close dialog and reset state
+  const forceCloseDialog = () => {
+    setShowDeleteDialog(false)
+  }
+
+  return (
+    <>
+      <div className='flex justify-center'>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 w-8 p-0' onClick={(e) => e.stopPropagation()}>
+              <span className='sr-only'>Open menu</span>
+              <MoreHorizontal className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleEdit}>Edit Job</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                console.log(`View applicants for job: ${job.id}`)
+              }}>
+              View Applicants
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                console.log(`View job posting: ${job.id}`)
+              }}>
+              View Posting
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                console.log(`Duplicate job: ${job.id}`)
+              }}>
+              Duplicate Job
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                console.log(`Archive job: ${job.id}`)
+              }}>
+              Archive Job
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className='text-destructive' onClick={handleDelete}>
+              Delete Job
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={handleDialogClose}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Job Posting</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{job.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancel} disabled={deleteJobMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteJobMutation.isPending}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
+              {deleteJobMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
 }
 
 export const columns: ColumnDef<JobPost>[] = [
@@ -54,7 +206,7 @@ export const columns: ColumnDef<JobPost>[] = [
     enableSorting: false,
     enableHiding: false,
     meta: {
-      className: 'w-12 px-3', // Fixed width and centered padding for checkbox column
+      className: 'w-12 px-3 border-r', // Fixed width, centered padding, and border for checkbox column
     },
   },
   {
@@ -72,7 +224,7 @@ export const columns: ColumnDef<JobPost>[] = [
     enableSorting: true,
     enableHiding: true,
     meta: {
-      className: 'min-w-[200px]', // Ensure title has enough space
+      className: 'min-w-[250px] w-[250px] px-3', // Fixed width for title to work with sticky
     },
   },
   {
@@ -208,74 +360,7 @@ export const columns: ColumnDef<JobPost>[] = [
   {
     id: 'actions',
     header: () => <div className='text-center'>Actions</div>,
-    cell: ({ row }) => {
-      const job = row.original
-
-      return (
-        <div className='flex justify-center'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant='ghost'
-                className='h-8 w-8 p-0'
-                onClick={(e) => e.stopPropagation()} // Prevent row click
-              >
-                <span className='sr-only'>Open menu</span>
-                <MoreHorizontal className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log(`Edit job: ${job.id}`)
-                }}>
-                Edit Job
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log(`View applicants for job: ${job.id}`)
-                }}>
-                View Applicants
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log(`View job posting: ${job.id}`)
-                }}>
-                View Posting
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log(`Duplicate job: ${job.id}`)
-                }}>
-                Duplicate Job
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log(`Archive job: ${job.id}`)
-                }}>
-                Archive Job
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className='text-destructive'
-                onClick={(e) => {
-                  e.stopPropagation()
-                  console.log(`Delete job: ${job.id}`)
-                }}>
-                Delete Job
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )
-    },
+    cell: ({ row }) => <JobActionsCell job={row.original} />,
     enableSorting: false,
     enableHiding: false,
     meta: {
