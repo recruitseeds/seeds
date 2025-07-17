@@ -26,29 +26,68 @@ import {
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useTableScroll } from '@/hooks/use-table-scroll'
 import { useTRPC } from '@/trpc/client'
-import { useQuery } from '@tanstack/react-query'
+import type { RouterOutputs } from '@/trpc/routers/_app'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { columns } from './columns'
 import { DataTablePagination } from './pagination'
 
-interface JobsTableProps {
-  initialSearch?: string
+interface JobsTablePropsWithData {
+  initialJobsData: RouterOutputs['organization']['listJobPostings']
   initialStatus?: 'draft' | 'published' | 'archived' | 'closed'
   initialSort?: [string, string]
 }
 
-export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTableProps) {
+interface JobsTablePropsWithoutData {
+  initialStatus?: 'draft' | 'published' | 'archived' | 'closed'
+  initialSort?: [string, string]
+}
+
+type JobsTableProps = JobsTablePropsWithData | JobsTablePropsWithoutData
+
+function hasData(props: JobsTableProps): props is JobsTablePropsWithData {
+  return 'initialJobsData' in props
+}
+
+export function JobsTable(props: JobsTableProps) {
+  const { initialStatus, initialSort } = props
   const router = useRouter()
   const searchParams = useSearchParams()
   const trpc = useTRPC()
 
-  // Using tRPC query for jobs data - adjusted to match your actual router
-  const { data, isLoading } = useQuery(
-    trpc.organization.listJobPostings.queryOptions({
-      status: initialStatus,
-      page: 1,
-      pageSize: 50,
+  // Use table scroll hook for sticky title column
+  const tableScroll = useTableScroll({
+    useColumnWidths: true,
+    startFromColumn: 1, // Start after the checkbox column
+  })
+
+  // Using tRPC query for jobs data - this will use initial data if provided
+  const queryInput = {
+    status: initialStatus,
+    page: 1,
+    pageSize: 50,
+  }
+
+  const queryOptionsObj = trpc.organization.listJobPostings.queryOptions(
+    queryInput,
+    hasData(props) ? { initialData: props.initialJobsData } : undefined
+  )
+
+  const { data, isLoading } = useQuery(queryOptionsObj)
+
+  // Create job mutation for the "Create Job" button
+  const createJobMutation = useMutation(
+    trpc.organization.createJobPosting.mutationOptions({
+      onSuccess: (newJob) => {
+        // Redirect to the edit page for the newly created job
+        router.push(`/jobs/create/${newJob.id}`)
+      },
+      onError: (error) => {
+        console.error('Failed to create job:', error)
+        // You could add a toast notification here
+      },
     })
   )
 
@@ -60,7 +99,7 @@ export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTab
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
-  const [searchTerm, setSearchTerm] = useState(initialSearch || '')
+  const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState(initialStatus || 'all')
 
   const table = useReactTable({
@@ -109,6 +148,7 @@ export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTab
   }
 
   const handleCreateJob = () => {
+    // Navigate directly to /jobs/create
     router.push('/jobs/create')
   }
 
@@ -196,15 +236,26 @@ export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTab
         <div className='rounded-md border'>
           {hasJobs ? (
             <div className='relative w-full'>
-              {/* Mobile responsive table container - NO BLUR */}
-              <div className='w-full overflow-x-auto scrollbar-hide'>
+              {/* Mobile responsive table container with sticky columns */}
+              <div ref={tableScroll.containerRef} className='w-full overflow-x-auto scrollbar-hide'>
                 <Table className='jobs-table'>
                   <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                       <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => {
+                        {headerGroup.headers.map((header, index) => {
+                          // Make title column sticky after checkbox (md+ only)
+                          const isCheckboxColumn = header.id === 'select'
+                          const isTitleColumn = header.id === 'title'
+                          const stickyClass = isCheckboxColumn
+                            ? 'md:sticky md:left-0 z-20 bg-background md:border-r'
+                            : isTitleColumn
+                            ? 'md:sticky md:left-12 z-20 bg-background md:border-r md:before:absolute md:before:right-0 md:before:top-0 md:before:bottom-0 md:before:w-px md:before:bg-border md:after:absolute md:after:right-[-24px] md:after:top-0 md:after:bottom-0 md:after:w-6 md:after:bg-gradient-to-l md:after:from-transparent md:after:to-background md:after:z-[-1]'
+                            : ''
+
                           return (
-                            <TableHead key={header.id} className={header.column.columnDef.meta?.className || ''}>
+                            <TableHead
+                              key={header.id}
+                              className={`${header.column.columnDef.meta?.className || ''} ${stickyClass}`}>
                               {header.isPlaceholder
                                 ? null
                                 : flexRender(header.column.columnDef.header, header.getContext())}
@@ -221,14 +272,27 @@ export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTab
                           key={row.id}
                           data-state={row.getIsSelected() && 'selected'}
                           className='cursor-pointer hover:bg-muted/50'
-                          onClick={() => router.push(`/jobs/${row.original.id}`)}>
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell
-                              key={cell.id}
-                              className={`table-cell-mobile ${cell.column.columnDef.meta?.className || ''}`}>
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
+                          onClick={() => router.push(`/jobs/create/${row.original.id}`)}>
+                          {row.getVisibleCells().map((cell, index) => {
+                            // Apply same sticky logic to cells (md+ only)
+                            const isCheckboxColumn = cell.column.id === 'select'
+                            const isTitleColumn = cell.column.id === 'title'
+                            const stickyClass = isCheckboxColumn
+                              ? 'md:sticky md:left-0 z-20 bg-background md:border-r'
+                              : isTitleColumn
+                              ? 'md:sticky md:left-12 z-20 bg-background md:border-r'
+                              : ''
+
+                            return (
+                              <TableCell
+                                key={cell.id}
+                                className={`table-cell-mobile ${
+                                  cell.column.columnDef.meta?.className || ''
+                                } ${stickyClass}`}>
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </TableCell>
+                            )
+                          })}
                         </TableRow>
                       ))
                     ) : (
@@ -260,7 +324,7 @@ export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTab
         {/* Pagination */}
         {hasJobs && <DataTablePagination table={table} />}
 
-        {/* Add custom styles to remove blur and improve mobile */}
+        {/* Add custom styles for sticky columns and mobile */}
         <style jsx>{`
           .scrollbar-hide {
             -ms-overflow-style: none;
@@ -276,6 +340,10 @@ export function JobsTable({ initialSearch, initialStatus, initialSort }: JobsTab
             .table-cell-mobile {
               padding-left: 0.5rem;
               padding-right: 0.5rem;
+            }
+            /* Adjust sticky positions for mobile - disable on small screens */
+            .md\\:sticky.md\\:left-12 {
+              left: 3rem; /* 48px */
             }
           }
         `}</style>

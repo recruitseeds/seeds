@@ -1,5 +1,5 @@
 import { JobsTable } from '@/components/tables/jobs/index'
-import { HydrateClient, getQueryClient, trpc } from '@/trpc/server'
+import { HydrateClient, getServerTRPCCaller } from '@/trpc/server'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -17,21 +17,18 @@ interface JobsPageProps {
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const params = await searchParams
-  const queryClient = getQueryClient()
+  const caller = await getServerTRPCCaller()
 
   const page = params.page ? Number.parseInt(params.page, 10) : 1
-  const search = params.search || undefined
   const status = params.status as 'draft' | 'published' | 'archived' | 'closed' | undefined
   const sort = params.sort ? (params.sort.split(',') as [string, string]) : undefined
 
-  await queryClient.prefetchInfiniteQuery(
-    trpc.organization.listJobs.infiniteQueryOptions({
-      search,
-      status,
-      sort,
-      limit: 50,
-    })
-  )
+  // Fetch the jobs data on the server using the tRPC caller
+  const jobsData = await caller.organization.listJobPostings({
+    page,
+    pageSize: 50,
+    status,
+  })
 
   return (
     <div className='space-y-6'>
@@ -41,7 +38,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       </div>
 
       <HydrateClient>
-        <JobsTable initialSearch={search} initialStatus={status} initialSort={sort} />
+        <JobsTable initialStatus={status} initialSort={sort} initialJobsData={jobsData} />
       </HydrateClient>
     </div>
   )
