@@ -1,9 +1,8 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { JobPost } from '@/data/jobs-posts'
 import type { ColumnDef } from '@tanstack/react-table'
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
 import {
@@ -16,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -27,152 +25,102 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTRPC } from '@/trpc/client'
 
-// Type for job posting data - matches your actual database structure
-export type JobPost = {
-  id: string
-  title: string
-  department: string | null
-  job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
-  status: 'draft' | 'published' | 'archived' | 'closed'
-  created_at: string
-  experience_level: 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | null
-  hiring_manager_id: string | null
-  salary_min: number | null
-  salary_max: number | null
-}
+import { DataTableColumnHeader } from '@/components/data-table/column-header'
 
-// Action cell component with delete confirmation
-function JobActionsCell({ job }: { job: JobPost }) {
-  const router = useRouter()
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
+// Create a cell component for actions that manages its own state
+function ActionsCell({ job, onDelete }: { job: JobPost; onDelete?: (id: string) => void }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const deleteJobMutation = useMutation(
-    trpc.organization.deleteJobPosting.mutationOptions({
-      onMutate: async () => {
-        // Close dialog immediately when mutation starts
-        setShowDeleteDialog(false)
-      },
-      onSuccess: () => {
-        // Invalidate queries to refresh the table
-        queryClient.invalidateQueries({
-          queryKey: [['organization', 'listJobPostings']],
-        })
-      },
-      onError: (error) => {
-        console.error('Failed to delete job:', error)
-        // Ensure dialog is closed on error too
-        setShowDeleteDialog(false)
-      },
-      onSettled: () => {
-        // Always ensure dialog is closed when mutation completes
-        setShowDeleteDialog(false)
-      },
-    })
-  )
-
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
-    router.push(`/jobs/create/${job.id}`)
-  }
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setShowDeleteDialog(true)
-  }
+    setIsDeleting(true)
 
-  const confirmDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    deleteJobMutation.mutate({ id: job.id })
-  }
+    try {
+      // Call the delete handler passed from parent
+      if (onDelete) {
+        await onDelete(job.id)
+      } else {
+        // Fallback to console.log if no handler provided
+        console.log(`Deleting job: ${job.id}`)
+        // Simulate API delay
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
 
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    forceCloseDialog()
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    // Only allow closing if not currently deleting
-    if (!deleteJobMutation.isPending) {
-      setShowDeleteDialog(open)
+      // Close the dialog after successful deletion
+      setShowDeleteDialog(false)
+    } catch (error) {
+      console.error('Failed to delete job:', error)
+      // Handle error - you might want to show a toast notification here
+    } finally {
+      setIsDeleting(false)
     }
   }
 
-  // Force close dialog and reset state
-  const forceCloseDialog = () => {
-    setShowDeleteDialog(false)
+  const handleMenuItemClick = (e: React.MouseEvent, action: () => void) => {
+    e.preventDefault()
+    e.stopPropagation()
+    action()
   }
 
   return (
     <>
-      <div className='flex justify-center'>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0' onClick={(e) => e.stopPropagation()}>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={handleEdit}>Edit Job</DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                console.log(`View applicants for job: ${job.id}`)
-              }}>
-              View Applicants
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                console.log(`View job posting: ${job.id}`)
-              }}>
-              View Posting
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                console.log(`Duplicate job: ${job.id}`)
-              }}>
-              Duplicate Job
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                console.log(`Archive job: ${job.id}`)
-              }}>
-              Archive Job
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className='text-destructive' onClick={handleDelete}>
-              Delete Job
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant='ghost'
+            className='h-8 w-8 p-0'
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}>
+            <span className='sr-only'>Open menu</span>
+            <MoreHorizontal className='h-4 w-4' />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='end' onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem onClick={(e) => handleMenuItemClick(e, () => console.log(`Edit job: ${job.id}`))}>
+            Edit Job
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => handleMenuItemClick(e, () => console.log(`View applicants for job: ${job.id}`))}>
+            View Applicants
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={(e) => handleMenuItemClick(e, () => console.log(`Close job: ${job.id}`))}>
+            Close Job
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={(e) => handleMenuItemClick(e, () => console.log(`Duplicate job: ${job.id}`))}>
+            Duplicate Job
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={(e) => handleMenuItemClick(e, () => console.log(`Share job: ${job.id}`))}>
+            Share Job
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className='text-destructive focus:text-destructive'
+            onClick={(e) => handleMenuItemClick(e, () => setShowDeleteDialog(true))}>
+            Delete Job
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={handleDialogClose}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Job Posting</AlertDialogTitle>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{job.title}"? This action cannot be undone.
+              This action cannot be undone. This will permanently delete the job posting "{job.title}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel} disabled={deleteJobMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={deleteJobMutation.isPending}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
-              {deleteJobMutation.isPending ? 'Deleting...' : 'Delete'}
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -185,186 +133,88 @@ export const columns: ColumnDef<JobPost>[] = [
   {
     id: 'select',
     header: ({ table }) => (
-      <div className='flex items-center justify-center w-12'>
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
-        />
-      </div>
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label='Select all'
+      />
     ),
     cell: ({ row }) => (
-      <div className='flex items-center justify-center w-12'>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-          onClick={(e) => e.stopPropagation()} // Prevent row click when clicking checkbox
-        />
-      </div>
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label='Select row'
+        onClick={(e) => e.stopPropagation()}
+      />
     ),
     enableSorting: false,
     enableHiding: false,
-    meta: {
-      className: 'w-12 px-3 border-r', // Fixed width, centered padding, and border for checkbox column
-    },
   },
   {
     accessorKey: 'title',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Job Title
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
-    cell: ({ row }) => <div className='font-medium'>{row.getValue('title')}</div>,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Job Title' />,
     enableSorting: true,
     enableHiding: true,
-    meta: {
-      className: 'min-w-[250px] w-[250px] px-3', // Fixed width for title to work with sticky
-    },
   },
   {
     accessorKey: 'department',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Department
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
-    cell: ({ row }) => <div className='capitalize'>{row.getValue('department')}</div>,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Department' />,
     enableSorting: true,
     enableHiding: true,
-    meta: {
-      className: 'min-w-[120px]',
-    },
   },
   {
-    accessorKey: 'job_type',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Job Type
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const jobType = row.getValue('job_type') as string
-      const formatted = jobType?.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'Not specified'
-      return <div className='capitalize'>{formatted}</div>
-    },
+    accessorKey: 'location',
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Location' />,
     enableSorting: true,
     enableHiding: true,
-    meta: {
-      className: 'min-w-[120px]',
-    },
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Status
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
     cell: ({ row }) => {
-      const status = row.getValue('status') as string
+      const status = row.getValue('status') as string | undefined
 
-      const statusConfig = {
-        draft: { variant: 'secondary' as const, label: 'Draft' },
-        published: { variant: 'default' as const, label: 'Published' },
-        archived: { variant: 'outline' as const, label: 'Archived' },
-        closed: { variant: 'destructive' as const, label: 'Closed' },
+      if (!status) {
+        return <span className='status-badge unknown'>Unknown</span>
       }
 
-      const config = statusConfig[status as keyof typeof statusConfig] || {
-        variant: 'secondary' as const,
-        label: status,
-      }
-
-      return (
-        <Badge variant={config.variant} className='capitalize'>
-          {config.label}
-        </Badge>
-      )
+      return <span className={`status-badge ${status.toLowerCase()}`}>{status}</span>
     },
     enableSorting: true,
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
     meta: {
       className: 'w-[100px]',
     },
   },
   {
-    accessorKey: 'created_at',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Date Created
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const date = new Date(row.getValue('created_at'))
-      return (
-        <div className='text-sm'>
-          {date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </div>
-      )
-    },
+    accessorKey: 'datePosted',
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Date Posted' />,
     enableSorting: true,
     enableHiding: true,
-    meta: {
-      className: 'w-[120px]',
-    },
   },
   {
-    accessorKey: 'experience_level',
-    header: ({ column }) => (
-      <Button
-        variant='ghost'
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        className='h-8 px-2 lg:px-3 hover:bg-muted'>
-        Experience
-        <ArrowUpDown className='ml-2 h-4 w-4' />
-      </Button>
-    ),
+    accessorKey: 'applicants',
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Applicants' />,
     cell: ({ row }) => {
-      const level = row.getValue('experience_level') as string
-      return <div className='capitalize'>{level || 'Not specified'}</div>
+      const applicants = row.getValue('applicants') as number
+      return <div>{applicants}</div>
     },
     enableSorting: true,
     enableHiding: true,
-    meta: {
-      className: 'w-[100px]',
-    },
+  },
+  {
+    accessorKey: 'hiringManager',
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Hiring Manager' />,
+    enableSorting: true,
+    enableHiding: true,
   },
   {
     id: 'actions',
-    header: () => <div className='text-center'>Actions</div>,
-    cell: ({ row }) => <JobActionsCell job={row.original} />,
+    cell: ({ row, table }) => {
+      // Get the onDelete handler from table meta if available
+      const onDelete = (table.options.meta as any)?.onDelete
+      return <ActionsCell job={row.original} onDelete={onDelete} />
+    },
     enableSorting: false,
     enableHiding: false,
-    meta: {
-      className: 'w-[70px]',
-    },
   },
 ]
