@@ -125,7 +125,6 @@ function MetricCard({
   );
 }
 
-// Custom AlertDialogItem component for bulk delete
 const AlertDialogItem = forwardRef<
   React.ElementRef<typeof DropdownMenuItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuItem> & {
@@ -192,51 +191,72 @@ export function JobsTable(props: JobsTableProps) {
     }),
   );
 
+  const getJobListingQueryKeys = () => {
+    return [
+      trpc.organization.listJobPostings.queryFilter(),
+      trpc.organization.listJobPostings.queryFilter({ page: 1, pageSize: 50 }),
+      trpc.organization.listJobPostings.queryFilter({
+        status: "draft",
+        page: 1,
+        pageSize: 50,
+      }),
+      trpc.organization.listJobPostings.queryFilter({
+        status: "published",
+        page: 1,
+        pageSize: 50,
+      }),
+      trpc.organization.listJobPostings.queryFilter({
+        status: "closed",
+        page: 1,
+        pageSize: 50,
+      }),
+    ];
+  };
+
   const bulkDeleteMutation = useMutation(
     trpc.organization.deleteJobPosting.mutationOptions({
       onMutate: async (variables) => {
-        // Cancel any outgoing refetches
         await queryClient.cancelQueries({
-          queryKey: ["organization", "listJobPostings"],
+          queryKey: [["organization", "listJobPostings"]],
         });
 
-        // Snapshot the previous value
-        const previousJobs = queryClient.getQueryData([
-          "organization",
-          "listJobPostings",
-        ]);
+        const previousQueries = new Map();
 
-        // Optimistically remove the job
-        queryClient.setQueryData(
-          ["organization", "listJobPostings"],
-          (old: any) => {
-            if (!old) return old;
+        getJobListingQueryKeys().forEach((queryKey) => {
+          const data = queryClient.getQueryData(queryKey);
+          if (data) {
+            previousQueries.set(JSON.stringify(queryKey), data);
+          }
+        });
+
+        getJobListingQueryKeys().forEach((queryKey) => {
+          queryClient.setQueryData(queryKey, (old: any) => {
+            if (!old?.data) return old;
             return {
               ...old,
               data: old.data.filter((j: JobPost) => j.id !== variables.id),
+              count: old.count ? old.count - 1 : old.count,
             };
-          },
-        );
+          });
+        });
 
-        return { previousJobs };
+        return { previousQueries };
       },
       onSuccess: () => {
         setRowSelection({});
       },
       onError: (error, variables, context) => {
-        // If the mutation fails, use the context returned from onMutate to roll back
-        if (context?.previousJobs) {
-          queryClient.setQueryData(
-            ["organization", "listJobPostings"],
-            context.previousJobs,
-          );
+        if (context?.previousQueries) {
+          context.previousQueries.forEach((data, queryKeyStr) => {
+            const queryKey = JSON.parse(queryKeyStr);
+            queryClient.setQueryData(queryKey, data);
+          });
         }
         console.error("Failed to delete jobs:", error);
       },
       onSettled: () => {
-        // Always refetch after error or success to ensure we have correct data
         queryClient.invalidateQueries({
-          queryKey: ["organization", "listJobPostings"],
+          queryKey: [["organization", "listJobPostings"]],
         });
       },
     }),
@@ -362,7 +382,7 @@ export function JobsTable(props: JobsTableProps) {
   };
 
   return (
-    <Container className="space-y-6 py-8">
+    <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Total Jobs"
@@ -523,7 +543,7 @@ export function JobsTable(props: JobsTableProps) {
         </div>
       </div>
 
-      <div className="border overflow-hidden rounded-none sm:rounded-md">
+      <div className="border overflow-hidden rounded-md">
         {hasJobs ? (
           <div className="w-full overflow-x-auto">
             <Table className="w-full min-w-[800px]">
@@ -591,6 +611,6 @@ export function JobsTable(props: JobsTableProps) {
       </div>
 
       {hasJobs && shouldShowPagination && <DataTablePagination table={table} />}
-    </Container>
+    </>
   );
 }

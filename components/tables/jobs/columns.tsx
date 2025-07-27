@@ -20,7 +20,7 @@ import {
   Share,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback, forwardRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import {
   AlertDialog,
@@ -31,7 +31,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,11 +72,9 @@ export interface JobPost {
   created_at: string;
   updated_at?: string | null;
   hiring_manager_id?: string | null;
+  hiring_manager_name?: string | null;
   hiring_manager?: {
-    id: string;
-    first_name: string;
-    last_name?: string;
-    email: string;
+    user_id: string;
   } | null;
   applicant_count?: number;
   applicantCount?: number;
@@ -86,52 +83,17 @@ export interface JobPost {
   published_at?: string | null;
 }
 
-// Custom AlertDialogItem component to handle portal conflicts
-// Custom AlertDialogItem component to handle portal conflicts
-const AlertDialogItem = forwardRef<
-  React.ElementRef<typeof DropdownMenuItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuItem> & {
-    triggerChildren: React.ReactNode;
-    onSelect?: (event: Event) => void;
-    onOpenChange?: (open: boolean) => void;
-    children: React.ReactNode;
-  }
->(
-  (
-    { triggerChildren, children, onSelect, onOpenChange, ...itemProps },
-    forwardedRef,
-  ) => {
-    return (
-      <AlertDialog onOpenChange={onOpenChange}>
-        <AlertDialogTrigger asChild>
-          <DropdownMenuItem
-            {...itemProps}
-            ref={forwardedRef}
-            onSelect={(event) => {
-              event.preventDefault();
-              onSelect?.(event);
-            }}
-          >
-            {triggerChildren}
-          </DropdownMenuItem>
-        </AlertDialogTrigger>
-        {children}
-      </AlertDialog>
-    );
-  },
-);
-
-AlertDialogItem.displayName = "AlertDialogItem";
-
 function ActionsCell({ job }: { job: JobPost }) {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [imageOptions, setImageOptions] = useState({
     title: true,
@@ -160,51 +122,77 @@ function ActionsCell({ job }: { job: JobPost }) {
     };
   }, [showShareDialog]);
 
+  const getJobListingQueryKeys = () => {
+    return [
+      trpc.organization.listJobPostings.queryFilter(),
+      trpc.organization.listJobPostings.queryFilter({ page: 1, pageSize: 50 }),
+      trpc.organization.listJobPostings.queryFilter({
+        status: "draft",
+        page: 1,
+        pageSize: 50,
+      }),
+      trpc.organization.listJobPostings.queryFilter({
+        status: "published",
+        page: 1,
+        pageSize: 50,
+      }),
+      trpc.organization.listJobPostings.queryFilter({
+        status: "closed",
+        page: 1,
+        pageSize: 50,
+      }),
+    ];
+  };
+
   const deleteMutation = useMutation(
     trpc.organization.deleteJobPosting.mutationOptions({
       onMutate: async (variables) => {
         setIsDeleting(true);
 
-        // Cancel any outgoing refetches
         await queryClient.cancelQueries({
-          queryKey: ["organization", "listJobPostings"],
+          queryKey: [["organization", "listJobPostings"]],
         });
 
-        // Snapshot the previous value
-        const previousJobs = queryClient.getQueryData([
-          "organization",
-          "listJobPostings",
-        ]);
+        const previousQueries = new Map();
 
-        // Optimistically remove the job
-        queryClient.setQueryData(
-          ["organization", "listJobPostings"],
-          (old: any) => {
-            if (!old) return old;
+        getJobListingQueryKeys().forEach((queryKey) => {
+          const data = queryClient.getQueryData(queryKey);
+          if (data) {
+            previousQueries.set(JSON.stringify(queryKey), data);
+          }
+        });
+
+        getJobListingQueryKeys().forEach((queryKey) => {
+          queryClient.setQueryData(queryKey, (old: any) => {
+            if (!old?.data) return old;
             return {
               ...old,
               data: old.data.filter((j: JobPost) => j.id !== variables.id),
+              count: old.count ? old.count - 1 : old.count,
             };
-          },
-        );
+          });
+        });
 
-        return { previousJobs };
+        return { previousQueries };
       },
       onError: (err, variables, context) => {
-        // If the mutation fails, use the context returned from onMutate to roll back
-        if (context?.previousJobs) {
-          queryClient.setQueryData(
-            ["organization", "listJobPostings"],
-            context.previousJobs,
-          );
+        if (context?.previousQueries) {
+          context.previousQueries.forEach((data, queryKeyStr) => {
+            const queryKey = JSON.parse(queryKeyStr);
+            queryClient.setQueryData(queryKey, data);
+          });
         }
         console.error("Failed to delete job:", err);
+        setIsDeleting(false);
+      },
+      onSuccess: () => {
+        setIsDeleting(false);
+        setDropdownOpen(false);
+        setShowDeleteDialog(false);
       },
       onSettled: () => {
-        setIsDeleting(false);
-        // Always refetch after error or success to ensure we have correct data
         queryClient.invalidateQueries({
-          queryKey: ["organization", "listJobPostings"],
+          queryKey: [["organization", "listJobPostings"]],
         });
       },
     }),
@@ -213,22 +201,22 @@ function ActionsCell({ job }: { job: JobPost }) {
   const updateStatusMutation = useMutation(
     trpc.organization.updateJobPosting.mutationOptions({
       onMutate: async (variables) => {
-        // Cancel any outgoing refetches
         await queryClient.cancelQueries({
-          queryKey: ["organization", "listJobPostings"],
+          queryKey: [["organization", "listJobPostings"]],
         });
 
-        // Snapshot the previous value
-        const previousJobs = queryClient.getQueryData([
-          "organization",
-          "listJobPostings",
-        ]);
+        const previousQueries = new Map();
 
-        // Optimistically update the job status
-        queryClient.setQueryData(
-          ["organization", "listJobPostings"],
-          (old: any) => {
-            if (!old) return old;
+        getJobListingQueryKeys().forEach((queryKey) => {
+          const data = queryClient.getQueryData(queryKey);
+          if (data) {
+            previousQueries.set(JSON.stringify(queryKey), data);
+          }
+        });
+
+        getJobListingQueryKeys().forEach((queryKey) => {
+          queryClient.setQueryData(queryKey, (old: any) => {
+            if (!old?.data) return old;
             return {
               ...old,
               data: old.data.map((j: JobPost) =>
@@ -237,7 +225,6 @@ function ActionsCell({ job }: { job: JobPost }) {
                       ...j,
                       status: variables.status,
                       updated_at: new Date().toISOString(),
-                      // Update published_at if we're publishing
                       ...(variables.status === "published" &&
                       j.status === "draft"
                         ? { published_at: new Date().toISOString() }
@@ -246,25 +233,26 @@ function ActionsCell({ job }: { job: JobPost }) {
                   : j,
               ),
             };
-          },
-        );
+          });
+        });
 
-        return { previousJobs };
+        return { previousQueries };
       },
       onError: (err, variables, context) => {
-        // If the mutation fails, use the context returned from onMutate to roll back
-        if (context?.previousJobs) {
-          queryClient.setQueryData(
-            ["organization", "listJobPostings"],
-            context.previousJobs,
-          );
+        if (context?.previousQueries) {
+          context.previousQueries.forEach((data, queryKeyStr) => {
+            const queryKey = JSON.parse(queryKeyStr);
+            queryClient.setQueryData(queryKey, data);
+          });
         }
         console.error("Failed to update job status:", err);
       },
+      onSuccess: () => {
+        setDropdownOpen(false);
+      },
       onSettled: () => {
-        // Always refetch after error or success to ensure we have correct data
         queryClient.invalidateQueries({
-          queryKey: ["organization", "listJobPostings"],
+          queryKey: [["organization", "listJobPostings"]],
         });
       },
     }),
@@ -367,16 +355,25 @@ function ActionsCell({ job }: { job: JobPost }) {
     });
   }, [updateStatusMutation, job.id]);
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteClick = useCallback(() => {
+    setDropdownOpen(false);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
     deleteMutation.mutate({ id: job.id });
   }, [deleteMutation, job.id]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setShowDeleteDialog(false);
+  }, []);
 
   const canUnpublish = job.status === "published";
   const canClose = job.status === "published" || job.status === "draft";
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
             <span className="sr-only">Open menu</span>
@@ -424,44 +421,43 @@ function ActionsCell({ job }: { job: JobPost }) {
 
           <DropdownMenuSeparator />
 
-          <AlertDialogItem
-            triggerChildren={
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </>
-            }
-            className="text-destructive"
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  job posting "{job.title}" and all associated applications.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete"
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogItem>
+          <DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the job
+              posting "{job.title}" and all associated applications.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {showShareDialog && (
         <DismissibleLayer onDismiss={() => setShowShareDialog(false)}>
@@ -807,19 +803,14 @@ export const columns: ColumnDef<JobPost>[] = [
     ),
     cell: ({ row }) => {
       const job = row.original;
-      const hiringManager = job.hiring_manager;
 
-      if (!hiringManager) {
+      if (!job.hiring_manager_name) {
         return (
           <div className="text-sm text-muted-foreground">Not assigned</div>
         );
       }
 
-      const fullName = hiringManager.last_name
-        ? `${hiringManager.first_name} ${hiringManager.last_name}`
-        : hiringManager.first_name;
-
-      return <div className="text-sm">{fullName}</div>;
+      return <div className="text-sm">{job.hiring_manager_name}</div>;
     },
   },
   {
