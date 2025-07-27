@@ -1,7 +1,6 @@
 "use client";
 
 import { useHotkeys } from "react-hotkeys-hook";
-import { getShortcutKeySymbol } from "@/components/ui/keyboard-shortcut";
 import { Container } from "@/components/container";
 import {
   type ColumnFiltersState,
@@ -14,9 +13,18 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, Plus, Search, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Plus,
+  Search,
+  Trash2,
+  BriefcaseIcon,
+  ClockIcon,
+  AlertCircleIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, forwardRef } from "react";
 
 import {
   AlertDialog,
@@ -27,6 +35,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,11 +61,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTRPC } from "@/trpc/client";
 import type { RouterOutputs } from "@/trpc/routers/_app";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { columns } from "./columns";
+import { columns, type JobPost } from "./columns";
 import { DataTablePagination } from "./pagination";
 
 interface JobsTablePropsWithData {
@@ -76,13 +86,87 @@ function hasData(props: JobsTableProps): props is JobsTablePropsWithData {
   return "initialJobsData" in props;
 }
 
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  trend,
+}: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: "up" | "down" | "neutral";
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {subtitle && (
+          <p
+            className={`text-xs ${
+              trend === "up"
+                ? "text-green-600"
+                : trend === "down"
+                  ? "text-red-600"
+                  : "text-muted-foreground"
+            }`}
+          >
+            {subtitle}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Custom AlertDialogItem component for bulk delete
+const AlertDialogItem = forwardRef<
+  React.ElementRef<typeof DropdownMenuItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuItem> & {
+    triggerChildren: React.ReactNode;
+    onSelect?: (event: Event) => void;
+    onOpenChange?: (open: boolean) => void;
+    children: React.ReactNode;
+  }
+>(
+  (
+    { triggerChildren, children, onSelect, onOpenChange, ...itemProps },
+    forwardedRef,
+  ) => {
+    return (
+      <AlertDialog onOpenChange={onOpenChange}>
+        <AlertDialogTrigger asChild>
+          <DropdownMenuItem
+            {...itemProps}
+            ref={forwardedRef}
+            onSelect={(event) => {
+              event.preventDefault();
+              onSelect?.(event);
+            }}
+          >
+            {triggerChildren}
+          </DropdownMenuItem>
+        </AlertDialogTrigger>
+        {children}
+      </AlertDialog>
+    );
+  },
+);
+
+AlertDialogItem.displayName = "AlertDialogItem";
+
 export function JobsTable(props: JobsTableProps) {
   const { initialStatus, initialSort } = props;
   const router = useRouter();
   const searchParams = useSearchParams();
   const trpc = useTRPC();
-
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   const queryInput = {
     status: initialStatus,
@@ -108,9 +192,96 @@ export function JobsTable(props: JobsTableProps) {
     }),
   );
 
+  const bulkDeleteMutation = useMutation(
+    trpc.organization.deleteJobPosting.mutationOptions({
+      onMutate: async (variables) => {
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({
+          queryKey: ["organization", "listJobPostings"],
+        });
+
+        // Snapshot the previous value
+        const previousJobs = queryClient.getQueryData([
+          "organization",
+          "listJobPostings",
+        ]);
+
+        // Optimistically remove the job
+        queryClient.setQueryData(
+          ["organization", "listJobPostings"],
+          (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              data: old.data.filter((j: JobPost) => j.id !== variables.id),
+            };
+          },
+        );
+
+        return { previousJobs };
+      },
+      onSuccess: () => {
+        setRowSelection({});
+      },
+      onError: (error, variables, context) => {
+        // If the mutation fails, use the context returned from onMutate to roll back
+        if (context?.previousJobs) {
+          queryClient.setQueryData(
+            ["organization", "listJobPostings"],
+            context.previousJobs,
+          );
+        }
+        console.error("Failed to delete jobs:", error);
+      },
+      onSettled: () => {
+        // Always refetch after error or success to ensure we have correct data
+        queryClient.invalidateQueries({
+          queryKey: ["organization", "listJobPostings"],
+        });
+      },
+    }),
+  );
+
   const jobs = useMemo(() => {
     return data?.data ?? [];
   }, [data]);
+
+  const metrics = useMemo(() => {
+    const totalJobs = jobs.length;
+    const activeJobs = jobs.filter((job) => job.status === "published").length;
+    const draftJobs = jobs.filter((job) => job.status === "draft").length;
+
+    const publishedJobs = jobs.filter(
+      (job) => job.status === "published" && job.published_at,
+    );
+    const avgTimeOpen =
+      publishedJobs.length > 0
+        ? publishedJobs.reduce((acc, job) => {
+            const publishedDate = new Date(job.published_at!);
+            const daysDiff = Math.floor(
+              (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24),
+            );
+            return acc + daysDiff;
+          }, 0) / publishedJobs.length
+        : 0;
+
+    const jobsRequiringAction =
+      draftJobs +
+      publishedJobs.filter((job) => {
+        const publishedDate = new Date(job.published_at!);
+        const daysDiff = Math.floor(
+          (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        return daysDiff > 30;
+      }).length;
+
+    return {
+      totalJobs,
+      activeJobs,
+      jobsRequiringAction,
+      avgTimeOpen: Math.round(avgTimeOpen),
+    };
+  }, [jobs]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -156,8 +327,8 @@ export function JobsTable(props: JobsTableProps) {
     const filterValue = value === "all" ? "" : value;
     table.getColumn("status")?.setFilterValue(filterValue);
     const params = new URLSearchParams(searchParams.toString());
-    if (filterValue) {
-      params.set("status", filterValue);
+    if (value !== "all") {
+      params.set("status", value);
     } else {
       params.delete("status");
     }
@@ -165,289 +336,261 @@ export function JobsTable(props: JobsTableProps) {
   };
 
   const handleCreateJob = () => {
-    router.push("/jobs/create");
+    createJobMutation.mutate({
+      title: "Untitled",
+      job_type: "full-time",
+      status: "draft",
+    });
   };
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  useHotkeys("mod+j", handleCreateJob, {
+    enableOnFormTags: true,
+  });
+
+  const selectedRows = Object.keys(rowSelection);
   const hasSelectedRows = selectedRows.length > 0;
-
-  const handleBulkDelete = () => {
-    setShowDeleteDialog(true);
-  };
-
-  const confirmBulkDelete = () => {
-    console.log(
-      "Deleting jobs:",
-      selectedRows.map((row) => row.original.id),
-    );
-    setShowDeleteDialog(false);
-    setRowSelection({});
-  };
-
   const hasJobs = jobs.length > 0;
-  const isLoadingContent = isLoading || createJobMutation.isPending;
-  const totalJobs = table.getFilteredRowModel().rows.length;
+  const shouldShowPagination = jobs.length > 10;
 
-  const createJobShortcut = ["mod", "j"].map(
-    (key) => getShortcutKeySymbol(key).text,
-  );
-
-  useHotkeys(
-    "meta+j,ctrl+j",
-    () => {
-      handleCreateJob();
-    },
-    {
-      enableOnFormTags: true,
-    },
-  );
-
-  if (isLoadingContent) {
-    return <div>Loading...</div>;
-  }
+  const confirmBulkDelete = async () => {
+    for (const rowIndex of selectedRows) {
+      const job = jobs[parseInt(rowIndex)];
+      if (job) {
+        await bulkDeleteMutation.mutateAsync({ id: job.id });
+      }
+    }
+  };
 
   return (
-    <Container className="px-0 sm:px-4" fullWidth>
-      <div className="space-y-4">
-        <div className="flex gap-2 px-2 sm:px-0">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-2 top-2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search jobs"
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-8 !h-7.5"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Select
-              value={statusFilter === "" ? "all" : statusFilter}
-              onValueChange={handleStatusFilter}
-            >
-              <SelectTrigger className="w-full h-7.5 gap-3">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="hidden lg:flex">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Columns <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) =>
-                            column.toggleVisibility(!!value)
-                          }
-                        >
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
-                      );
-                    })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <div className="hidden lg:flex">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    disabled={!hasSelectedRows}
-                    className="w-full sm:w-auto"
-                  >
-                    Actions <ChevronDown className="ml-2 size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={handleBulkDelete}
-                    className="text-destructive"
-                    disabled={!hasSelectedRows}
-                    variant="destructive"
-                  >
-                    <Trash2 className="mr-2 size-4" />
-                    Delete ({selectedRows.length})
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <div>
-              <Button
-                onClick={handleCreateJob}
-                size="icon"
-                tooltip="Create job"
-                tooltipShortcut={createJobShortcut}
-                className="lg:hidden h-7.5"
-              >
-                <Plus />
-                <span className="sr-only">Create Job</span>
-              </Button>
-
-              <Button
-                onClick={handleCreateJob}
-                className="hidden lg:flex"
-                tooltipShortcut={createJobShortcut}
-              >
-                <Plus className="mr-2 size-4" />
-                Create Job
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="border overflow-hidden rounded-none sm:rounded-md">
-          {hasJobs ? (
-            <div className="w-full overflow-x-auto">
-              <Table className="w-full min-w-[800px]">
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow
-                      key={headerGroup.id}
-                      className="hover:bg-transparent"
-                    >
-                      {headerGroup.headers.map((header, index) => (
-                        <TableHead
-                          key={header.id}
-                          className={`
-                           bg-muted/50 px-4 py-3
-                           ${index === 0 ? "rounded-tl-lg" : ""}
-                           ${index === headerGroup.headers.length - 1 ? "rounded-tr-lg" : ""}
-                           ${header.column.columnDef.meta?.className || ""}
-                         `}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row, rowIndex) => (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                        className="hover:bg-muted/50"
-                      >
-                        {row.getVisibleCells().map((cell, cellIndex) => (
-                          <TableCell
-                            key={cell.id}
-                            className={`
-                             px-4 py-3
-                             ${
-                               rowIndex ===
-                                 table.getRowModel().rows.length - 1 &&
-                               cellIndex === 0
-                                 ? "rounded-bl-lg"
-                                 : ""
-                             }
-                             ${
-                               rowIndex ===
-                                 table.getRowModel().rows.length - 1 &&
-                               cellIndex === row.getVisibleCells().length - 1
-                                 ? "rounded-br-lg"
-                                 : ""
-                             }
-                             ${cell.column.columnDef.meta?.className || ""}
-                           `}
-                            onClick={
-                              cell.column.id === "select" ||
-                              cell.column.id === "actions"
-                                ? undefined
-                                : () =>
-                                    router.push(
-                                      `/jobs/create/${row.original.id}`,
-                                    )
-                            }
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={table.getAllColumns().length}
-                        className="h-24 text-center"
-                      >
-                        No results.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="mx-auto max-w-lg py-12 text-center">
-              <h3 className="text-lg font-semibold">No jobs yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Get started by creating your first job posting.
-              </p>
-              <Button onClick={handleCreateJob}>
-                <Plus className="mr-2 size-4" />
-                Create Job
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {hasJobs && totalJobs > 10 && <DataTablePagination table={table} />}
+    <Container className="space-y-6 py-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Total Jobs"
+          value={metrics.totalJobs}
+          subtitle={`${metrics.activeJobs} active`}
+          icon={BriefcaseIcon}
+        />
+        <MetricCard
+          title="Requiring Action"
+          value={metrics.jobsRequiringAction}
+          subtitle="Draft + stale postings"
+          icon={AlertCircleIcon}
+          trend={metrics.jobsRequiringAction > 0 ? "up" : "neutral"}
+        />
+        <MetricCard
+          title="Avg. Time Open"
+          value={`${metrics.avgTimeOpen}d`}
+          subtitle="Published to offer"
+          icon={ClockIcon}
+        />
+        <MetricCard
+          title="Total Applications"
+          value={jobs.reduce((sum, job) => sum + (job.applicant_count || 0), 0)}
+          subtitle="Across all jobs"
+          icon={TrendingUpIcon}
+        />
       </div>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Selected Jobs</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {selectedRows.length} job
-              {selectedRows.length === 1 ? "" : "s"}? This action cannot be
-              undone and will permanently delete the job posting
-              {selectedRows.length === 1 ? "" : "s"}
-              and all associated applications.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmBulkDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 items-center space-x-2">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search jobs..."
+              value={searchTerm}
+              onChange={(event) => handleSearch(event.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select
+            value={statusFilter || "all"}
+            onValueChange={handleStatusFilter}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="hidden lg:flex">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  Columns <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="hidden lg:flex">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={!hasSelectedRows}
+                  className="w-full sm:w-auto"
+                >
+                  Actions <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <AlertDialogItem
+                  triggerChildren={
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete ({selectedRows.length})
+                    </>
+                  }
+                  className="text-destructive"
+                  disabled={!hasSelectedRows}
+                >
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete {selectedRows.length} job
+                        posting{selectedRows.length === 1 ? "" : "s"}? This
+                        action cannot be undone and will permanently delete the
+                        job posting
+                        {selectedRows.length === 1 ? "" : "s"} and all
+                        associated applications.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={confirmBulkDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialogItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div>
+            <Button
+              onClick={handleCreateJob}
+              size="icon"
+              tooltip="Create job"
+              tooltipShortcut={["Mod", "J"]}
+              className="lg:hidden h-7.5"
             >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <Plus />
+              <span className="sr-only">Create Job</span>
+            </Button>
+
+            <Button
+              onClick={handleCreateJob}
+              className="hidden lg:flex"
+              tooltipShortcut={["Mod", "J"]}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Job
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="border overflow-hidden rounded-none sm:rounded-md">
+        {hasJobs ? (
+          <div className="w-full overflow-x-auto">
+            <Table className="w-full min-w-[800px]">
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow
+                    key={headerGroup.id}
+                    className="hover:bg-transparent"
+                  >
+                    {headerGroup.headers.map((header, index) => (
+                      <TableHead
+                        key={header.id}
+                        className={`
+                         bg-muted/50 px-4 py-3
+                         ${index === 0 ? "rounded-tl-lg" : ""}
+                         ${index === headerGroup.headers.length - 1 ? "rounded-tr-lg" : ""}
+                         ${header.column.columnDef.meta?.className || ""}
+                       `}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-muted/50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="px-4 py-2">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-lg font-medium">No jobs found</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Get started by creating your first job posting.
+              </p>
+              <Button onClick={handleCreateJob} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Job
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {hasJobs && shouldShowPagination && <DataTablePagination table={table} />}
     </Container>
   );
 }
