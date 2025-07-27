@@ -1,14 +1,5 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Check,
@@ -21,9 +12,15 @@ import {
   MoreHorizontal,
   Twitter,
   X,
+  Edit,
+  Users,
+  EyeOff,
+  Archive,
+  Trash2,
+  Share,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 
 import {
   AlertDialog,
@@ -34,6 +31,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +45,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { DataTableColumnHeader } from "@/components/data-table/column-header";
 
@@ -67,7 +73,12 @@ export interface JobPost {
   created_at: string;
   updated_at?: string | null;
   hiring_manager_id?: string | null;
-  hiring_manager_name?: string | null;
+  hiring_manager?: {
+    id: string;
+    first_name: string;
+    last_name?: string;
+    email: string;
+  } | null;
   applicant_count?: number;
   applicantCount?: number;
   organization_id?: string;
@@ -75,10 +86,48 @@ export interface JobPost {
   published_at?: string | null;
 }
 
+// Custom AlertDialogItem component to handle portal conflicts
+// Custom AlertDialogItem component to handle portal conflicts
+const AlertDialogItem = forwardRef<
+  React.ElementRef<typeof DropdownMenuItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuItem> & {
+    triggerChildren: React.ReactNode;
+    onSelect?: (event: Event) => void;
+    onOpenChange?: (open: boolean) => void;
+    children: React.ReactNode;
+  }
+>(
+  (
+    { triggerChildren, children, onSelect, onOpenChange, ...itemProps },
+    forwardedRef,
+  ) => {
+    return (
+      <AlertDialog onOpenChange={onOpenChange}>
+        <AlertDialogTrigger asChild>
+          <DropdownMenuItem
+            {...itemProps}
+            ref={forwardedRef}
+            onSelect={(event) => {
+              event.preventDefault();
+              onSelect?.(event);
+            }}
+          >
+            {triggerChildren}
+          </DropdownMenuItem>
+        </AlertDialogTrigger>
+        {children}
+      </AlertDialog>
+    );
+  },
+);
+
+AlertDialogItem.displayName = "AlertDialogItem";
+
 function ActionsCell({ job }: { job: JobPost }) {
   const router = useRouter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -110,6 +159,116 @@ function ActionsCell({ job }: { job: JobPost }) {
       document.body.style.overflow = "unset";
     };
   }, [showShareDialog]);
+
+  const deleteMutation = useMutation(
+    trpc.organization.deleteJobPosting.mutationOptions({
+      onMutate: async (variables) => {
+        setIsDeleting(true);
+
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({
+          queryKey: ["organization", "listJobPostings"],
+        });
+
+        // Snapshot the previous value
+        const previousJobs = queryClient.getQueryData([
+          "organization",
+          "listJobPostings",
+        ]);
+
+        // Optimistically remove the job
+        queryClient.setQueryData(
+          ["organization", "listJobPostings"],
+          (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              data: old.data.filter((j: JobPost) => j.id !== variables.id),
+            };
+          },
+        );
+
+        return { previousJobs };
+      },
+      onError: (err, variables, context) => {
+        // If the mutation fails, use the context returned from onMutate to roll back
+        if (context?.previousJobs) {
+          queryClient.setQueryData(
+            ["organization", "listJobPostings"],
+            context.previousJobs,
+          );
+        }
+        console.error("Failed to delete job:", err);
+      },
+      onSettled: () => {
+        setIsDeleting(false);
+        // Always refetch after error or success to ensure we have correct data
+        queryClient.invalidateQueries({
+          queryKey: ["organization", "listJobPostings"],
+        });
+      },
+    }),
+  );
+
+  const updateStatusMutation = useMutation(
+    trpc.organization.updateJobPosting.mutationOptions({
+      onMutate: async (variables) => {
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({
+          queryKey: ["organization", "listJobPostings"],
+        });
+
+        // Snapshot the previous value
+        const previousJobs = queryClient.getQueryData([
+          "organization",
+          "listJobPostings",
+        ]);
+
+        // Optimistically update the job status
+        queryClient.setQueryData(
+          ["organization", "listJobPostings"],
+          (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              data: old.data.map((j: JobPost) =>
+                j.id === variables.id
+                  ? {
+                      ...j,
+                      status: variables.status,
+                      updated_at: new Date().toISOString(),
+                      // Update published_at if we're publishing
+                      ...(variables.status === "published" &&
+                      j.status === "draft"
+                        ? { published_at: new Date().toISOString() }
+                        : {}),
+                    }
+                  : j,
+              ),
+            };
+          },
+        );
+
+        return { previousJobs };
+      },
+      onError: (err, variables, context) => {
+        // If the mutation fails, use the context returned from onMutate to roll back
+        if (context?.previousJobs) {
+          queryClient.setQueryData(
+            ["organization", "listJobPostings"],
+            context.previousJobs,
+          );
+        }
+        console.error("Failed to update job status:", err);
+      },
+      onSettled: () => {
+        // Always refetch after error or success to ensure we have correct data
+        queryClient.invalidateQueries({
+          queryKey: ["organization", "listJobPostings"],
+        });
+      },
+    }),
+  );
 
   const getJobUrl = () => {
     return `${window.location.origin}/jobs/${job.id}`;
@@ -177,89 +336,135 @@ function ActionsCell({ job }: { job: JobPost }) {
     }
   };
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     router.push(`/jobs/create/${job.id}`);
-  };
+  }, [router, job.id]);
 
-  const handleDuplicate = async () => {
+  const handleViewApplicants = useCallback(() => {
+    router.push(`/jobs/${job.id}/applicants`);
+  }, [router, job.id]);
+
+  const handleCopyUrl = useCallback(async () => {
     try {
-      console.log("Duplicating job:", job.id);
+      const url = `${window.location.origin}/jobs/${job.id}`;
+      await navigator.clipboard.writeText(url);
     } catch (error) {
-      console.error("Failed to duplicate job:", error);
+      console.error("Failed to copy URL to clipboard:", error);
     }
-  };
+  }, [job.id]);
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      console.log("Deleting job:", job.id);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setShowDeleteDialog(false);
-    } catch (error) {
-      console.error("Failed to delete job:", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const handleUnpublish = useCallback(() => {
+    updateStatusMutation.mutate({
+      id: job.id,
+      status: "draft",
+    });
+  }, [updateStatusMutation, job.id]);
 
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowShareDialog(true);
-    setImageLoading(true);
-    setImageError(false);
-  };
+  const handleClose = useCallback(() => {
+    updateStatusMutation.mutate({
+      id: job.id,
+      status: "closed",
+    });
+  }, [updateStatusMutation, job.id]);
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowDeleteDialog(true);
-  };
+  const handleDelete = useCallback(() => {
+    deleteMutation.mutate({ id: job.id });
+  }, [deleteMutation, job.id]);
 
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    handleEdit();
-  };
-
-  const handleDuplicateClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    handleDuplicate();
-  };
-
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
+  const canUnpublish = job.status === "published";
+  const canClose = job.status === "published" || job.status === "draft";
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0"
-            onClick={handleMenuClick}
-          >
+          <Button variant="ghost" className="h-8 w-8 p-0">
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onClick={handleMenuClick}>
+        <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleDuplicateClick}>
-            Duplicate
+
+          <DropdownMenuItem onClick={handleEdit}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleShareClick}>Share</DropdownMenuItem>
+
+          <DropdownMenuItem onClick={handleViewApplicants}>
+            <Users className="mr-2 h-4 w-4" />
+            View Applicants ({job.applicant_count || 0})
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={handleCopyUrl}>
+            <Copy className="mr-2 h-4 w-4" />
+            Copy URL
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
+            <Share className="mr-2 h-4 w-4" />
+            Share
+          </DropdownMenuItem>
+
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={handleDeleteClick}
+
+          {canUnpublish && (
+            <DropdownMenuItem onClick={handleUnpublish}>
+              <EyeOff className="mr-2 h-4 w-4" />
+              Unpublish
+            </DropdownMenuItem>
+          )}
+
+          {canClose && (
+            <DropdownMenuItem onClick={handleClose}>
+              <Archive className="mr-2 h-4 w-4" />
+              Close Posting
+            </DropdownMenuItem>
+          )}
+
+          <DropdownMenuSeparator />
+
+          <AlertDialogItem
+            triggerChildren={
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </>
+            }
             className="text-destructive"
           >
-            Delete
-          </DropdownMenuItem>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  job posting "{job.title}" and all associated applications.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {showShareDialog && (
-        <DismissibleLayer>
+        <DismissibleLayer onDismiss={() => setShowShareDialog(false)}>
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
               className="fixed inset-0 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
@@ -290,108 +495,95 @@ function ActionsCell({ job }: { job: JobPost }) {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-6">
-                  <div className="rounded-lg border p-4 space-y-2">
-                    <h4 className="font-semibold">{job.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {job.company || "Our Company"} •{" "}
-                      {job.location || "Location not specified"}
-                    </p>
-                    {job.salary && (
-                      <p className="text-sm font-medium">{job.salary}</p>
-                    )}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Template</label>
+                    <Select
+                      value={imageOptions.template}
+                      onValueChange={(value) =>
+                        updateImageOption("template", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="modern">Modern</SelectItem>
+                        <SelectItem value="minimal">Minimal</SelectItem>
+                        <SelectItem value="corporate">Corporate</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">Customize image</h3>
-
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">
+                      Include in preview
+                    </label>
                     <div className="space-y-2">
-                      <Select
-                        value={imageOptions.template}
-                        onValueChange={(value) =>
-                          updateImageOption(
-                            "template",
-                            value as "modern" | "minimal" | "corporate",
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select template" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Templates</SelectLabel>
-                            <SelectItem value="modern">
-                              Modern Gradient
-                            </SelectItem>
-                            <SelectItem value="minimal">
-                              Clean Minimal
-                            </SelectItem>
-                            <SelectItem value="corporate">
-                              Corporate Blue
-                            </SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium">
-                        Include in image
-                      </label>
-
-                      <div className="space-y-2">
-                        <label className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={imageOptions.title}
-                            onCheckedChange={(checked) =>
-                              updateImageOption("title", checked)
-                            }
-                          />
-                          <span className="text-sm">Job Title</span>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="title"
+                          checked={imageOptions.title}
+                          onCheckedChange={(checked) =>
+                            updateImageOption("title", checked)
+                          }
+                        />
+                        <label htmlFor="title" className="text-sm">
+                          Job title
                         </label>
-
-                        <label className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={imageOptions.company}
-                            onCheckedChange={(checked) =>
-                              updateImageOption("company", checked)
-                            }
-                          />
-                          <span className="text-sm">Company Name</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="company"
+                          checked={imageOptions.company}
+                          onCheckedChange={(checked) =>
+                            updateImageOption("company", checked)
+                          }
+                        />
+                        <label htmlFor="company" className="text-sm">
+                          Company name
                         </label>
-
-                        <label className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={imageOptions.location}
-                            onCheckedChange={(checked) =>
-                              updateImageOption("location", checked)
-                            }
-                          />
-                          <span className="text-sm">Location</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="salary"
+                          checked={imageOptions.salary}
+                          onCheckedChange={(checked) =>
+                            updateImageOption("salary", checked)
+                          }
+                        />
+                        <label htmlFor="salary" className="text-sm">
+                          Salary range
                         </label>
-
-                        <label className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={imageOptions.salary}
-                            onCheckedChange={(checked) =>
-                              updateImageOption("salary", checked)
-                            }
-                          />
-                          <span className="text-sm">Salary Range</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="location"
+                          checked={imageOptions.location}
+                          onCheckedChange={(checked) =>
+                            updateImageOption("location", checked)
+                          }
+                        />
+                        <label htmlFor="location" className="text-sm">
+                          Location
                         </label>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Job link</label>
-                    <div className="flex gap-2">
-                      <Input value={getJobUrl()} readOnly className="flex-1" />
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Share URL</label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={getJobUrl()}
+                        className="flex-1 px-3 py-2 text-sm border border-input bg-background rounded-md"
+                      />
                       <Button
                         variant="outline"
-                        size="icon"
+                        size="sm"
                         onClick={handleCopyLink}
-                        className="shrink-0"
+                        className="px-3"
                       >
                         {copySuccess ? <Check /> : <Copy />}
                       </Button>
@@ -444,7 +636,7 @@ function ActionsCell({ job }: { job: JobPost }) {
                   </Button>
                 </div>
 
-                <div className="flex flex-col justify-center space-y-4 -mt-[70px]">
+                <div className="flex flex-col justify-center space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Preview</label>
                     <p className="text-xs text-muted-foreground">
@@ -468,73 +660,26 @@ function ActionsCell({ job }: { job: JobPost }) {
                         />
                       )}
 
-                      {imageLoading && !imageError && (
-                        <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                          <div className="text-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground">
-                              Generating preview...
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {imageError && (
-                        <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                          <div className="text-center">
-                            <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground mb-2">
-                              Preview unavailable
-                            </p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setImageKey((prev) => prev + 1);
-                                setImageLoading(true);
-                                setImageError(false);
-                              }}
-                            >
-                              Try Again
-                            </Button>
-                          </div>
+                      {(imageLoading || imageError) && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                          {imageLoading ? (
+                            <div className="flex items-center space-x-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span className="text-sm text-muted-foreground">
+                                Loading preview...
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center space-y-2">
+                              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                Preview unavailable
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const link = document.createElement("a");
-                        link.href = getOGImageUrl();
-                        link.download = `${job.title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-job-post.png`;
-                        link.click();
-                      }}
-                      className="flex-1"
-                      disabled={imageError}
-                    >
-                      Download Image
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(
-                            window.location.origin + getOGImageUrl(),
-                          );
-                        } catch (err) {
-                          console.error("Failed to copy image URL:", err);
-                        }
-                      }}
-                      className="flex-1"
-                      disabled={imageError}
-                    >
-                      Copy Image URL
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -542,31 +687,17 @@ function ActionsCell({ job }: { job: JobPost }) {
           </div>
         </DismissibleLayer>
       )}
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Job Posting</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the job posting "{job.title}" and all
-              associated applications.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete Job
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
+}
+
+function formatDisplayText(text: string | null | undefined): string {
+  if (!text) return "Not specified";
+
+  return text
+    .split(/[-_\s]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export const columns: ColumnDef<JobPost>[] = [
@@ -587,7 +718,6 @@ export const columns: ColumnDef<JobPost>[] = [
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
-        onClick={(e) => e.stopPropagation()}
       />
     ),
     enableSorting: false,
@@ -603,9 +733,11 @@ export const columns: ColumnDef<JobPost>[] = [
       return (
         <div className="space-y-1">
           <div className="font-medium">{job.title}</div>
-          <div className="text-sm text-muted-foreground">
-            {job.department || "No department"}
-          </div>
+          {job.department && (
+            <div className="text-sm text-muted-foreground">
+              {job.department}
+            </div>
+          )}
         </div>
       );
     },
@@ -629,7 +761,7 @@ export const columns: ColumnDef<JobPost>[] = [
                   : "outline"
           }
         >
-          {status}
+          {formatDisplayText(status)}
         </Badge>
       );
     },
@@ -644,11 +776,7 @@ export const columns: ColumnDef<JobPost>[] = [
     ),
     cell: ({ row }) => {
       const jobType = row.getValue("job_type") as string;
-      return (
-        <Badge variant="outline">
-          {jobType?.replace("_", "-") || "Not specified"}
-        </Badge>
-      );
+      return <Badge variant="outline">{formatDisplayText(jobType)}</Badge>;
     },
   },
   {
@@ -679,11 +807,19 @@ export const columns: ColumnDef<JobPost>[] = [
     ),
     cell: ({ row }) => {
       const job = row.original;
-      return (
-        <div className="text-sm">
-          {job.hiring_manager_name || "Not assigned"}
-        </div>
-      );
+      const hiringManager = job.hiring_manager;
+
+      if (!hiringManager) {
+        return (
+          <div className="text-sm text-muted-foreground">Not assigned</div>
+        );
+      }
+
+      const fullName = hiringManager.last_name
+        ? `${hiringManager.first_name} ${hiringManager.last_name}`
+        : hiringManager.first_name;
+
+      return <div className="text-sm">{fullName}</div>;
     },
   },
   {
