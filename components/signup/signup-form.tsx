@@ -11,9 +11,11 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>) {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [userRole, setUserRole] = useState<'candidate' | 'organization'>('candidate') // Changed from 'company'
+  const [userRole, setUserRole] = useState<'candidate' | 'organization'>('candidate')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -24,8 +26,26 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
     setIsLoading(true)
     setError(null)
 
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('First and last name are required')
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { data, error: signUpError } = await handleEmailPasswordSignUp(supabase, email, password, userRole)
+      const fullName = `${firstName.trim()} ${lastName.trim()}`
+
+      const { data, error: signUpError } = await handleEmailPasswordSignUp(
+        supabase,
+        email,
+        password,
+        userRole,
+        {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          full_name: fullName
+        }
+      )
 
       if (signUpError) {
         setError(signUpError.message)
@@ -38,7 +58,6 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
         if (userRole === 'candidate') {
           router.push('/candidate/profile')
         } else if (userRole === 'organization') {
-          // Changed from 'company'
           router.push('/organization/dashboard')
         } else {
           router.push('/dashboard')
@@ -57,7 +76,6 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
   const handleOAuthSignUp = async (provider: Provider) => {
     setIsLoading(true)
     setError(null)
-
     try {
       await oAuthSignUp(supabase, provider, userRole)
     } catch (err: any) {
@@ -74,7 +92,35 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
           <h1 className='text-2xl font-bold'>Create an account</h1>
           <p className='text-balance text-muted-foreground'>Sign up for a Seeds account</p>
         </div>
+
         {error && <div className='rounded bg-red-100 p-2 text-sm text-red-600'>{error}</div>}
+
+        <div className='grid gap-4'>
+          <div className='grid gap-2'>
+            <Label htmlFor='firstName'>First Name</Label>
+            <Input
+              id='firstName'
+              type='text'
+              placeholder='John'
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className='grid gap-2'>
+            <Label htmlFor='lastName'>Last Name</Label>
+            <Input
+              id='lastName'
+              type='text'
+              placeholder='Doe'
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+        </div>
 
         <div className='grid gap-2'>
           <Label htmlFor='email'>Email</Label>
@@ -105,7 +151,7 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
           <Label>I am a</Label>
           <RadioGroup
             value={userRole}
-            onValueChange={(value) => setUserRole(value as 'candidate' | 'organization')} // Changed
+            onValueChange={(value) => setUserRole(value as 'candidate' | 'organization')}
             className='flex gap-4'
             disabled={isLoading}>
             <div className='flex items-center space-x-2'>
@@ -113,8 +159,8 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
               <Label htmlFor='candidate'>Job Seeker</Label>
             </div>
             <div className='flex items-center space-x-2'>
-              <RadioGroupItem value='organization' id='organization' /> {/* Changed */}
-              <Label htmlFor='organization'>Employer</Label> {/* Changed */}
+              <RadioGroupItem value='organization' id='organization' />
+              <Label htmlFor='organization'>Employer</Label>
             </div>
           </RadioGroup>
         </div>

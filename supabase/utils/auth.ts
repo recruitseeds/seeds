@@ -1,5 +1,11 @@
 import type { Provider, SupabaseClient } from '@supabase/supabase-js'
 
+interface UserMetadata {
+  first_name?: string
+  last_name?: string
+  full_name?: string
+}
+
 /**
  * Handles signing up a new user with email and password.
  * Sets the user's role ('candidate' or 'organization') in the user metadata,
@@ -10,13 +16,15 @@ import type { Provider, SupabaseClient } from '@supabase/supabase-js'
  * @param email - The email address for the new user account.
  * @param password - The password for the new user account.
  * @param userRole - The role to assign to the user ('candidate' or 'organization').
+ * @param userMetadata - Optional user metadata including name information.
  * @returns A promise that resolves to an object containing the signup response data (including the user object on success) and any potential error.
  */
 export const handleEmailPasswordSignUp = async (
   supabase: SupabaseClient,
   email: string,
   password: string,
-  userRole: 'candidate' | 'organization'
+  userRole: 'candidate' | 'organization',
+  userMetadata?: UserMetadata
 ) => {
   const emailRedirectTo = `${window.location.origin}/login?message=check-email`
 
@@ -26,6 +34,7 @@ export const handleEmailPasswordSignUp = async (
     options: {
       data: {
         role: userRole,
+        ...userMetadata,
       },
       emailRedirectTo: emailRedirectTo,
     },

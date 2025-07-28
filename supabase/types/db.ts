@@ -1,10 +1,16 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '12.2.3 (519615d)'
+    PostgrestVersion: "12.2.3 (519615d)"
   }
   graphql_public: {
     Tables: {
@@ -72,40 +78,40 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'application_step_history_application_id_fkey'
-            columns: ['application_id']
+            foreignKeyName: "application_step_history_application_id_fkey"
+            columns: ["application_id"]
             isOneToOne: false
-            referencedRelation: 'job_applications'
-            referencedColumns: ['id']
+            referencedRelation: "job_applications"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'application_step_history_moved_by_fkey'
-            columns: ['moved_by']
+            foreignKeyName: "application_step_history_moved_by_fkey"
+            columns: ["moved_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'application_step_history_moved_from_step_id_fkey'
-            columns: ['moved_from_step_id']
+            foreignKeyName: "application_step_history_moved_from_step_id_fkey"
+            columns: ["moved_from_step_id"]
             isOneToOne: false
-            referencedRelation: 'pipeline_steps'
-            referencedColumns: ['id']
+            referencedRelation: "pipeline_steps"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'application_step_history_moved_to_step_id_fkey'
-            columns: ['moved_to_step_id']
+            foreignKeyName: "application_step_history_moved_to_step_id_fkey"
+            columns: ["moved_to_step_id"]
             isOneToOne: false
-            referencedRelation: 'pipeline_steps'
-            referencedColumns: ['id']
+            referencedRelation: "pipeline_steps"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'application_step_history_step_id_fkey'
-            columns: ['step_id']
+            foreignKeyName: "application_step_history_step_id_fkey"
+            columns: ["step_id"]
             isOneToOne: false
-            referencedRelation: 'pipeline_steps'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "pipeline_steps"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_application_history: {
@@ -114,30 +120,30 @@ export type Database = {
           created_at: string | null
           id: string
           notes: string | null
-          status: Database['public']['Enums']['candidate_application_status']
+          status: Database["public"]["Enums"]["candidate_application_status"]
         }
         Insert: {
           application_id: string
           created_at?: string | null
           id?: string
           notes?: string | null
-          status: Database['public']['Enums']['candidate_application_status']
+          status: Database["public"]["Enums"]["candidate_application_status"]
         }
         Update: {
           application_id?: string
           created_at?: string | null
           id?: string
           notes?: string | null
-          status?: Database['public']['Enums']['candidate_application_status']
+          status?: Database["public"]["Enums"]["candidate_application_status"]
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_application_history_application_id_fkey'
-            columns: ['application_id']
+            foreignKeyName: "candidate_application_history_application_id_fkey"
+            columns: ["application_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_applications'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "candidate_applications"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_applications: {
@@ -157,8 +163,8 @@ export type Database = {
           next_step_description: string | null
           next_steps: Json | null
           salary_range: string | null
-          source: Database['public']['Enums']['candidate_application_source']
-          status: Database['public']['Enums']['candidate_application_status']
+          source: Database["public"]["Enums"]["candidate_application_source"]
+          status: Database["public"]["Enums"]["candidate_application_status"]
           updated_at: string | null
         }
         Insert: {
@@ -177,8 +183,8 @@ export type Database = {
           next_step_description?: string | null
           next_steps?: Json | null
           salary_range?: string | null
-          source?: Database['public']['Enums']['candidate_application_source']
-          status: Database['public']['Enums']['candidate_application_status']
+          source?: Database["public"]["Enums"]["candidate_application_source"]
+          status: Database["public"]["Enums"]["candidate_application_status"]
           updated_at?: string | null
         }
         Update: {
@@ -197,18 +203,18 @@ export type Database = {
           next_step_description?: string | null
           next_steps?: Json | null
           salary_range?: string | null
-          source?: Database['public']['Enums']['candidate_application_source']
-          status?: Database['public']['Enums']['candidate_application_status']
+          source?: Database["public"]["Enums"]["candidate_application_source"]
+          status?: Database["public"]["Enums"]["candidate_application_status"]
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_applications_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "candidate_applications_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_profiles'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_education: {
@@ -259,12 +265,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_education_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "candidate_education_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_profiles'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_files: {
@@ -272,7 +278,7 @@ export type Database = {
           candidate_id: string
           created_at: string | null
           file_name: string
-          file_type: Database['public']['Enums']['candidate_file_type']
+          file_type: Database["public"]["Enums"]["candidate_file_type"]
           id: string
           is_default_resume: boolean | null
           mime_type: string | null
@@ -288,7 +294,7 @@ export type Database = {
           candidate_id: string
           created_at?: string | null
           file_name: string
-          file_type: Database['public']['Enums']['candidate_file_type']
+          file_type: Database["public"]["Enums"]["candidate_file_type"]
           id?: string
           is_default_resume?: boolean | null
           mime_type?: string | null
@@ -304,7 +310,7 @@ export type Database = {
           candidate_id?: string
           created_at?: string | null
           file_name?: string
-          file_type?: Database['public']['Enums']['candidate_file_type']
+          file_type?: Database["public"]["Enums"]["candidate_file_type"]
           id?: string
           is_default_resume?: boolean | null
           mime_type?: string | null
@@ -318,19 +324,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_files_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "candidate_files_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_profiles'
-            referencedColumns: ['id']
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'candidate_files_previous_version_id_fkey'
-            columns: ['previous_version_id']
+            foreignKeyName: "candidate_files_previous_version_id_fkey"
+            columns: ["previous_version_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_files'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "candidate_files"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_notes: {
@@ -366,26 +372,26 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_notes_application_id_fkey'
-            columns: ['application_id']
+            foreignKeyName: "candidate_notes_application_id_fkey"
+            columns: ["application_id"]
             isOneToOne: false
-            referencedRelation: 'job_applications'
-            referencedColumns: ['id']
+            referencedRelation: "job_applications"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'candidate_notes_author_id_fkey'
-            columns: ['author_id']
+            foreignKeyName: "candidate_notes_author_id_fkey"
+            columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'candidate_notes_step_id_fkey'
-            columns: ['step_id']
+            foreignKeyName: "candidate_notes_step_id_fkey"
+            columns: ["step_id"]
             isOneToOne: false
-            referencedRelation: 'pipeline_steps'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "pipeline_steps"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_profiles: {
@@ -478,12 +484,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_skills_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "candidate_skills_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_profiles'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       candidate_work_experiences: {
@@ -531,12 +537,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'candidate_work_experiences_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "candidate_work_experiences_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidate_profiles'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversation_participants: {
@@ -563,19 +569,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'conversation_participants_conversation_id_fkey'
-            columns: ['conversation_id']
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: 'conversations'
-            referencedColumns: ['id']
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'conversation_participants_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "conversation_participants_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversations: {
@@ -608,19 +614,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'conversations_created_by_fkey'
-            columns: ['created_by']
+            foreignKeyName: "conversations_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'conversations_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "conversations_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       default_pipeline_steps: {
@@ -689,26 +695,26 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'hiring_pipelines_category_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "hiring_pipelines_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'pipeline_categories'
-            referencedColumns: ['id']
+            referencedRelation: "pipeline_categories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'hiring_pipelines_created_by_fkey'
-            columns: ['created_by']
+            foreignKeyName: "hiring_pipelines_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'hiring_pipelines_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "hiring_pipelines_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       job_applications: {
@@ -744,19 +750,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'job_applications_current_step_id_fkey'
-            columns: ['current_step_id']
+            foreignKeyName: "job_applications_current_step_id_fkey"
+            columns: ["current_step_id"]
             isOneToOne: false
-            referencedRelation: 'pipeline_steps'
-            referencedColumns: ['id']
+            referencedRelation: "pipeline_steps"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'job_applications_job_posting_id_fkey'
-            columns: ['job_posting_id']
+            foreignKeyName: "job_applications_job_posting_id_fkey"
+            columns: ["job_posting_id"]
             isOneToOne: false
-            referencedRelation: 'job_postings'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
         ]
       }
       job_postings: {
@@ -819,33 +825,33 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'job_postings_created_by_fkey'
-            columns: ['created_by']
+            foreignKeyName: "job_postings_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'job_postings_hiring_manager_id_fkey'
-            columns: ['hiring_manager_id']
+            foreignKeyName: "job_postings_hiring_manager_id_fkey"
+            columns: ["hiring_manager_id"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'job_postings_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "job_postings_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'job_postings_pipeline_id_fkey'
-            columns: ['pipeline_id']
+            foreignKeyName: "job_postings_pipeline_id_fkey"
+            columns: ["pipeline_id"]
             isOneToOne: false
-            referencedRelation: 'hiring_pipelines'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "hiring_pipelines"
+            referencedColumns: ["id"]
+          },
         ]
       }
       job_templates: {
@@ -896,26 +902,26 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'job_templates_created_by_fkey'
-            columns: ['created_by']
+            foreignKeyName: "job_templates_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'job_templates_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "job_templates_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'job_templates_parent_template_id_fkey'
-            columns: ['parent_template_id']
+            foreignKeyName: "job_templates_parent_template_id_fkey"
+            columns: ["parent_template_id"]
             isOneToOne: false
-            referencedRelation: 'job_templates'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "job_templates"
+            referencedColumns: ["id"]
+          },
         ]
       }
       message_reactions: {
@@ -942,19 +948,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'message_reactions_message_id_fkey'
-            columns: ['message_id']
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
             isOneToOne: false
-            referencedRelation: 'messages'
-            referencedColumns: ['id']
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'message_reactions_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       messages: {
@@ -999,26 +1005,26 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'messages_conversation_id_fkey'
-            columns: ['conversation_id']
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: 'conversations'
-            referencedColumns: ['id']
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'messages_reply_to_id_fkey'
-            columns: ['reply_to_id']
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
             isOneToOne: false
-            referencedRelation: 'messages'
-            referencedColumns: ['id']
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'messages_sender_id_fkey'
-            columns: ['sender_id']
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organization_invitations: {
@@ -1057,27 +1063,29 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'company_invitations_invited_by_fkey'
-            columns: ['invited_by']
+            foreignKeyName: "company_invitations_invited_by_fkey"
+            columns: ["invited_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'organization_invitations_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organization_users: {
         Row: {
           created_at: string | null
+          email: string | null
           id: string
           invited_by: string | null
           joined_at: string | null
+          name: string | null
           organization_id: string
           role: string
           status: string
@@ -1085,9 +1093,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           id?: string
           invited_by?: string | null
           joined_at?: string | null
+          name?: string | null
           organization_id: string
           role: string
           status?: string
@@ -1095,9 +1105,11 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           id?: string
           invited_by?: string | null
           joined_at?: string | null
+          name?: string | null
           organization_id?: string
           role?: string
           status?: string
@@ -1105,19 +1117,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'company_users_invited_by_fkey'
-            columns: ['invited_by']
+            foreignKeyName: "company_users_invited_by_fkey"
+            columns: ["invited_by"]
             isOneToOne: false
-            referencedRelation: 'organization_users'
-            referencedColumns: ['id']
+            referencedRelation: "organization_users"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'organization_users_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "organization_users_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organizations: {
@@ -1180,12 +1192,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pipeline_categories_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "pipeline_categories_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pipeline_steps: {
@@ -1230,19 +1242,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pipeline_steps_default_step_id_fkey'
-            columns: ['default_step_id']
+            foreignKeyName: "pipeline_steps_default_step_id_fkey"
+            columns: ["default_step_id"]
             isOneToOne: false
-            referencedRelation: 'default_pipeline_steps'
-            referencedColumns: ['id']
+            referencedRelation: "default_pipeline_steps"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'pipeline_steps_pipeline_id_fkey'
-            columns: ['pipeline_id']
+            foreignKeyName: "pipeline_steps_pipeline_id_fkey"
+            columns: ["pipeline_id"]
             isOneToOne: false
-            referencedRelation: 'hiring_pipelines'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "hiring_pipelines"
+            referencedColumns: ["id"]
+          },
         ]
       }
       template_variables: {
@@ -1275,12 +1287,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'template_variables_template_id_fkey'
-            columns: ['template_id']
+            foreignKeyName: "template_variables_template_id_fkey"
+            columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: 'job_templates'
-            referencedColumns: ['id']
-          }
+            referencedRelation: "job_templates"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -1292,7 +1304,7 @@ export type Database = {
         Args: {
           p_auth_user_id: string
           p_file_name: string
-          p_file_type: Database['public']['Enums']['candidate_file_type']
+          p_file_type: Database["public"]["Enums"]["candidate_file_type"]
           p_mime_type: string
           p_storage_path: string
           p_size_bytes: number
@@ -1304,7 +1316,7 @@ export type Database = {
         Args: {
           p_candidate_id: string
           p_file_name: string
-          p_file_type: Database['public']['Enums']['candidate_file_type']
+          p_file_type: Database["public"]["Enums"]["candidate_file_type"]
           p_mime_type: string
           p_storage_path: string
           p_size_bytes: number
@@ -1316,19 +1328,28 @@ export type Database = {
         Args: { p_candidate_id: string; p_file_id: string }
         Returns: undefined
       }
+      test_organizations_access: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
-      candidate_application_source: 'platform' | 'import' | 'manual'
-      candidate_application_status: 'applied' | 'in-review' | 'interview' | 'rejected' | 'offer'
+      candidate_application_source: "platform" | "import" | "manual"
+      candidate_application_status:
+        | "applied"
+        | "in-review"
+        | "interview"
+        | "rejected"
+        | "offer"
       candidate_file_type:
-        | 'resume'
-        | 'cover_letter'
-        | 'portfolio'
-        | 'certification'
-        | 'transcript'
-        | 'reference'
-        | 'eligibility'
-        | 'other'
+        | "resume"
+        | "cover_letter"
+        | "portfolio"
+        | "certification"
+        | "transcript"
+        | "reference"
+        | "eligibility"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1336,114 +1357,122 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-    : never = never
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-  ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
-  : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    : never = never
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
     : never
-  : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    : never = never
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
     : never
-  : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-    : never = never
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
-  : never
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-    : never = never
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-  : never
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   graphql_public: {
@@ -1451,17 +1480,23 @@ export const Constants = {
   },
   public: {
     Enums: {
-      candidate_application_source: ['platform', 'import', 'manual'],
-      candidate_application_status: ['applied', 'in-review', 'interview', 'rejected', 'offer'],
+      candidate_application_source: ["platform", "import", "manual"],
+      candidate_application_status: [
+        "applied",
+        "in-review",
+        "interview",
+        "rejected",
+        "offer",
+      ],
       candidate_file_type: [
-        'resume',
-        'cover_letter',
-        'portfolio',
-        'certification',
-        'transcript',
-        'reference',
-        'eligibility',
-        'other',
+        "resume",
+        "cover_letter",
+        "portfolio",
+        "certification",
+        "transcript",
+        "reference",
+        "eligibility",
+        "other",
       ],
     },
   },

@@ -60,7 +60,14 @@ export const organizationRouter = createTRPCRouter({
           salary_max,
           salary_type,
           created_at,
-          updated_at
+          updated_at,
+          hiring_manager_id,
+          hiring_manager:organization_users!hiring_manager_id(
+            id,
+            user_id,
+            name,
+            email
+          )
         `,
           { count: "exact" },
         )
@@ -98,13 +105,30 @@ export const organizationRouter = createTRPCRouter({
         });
       }
 
+      const enrichedData = await Promise.all(
+        (data || []).map(async (job) => {
+          const hiring_manager_name = job.hiring_manager?.name || job.hiring_manager?.email || null;
+
+          const { count: applicant_count } = await ctx.supabase
+            .from("job_applications")
+            .select("*", { count: "exact", head: true })
+            .eq("job_posting_id", job.id);
+
+          return {
+            ...job,
+            hiring_manager_name,
+            applicant_count: applicant_count || 0,
+          };
+        })
+      );
+
       const nextCursor =
-        data && data.length === limit
-          ? data[data.length - 1]?.created_at
+        enrichedData && enrichedData.length === limit
+          ? enrichedData[enrichedData.length - 1]?.created_at
           : undefined;
 
       return {
-        data: data || [],
+        data: enrichedData || [],
         meta: {
           count: count || 0,
           cursor: nextCursor,
