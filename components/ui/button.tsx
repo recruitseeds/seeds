@@ -1,10 +1,9 @@
 "use client";
-
 import { cn } from "@/lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import * as React from "react";
-
 import { Tooltip } from "./tooltip";
 
 const buttonVariants = cva(
@@ -108,6 +107,8 @@ interface ButtonProps
   asChild?: boolean;
   tooltip?: string | React.ReactNode;
   tooltipShortcut?: string[];
+  loading?: boolean;
+  loadingText?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -121,12 +122,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       asChild = false,
       tooltip,
       tooltipShortcut,
+      loading = false,
+      loadingText,
+      children,
+      disabled,
       ...props
     },
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
-
     const allClasses = cn(buttonVariants({ variant, size }), className);
 
     const getButtonRadius = (classes: string) => {
@@ -140,12 +144,23 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const buttonRadius = getButtonRadius(allClasses);
+    const isDisabled = loading || disabled;
+    const buttonContent = loading ? (
+      <>
+        <Loader2 className="size-4 animate-spin" />
+        {loadingText || children}
+      </>
+    ) : (
+      children
+    );
 
     const buttonElement = (
       <Comp
         ref={ref}
         data-slot="button"
         data-state={active ? "active" : "inactive"}
+        data-loading={loading ? "true" : "false"}
+        disabled={isDisabled}
         style={
           {
             "--button-radius": buttonRadius,
@@ -158,7 +173,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className,
         )}
         {...props}
-      />
+      >
+        {buttonContent}
+      </Comp>
     );
 
     if (tooltip || tooltipShortcut) {

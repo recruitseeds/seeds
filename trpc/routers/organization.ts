@@ -1,6 +1,7 @@
 import {
   createJobPosting,
   deleteJobPosting,
+  duplicateJobPosting,
   updateJobPosting,
 } from "@/supabase/mutations/organization";
 import {
@@ -65,19 +66,16 @@ export const organizationRouter = createTRPCRouter({
         )
         .eq("organization_id", organizationId);
 
-      // Search filter
       if (search) {
         query = query.or(
           `title.ilike.%${search}%,department.ilike.%${search}%`,
         );
       }
 
-      // Status filter
       if (status) {
         query = query.eq("status", status);
       }
 
-      // Sorting
       if (sort && sort.length === 2) {
         const [column, direction] = sort;
         query = query.order(column, { ascending: direction === "asc" });
@@ -85,7 +83,6 @@ export const organizationRouter = createTRPCRouter({
         query = query.order("created_at", { ascending: false });
       }
 
-      // Cursor pagination
       if (cursor) {
         query = query.lt("created_at", cursor);
       }
@@ -140,7 +137,6 @@ export const organizationRouter = createTRPCRouter({
         });
       }
 
-      // Get the organization_users record for the current user
       const { data: orgUser, error: orgUserError } = await ctx.supabase
         .from("organization_users")
         .select("id")
@@ -159,7 +155,7 @@ export const organizationRouter = createTRPCRouter({
         ...input,
         content: input.content as Json,
         organization_id: organizationId,
-        created_by: orgUser.id, // Use organization_users.id instead of auth.users.id
+        created_by: orgUser.id,
       };
 
       try {
@@ -205,6 +201,22 @@ export const organizationRouter = createTRPCRouter({
             error instanceof Error
               ? error.message
               : "Failed to update job posting",
+        });
+      }
+    }),
+
+  duplicateJobPosting: organizationProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await duplicateJobPosting(ctx.supabase, input.id);
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to duplicate job posting",
         });
       }
     }),
