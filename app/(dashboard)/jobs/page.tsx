@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { JobsTable } from "@/components/tables/jobs/index";
 import { HydrateClient, getServerTRPCCaller } from "@/trpc/server";
 import type { Metadata } from "next";
@@ -33,7 +34,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 
   const jobsData = await caller.organization.listJobPostings({
     page,
-    pageSize: 50,
+    pageSize: 1000,
     status,
   });
 

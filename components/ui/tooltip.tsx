@@ -1,8 +1,7 @@
 "use client";
-
 import { cn } from "@/lib/utils";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import type * as React from "react";
+import * as React from "react";
 
 const isMac =
   typeof window !== "undefined"
@@ -58,20 +57,24 @@ export function Tooltip({
   if (!enabled) {
     return <>{children}</>;
   }
-
-  // Don't render if there's no title AND no shortcut
   if (!title && !shortcut) {
     return <>{children}</>;
   }
 
-  // If we only have shortcut, don't show the ml-2 margin
   const content = (
     <>
       {title && <span className="text-xs font-medium text-muted">{title}</span>}
       {shortcut && (
         <span className={cn("flex items-center gap-0.5", title && "ml-2")}>
-          {shortcut.map((key) => (
-            <ShortcutKey key={key}>{key}</ShortcutKey>
+          {shortcut.map((key, index) => (
+            <React.Fragment key={key}>
+              <ShortcutKey>{key}</ShortcutKey>
+              {index < shortcut.length - 1 && (
+                <span className="text-[0.625rem] text-muted-foreground mx-0.5">
+                  +
+                </span>
+              )}
+            </React.Fragment>
           ))}
         </span>
       )}
