@@ -445,6 +445,10 @@ export const invitationRouter = createTRPCRouter({
 			}
 		}),
 
+	// trpc/routers/invitation.ts - Fix for the acceptInvitation mutation
+
+	// trpc/routers/invitation.ts - Add detailed logging to debug the issue
+
 	acceptInvitation: protectedProcedure
 		.input(acceptInvitationSchema)
 		.mutation(async ({ ctx, input }) => {
@@ -468,10 +472,36 @@ export const invitationRouter = createTRPCRouter({
 					invitation_email: invitation.email,
 					invitation_organization_id: invitation.organization_id,
 					invitation_role: invitation.role,
-					expected_org_id: "7255829c-6c65-413e-abcf-9631ad7b40d2",
 				});
 
 				const fullName = `${firstName.trim()} ${lastName.trim()}`;
+
+				// 🔍 DEBUG: Check organization_users count BEFORE signup
+				const { count: beforeCount } = await ctx.supabase
+					.from("organization_users")
+					.select("*", { count: "exact", head: true })
+					.eq("organization_id", invitation.organization_id);
+
+				console.log(
+					"📊 BEFORE SIGNUP - organization_users count:",
+					beforeCount,
+				);
+
+				// 🔍 DEBUG: Check organizations BEFORE signup
+				const { data: orgsBefore } = await ctx.supabase
+					.from("organizations")
+					.select("id, name");
+				console.log("🏢 BEFORE SIGNUP - all organizations:", orgsBefore);
+
+				console.log("🔐 About to create user with metadata:", {
+					role: "organization",
+					is_invited_user: true,
+					invited_to_organization: invitation.organization_id,
+					first_name: firstName.trim(),
+					last_name: lastName.trim(),
+					full_name: fullName,
+				});
+
 				const { data: signUpData, error: signUpError } =
 					await handleEmailPasswordSignUp(
 						ctx.supabase,
@@ -482,6 +512,8 @@ export const invitationRouter = createTRPCRouter({
 							first_name: firstName.trim(),
 							last_name: lastName.trim(),
 							full_name: fullName,
+							is_invited_user: true,
+							invited_to_organization: invitation.organization_id,
 						},
 						process.env.NEXT_PUBLIC_URL,
 					);
@@ -494,6 +526,51 @@ export const invitationRouter = createTRPCRouter({
 				}
 
 				console.log("👤 User created successfully:", signUpData.user.id);
+				console.log(
+					"🔍 User metadata after creation:",
+					signUpData.user.user_metadata,
+				);
+
+				// 🔍 DEBUG: Check organization_users count AFTER signup but BEFORE our manual insertion
+				const { count: afterSignupCount } = await ctx.supabase
+					.from("organization_users")
+					.select("*", { count: "exact", head: true })
+					.eq("organization_id", invitation.organization_id);
+
+				console.log(
+					"📊 AFTER SIGNUP (before our code) - organization_users count:",
+					afterSignupCount,
+				);
+
+				// 🔍 DEBUG: Check organizations AFTER signup
+				const { data: orgsAfter } = await ctx.supabase
+					.from("organizations")
+					.select("id, name");
+				console.log("🏢 AFTER SIGNUP - all organizations:", orgsAfter);
+
+				// Check if a new organization was created
+				const newOrgs = orgsAfter?.filter(
+					(org) => !orgsBefore?.some((beforeOrg) => beforeOrg.id === org.id),
+				);
+				if (newOrgs && newOrgs.length > 0) {
+					console.log("🚨 NEW ORGANIZATIONS CREATED BY TRIGGER:", newOrgs);
+				}
+
+				// Check if organization_users record was created by trigger
+				if (afterSignupCount && beforeCount && afterSignupCount > beforeCount) {
+					console.log("🚨 ORGANIZATION_USERS RECORD(S) CREATED BY TRIGGER!");
+
+					// Find which records were created
+					const { data: newOrgUsers } = await ctx.supabase
+						.from("organization_users")
+						.select("*")
+						.eq("user_id", signUpData.user.id);
+
+					console.log(
+						"🔍 New organization_users records for this user:",
+						newOrgUsers,
+					);
+				}
 
 				console.log("🏢 About to call addUserToExistingOrganization with:", {
 					userId: signUpData.user.id,
@@ -518,6 +595,14 @@ export const invitationRouter = createTRPCRouter({
 				}
 
 				console.log("✅ Organization setup completed successfully");
+
+				// 🔍 DEBUG: Check organization_users count AFTER our insertion
+				const { count: finalCount } = await ctx.supabase
+					.from("organization_users")
+					.select("*", { count: "exact", head: true })
+					.eq("organization_id", invitation.organization_id);
+
+				console.log("📊 FINAL - organization_users count:", finalCount);
 
 				const { data: orgUser, error: orgUserError } = await ctx.supabase
 					.from("organization_users")

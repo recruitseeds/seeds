@@ -1,194 +1,137 @@
 import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components'
+	Body,
+	Button,
+	Container,
+	Head,
+	Heading,
+	Hr,
+	Html,
+	Img,
+	Link,
+	Preview,
+	pixelBasedPreset,
+	Section,
+	Tailwind,
+	Text,
+} from "@react-email/components";
 
 interface InvitationEmailProps {
-  inviterName: string
-  organizationName: string
-  role: string
-  acceptUrl: string
-  expiresAt: string
-  organizationLogo?: string
+	inviterName: string;
+	organizationName: string;
+	role: string;
+	acceptUrl: string;
+	expiresAt: string;
+	organizationLogo?: string;
 }
+
+const companyLogo =
+	"https://pub-e05ee10cfc0b40c59cc080c153ad3da0.r2.dev/logo.jpg";
 
 export const InvitationEmail = ({
-  inviterName = 'John Doe',
-  organizationName = 'Acme Corp',
-  role = 'recruiter',
-  acceptUrl = 'https://example.com/accept',
-  expiresAt = '7 days',
-  organizationLogo,
+	inviterName,
+	organizationName,
+	role,
+	acceptUrl,
+	expiresAt,
+	organizationLogo,
 }: InvitationEmailProps) => {
-  const roleDisplayName = role
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+	const roleDisplayName = role
+		.split("_")
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
 
-  return (
-    <Html>
-      <Head />
-      <Preview>
-        You've been invited to join {organizationName} as a {roleDisplayName}
-      </Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Section style={logoSection}>
-            {organizationLogo ? (
-              <Img
-                src={organizationLogo}
-                width="60"
-                height="60"
-                alt={organizationName}
-                style={logo}
-              />
-            ) : (
-              <div style={logoPlaceholder}>
-                {organizationName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </Section>
+	const previewText = `Join ${organizationName} as a ${roleDisplayName}`;
 
-          <Heading style={h1}>
-            You're invited to join {organizationName}
-          </Heading>
+	return (
+		<Html>
+			<Head />
+			<Tailwind
+				config={{
+					presets: [pixelBasedPreset],
+				}}
+			>
+				<Body className="mx-auto my-auto bg-white px-2 font-sans">
+					<Preview>{previewText}</Preview>
+					<Container className="mx-auto my-[40px] max-w-[465px] rounded border border-[#eaeaea] border-solid p-[20px]">
+						<Section className="mt-[32px]">
+							<Img
+								src={companyLogo}
+								width="60"
+								height="60"
+								alt="Seeds ATS Logo"
+								className="mx-auto my-0"
+							/>
+						</Section>
 
-          <Text style={text}>
-            Hi there! <strong>{inviterName}</strong> has invited you to join{' '}
-            <strong>{organizationName}</strong> as a <strong>{roleDisplayName}</strong>.
-          </Text>
+						<Heading className="mx-0 my-[30px] p-0 text-center font-normal text-[24px] text-black">
+							You're invited to join <strong>{organizationName}</strong>
+						</Heading>
 
-          <Text style={text}>
-            Join their team to collaborate on hiring the best talent and
-            streamlining your recruitment process.
-          </Text>
+						<Text className="text-[14px] text-black leading-[24px]">
+							Hello there,
+						</Text>
 
-          <Section style={buttonContainer}>
-            <Button style={button} href={acceptUrl}>
-              Accept Invitation
-            </Button>
-          </Section>
+						<Text className="text-[14px] text-black leading-[24px]">
+							<strong>{inviterName}</strong> has invited you to join{" "}
+							<strong>{organizationName}</strong> as a{" "}
+							<strong>{roleDisplayName}</strong>.
+						</Text>
 
-          <Text style={links}>
-            <Link style={link} href={acceptUrl}>
-              Or copy and paste this URL into your browser: {acceptUrl}
-            </Link>
-          </Text>
+						<Text className="text-[14px] text-black leading-[24px]">
+							Click the button below to accept your invitation and create your
+							account to get started with the team.
+						</Text>
 
-          <Text style={footer}>
-            This invitation will expire in {expiresAt}. If you did not expect
-            this invitation, you can safely ignore this email.
-          </Text>
+						{organizationLogo && (
+							<Section className="mt-[32px] mb-[32px] text-center">
+								<Img
+									className="rounded-lg mx-auto"
+									src={organizationLogo}
+									width="80"
+									height="80"
+									alt={`${organizationName} logo`}
+								/>
+							</Section>
+						)}
 
-          <Text style={footer}>
-            <Link style={footerLink} href="https://seeds-ats.com">
-              Seeds ATS
-            </Link>{' '}
-            - Making hiring faster and better for startups
-          </Text>
-        </Container>
-      </Body>
-    </Html>
-  )
-}
+						<Section className="mt-[32px] mb-[32px] text-center">
+							<Button
+								className="rounded-lg bg-[#11b1b4] px-5 py-3 text-center font-semibold text-[12px] text-white no-underline"
+								href={acceptUrl}
+							>
+								Accept Invitation & Join Team
+							</Button>
+						</Section>
 
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
-}
+						<Text className="text-[14px] text-black leading-[24px]">
+							or copy and paste this URL into your browser:{" "}
+							<Link href={acceptUrl} className="text-blue-600 no-underline">
+								{acceptUrl}
+							</Link>
+						</Text>
 
-const container = {
-  margin: '0 auto',
-  padding: '20px 0 48px',
-  maxWidth: '560px',
-}
+						<Hr className="mx-0 my-[26px] w-full border border-[#eaeaea] border-solid" />
 
-const logoSection = {
-  display: 'flex',
-  justifyContent: 'center',
-  marginBottom: '32px',
-}
+						<Text className="text-[#666666] text-[12px] leading-[24px]">
+							This invitation will expire in{" "}
+							<span className="text-black">{expiresAt}</span>. If you did not
+							expect this invitation, you can safely ignore this email.
+						</Text>
 
-const logo = {
-  borderRadius: '8px',
-}
+						<Text className="text-[#666666] text-[12px] leading-[24px] text-center mt-[20px]">
+							Powered by{" "}
+							<Link
+								href="https://recruitseeds.com"
+								className="text-[#666666] no-underline"
+							>
+								Seeds
+							</Link>
+						</Text>
+					</Container>
+				</Body>
+			</Tailwind>
+		</Html>
+	);
+};
 
-const logoPlaceholder = {
-  width: '60px',
-  height: '60px',
-  borderRadius: '8px',
-  backgroundColor: '#f3f4f6',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  color: '#374151',
-}
-
-const h1 = {
-  color: '#333',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  textAlign: 'center' as const,
-  margin: '30px 0',
-}
-
-const text = {
-  color: '#333',
-  fontSize: '16px',
-  lineHeight: '26px',
-  margin: '16px 0',
-}
-
-const buttonContainer = {
-  textAlign: 'center' as const,
-  margin: '32px 0',
-}
-
-const button = {
-  backgroundColor: '#000',
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '16px',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'inline-block',
-  padding: '12px 24px',
-  fontWeight: 'bold',
-}
-
-const links = {
-  textAlign: 'center' as const,
-  fontSize: '14px',
-  color: '#898989',
-}
-
-const link = {
-  color: '#898989',
-  textDecoration: 'underline',
-}
-
-const footer = {
-  color: '#898989',
-  fontSize: '12px',
-  textAlign: 'center' as const,
-  marginTop: '20px',
-}
-
-const footerLink = {
-  color: '#898989',
-  textDecoration: 'underline',
-}
-
-export default InvitationEmail
+export default InvitationEmail;

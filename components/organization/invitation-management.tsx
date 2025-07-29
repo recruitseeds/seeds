@@ -60,24 +60,20 @@ export function InvitationManagement() {
 		role: "member" as "admin" | "recruiter" | "hiring_manager" | "member",
 	});
 
-	// Fetch invitation stats
 	const { data: stats, isLoading: statsLoading } = useQuery({
 		...trpc.invitation.getInvitationStats.queryOptions({ days: 30 }),
 	});
 
-	// Fetch invitations list
 	const { data: invitations, isLoading: invitationsLoading } = useQuery({
 		...trpc.invitation.listInvitations.queryOptions({ includeAccepted: false }),
 	});
 
-	// Send invitation mutation
 	const sendInvitationMutation = useMutation({
 		...trpc.invitation.sendInvitation.mutationOptions(),
 		onSuccess: (data) => {
 			toast.success(`Invitation sent to ${inviteForm.email}!`);
 			setInviteForm({ email: "", role: "member" });
 			setIsInviteDialogOpen(false);
-			// Refresh the invitations list
 			queryClient.invalidateQueries({
 				queryKey: [["invitation", "listInvitations"]],
 			});
@@ -90,7 +86,6 @@ export function InvitationManagement() {
 		},
 	});
 
-	// Resend invitation mutation
 	const resendInvitationMutation = useMutation({
 		...trpc.invitation.resendInvitation.mutationOptions(),
 		onSuccess: () => {
@@ -104,7 +99,6 @@ export function InvitationManagement() {
 		},
 	});
 
-	// Cancel invitation mutation
 	const cancelInvitationMutation = useMutation({
 		...trpc.invitation.cancelInvitation.mutationOptions(),
 		onSuccess: () => {
@@ -130,7 +124,6 @@ export function InvitationManagement() {
 		sendInvitationMutation.mutate({
 			email: inviteForm.email,
 			role: inviteForm.role,
-			organizationId: "placeholder", // This will be handled by the organizationProcedure
 		});
 	};
 
@@ -188,7 +181,6 @@ export function InvitationManagement() {
 
 	return (
 		<div className="space-y-6">
-			{/* Stats Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<Card>
 					<CardContent className="pt-6">
