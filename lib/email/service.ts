@@ -51,7 +51,7 @@ export const sendInvitationEmail = async (
 			.join(" ");
 
 		const { data, error } = await resend.emails.send({
-			from: "Seeds ATS <noreply@seeds-ats.com>",
+			from: "Recruit Seeds <noreply@recruitseeds.com>",
 			to: [to],
 			subject: `You're invited to join ${organizationName} as a ${roleDisplayName}`,
 			html: emailHtml,

@@ -79,5 +79,5 @@ export const checkDuplicateInvitation = async (
 		throw new Error(`Failed to check duplicate invitation: ${error.message}`);
 	}
 
-	return !!existingInvitation;
+	return existingInvitation && existingInvitation.length > 0;
 };
