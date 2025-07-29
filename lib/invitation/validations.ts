@@ -7,7 +7,7 @@ export const roleEnum = z.enum([
 	"member",
 ]);
 
-export const invitationSchema = z.object({
+export const sendInvitationSchema = z.object({
 	email: z
 		.string()
 		.email("Please enter a valid email address")
@@ -15,8 +15,9 @@ export const invitationSchema = z.object({
 		.toLowerCase()
 		.trim(),
 	role: roleEnum,
-	organizationId: z.string().uuid("Invalid organization ID"),
 });
+
+export const invitationSchema = sendInvitationSchema;
 
 export const bulkInvitationSchema = z.object({
 	invitations: z
@@ -28,7 +29,6 @@ export const bulkInvitationSchema = z.object({
 		)
 		.min(1, "At least one invitation is required")
 		.max(100, "Cannot send more than 100 invitations at once"),
-	organizationId: z.string().uuid(),
 });
 
 export const acceptInvitationSchema = z.object({
@@ -54,6 +54,7 @@ export const resendInvitationSchema = z.object({
 	organizationId: z.string().uuid("Invalid organization ID"),
 });
 
+export type SendInvitationInput = z.infer<typeof sendInvitationSchema>;
 export type InvitationInput = z.infer<typeof invitationSchema>;
 export type BulkInvitationInput = z.infer<typeof bulkInvitationSchema>;
 export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;

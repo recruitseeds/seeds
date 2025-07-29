@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/container";
 import { JobsTable } from "@/components/tables/jobs/index";
-import { InvitationTest } from "@/components/test/invitation-test";
 import { Button } from "@/components/ui/button";
 import { getServerTRPCCaller, HydrateClient } from "@/trpc/server";
 
@@ -48,11 +47,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
 						Manage your organization's job postings and track applications.
 					</p>
 				</div>
-
-				{/* Temporary test component - remove after testing */}
-				<HydrateClient>
-					<InvitationTest />
-				</HydrateClient>
 
 				<HydrateClient>
 					<JobsTable
