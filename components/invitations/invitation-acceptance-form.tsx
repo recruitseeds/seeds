@@ -33,7 +33,7 @@ export function InvitationAcceptanceForm({
 		...trpc.invitation.acceptInvitation.mutationOptions(),
 		onSuccess: () => {
 			toast.success("Welcome to the team! You can now log in.");
-			router.push("/auth/signin?message=invitation-accepted");
+			router.push("/login?message=invitation-accepted");
 		},
 		onError: (error: any) => {
 			toast.error(`Failed to accept invitation: ${error.message}`);

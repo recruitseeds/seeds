@@ -1,9 +1,9 @@
-import type { Provider, SupabaseClient } from '@supabase/supabase-js'
+import type { Provider, SupabaseClient } from "@supabase/supabase-js";
 
 interface UserMetadata {
-  first_name?: string
-  last_name?: string
-  full_name?: string
+	first_name?: string;
+	last_name?: string;
+	full_name?: string;
 }
 
 /**
@@ -17,30 +17,34 @@ interface UserMetadata {
  * @param password - The password for the new user account.
  * @param userRole - The role to assign to the user ('candidate' or 'organization').
  * @param userMetadata - Optional user metadata including name information.
+ * @param origin - Optional origin URL for email redirects (falls back to env var).
  * @returns A promise that resolves to an object containing the signup response data (including the user object on success) and any potential error.
  */
 export const handleEmailPasswordSignUp = async (
-  supabase: SupabaseClient,
-  email: string,
-  password: string,
-  userRole: 'candidate' | 'organization',
-  userMetadata?: UserMetadata
+	supabase: SupabaseClient,
+	email: string,
+	password: string,
+	userRole: "candidate" | "organization",
+	userMetadata?: UserMetadata,
+	origin?: string,
 ) => {
-  const emailRedirectTo = `${window.location.origin}/login?message=check-email`
+	const baseUrl =
+		origin || process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+	const emailRedirectTo = `${baseUrl}/login?message=check-email`;
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        role: userRole,
-        ...userMetadata,
-      },
-      emailRedirectTo: emailRedirectTo,
-    },
-  })
-  return { data, error }
-}
+	const { data, error } = await supabase.auth.signUp({
+		email,
+		password,
+		options: {
+			data: {
+				role: userRole,
+				...userMetadata,
+			},
+			emailRedirectTo: emailRedirectTo,
+		},
+	});
+	return { data, error };
+};
 
 /**
  * Initiates the OAuth sign-up flow for a specific provider.
@@ -56,24 +60,24 @@ export const handleEmailPasswordSignUp = async (
  * @returns A promise that resolves to an object containing the initial OAuth data (which might be null if redirect happens immediately) and any potential error during the initiation phase. The main result (user session) is handled by the callback route.
  */
 export const handleOAuthSignUp = async (
-  supabase: SupabaseClient,
-  provider: Provider,
-  userRole: 'candidate' | 'organization'
+	supabase: SupabaseClient,
+	provider: Provider,
+	userRole: "candidate" | "organization",
 ) => {
-  const redirectTo = new URL('/api/auth/callback', window.location.origin)
-  redirectTo.searchParams.append('provider', provider)
+	const redirectTo = new URL("/api/auth/callback", window.location.origin);
+	redirectTo.searchParams.append("provider", provider);
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: redirectTo.toString(),
-      queryParams: {
-        user_role: userRole,
-      },
-    },
-  })
-  return { data, error }
-}
+	const { data, error } = await supabase.auth.signInWithOAuth({
+		provider,
+		options: {
+			redirectTo: redirectTo.toString(),
+			queryParams: {
+				user_role: userRole,
+			},
+		},
+	});
+	return { data, error };
+};
 
 /**
  * Handles signing in an existing user using their email and password.
@@ -83,13 +87,17 @@ export const handleOAuthSignUp = async (
  * @param password - The user's password.
  * @returns A promise that resolves to an object containing the sign-in response data (including the user and session object on success) and any potential error.
  */
-export const handleEmailPasswordSignIn = async (supabase: SupabaseClient, email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-  return { data, error }
-}
+export const handleEmailPasswordSignIn = async (
+	supabase: SupabaseClient,
+	email: string,
+	password: string,
+) => {
+	const { data, error } = await supabase.auth.signInWithPassword({
+		email,
+		password,
+	});
+	return { data, error };
+};
 
 /**
  * Initiates the OAuth sign-in flow for a specific provider for an existing user.
@@ -103,15 +111,18 @@ export const handleEmailPasswordSignIn = async (supabase: SupabaseClient, email:
  * @param provider - The OAuth provider to use (e.g., 'google', 'azure', 'linkedin_oidc').
  * @returns A promise that resolves to an object containing the initial OAuth data (which might be null if redirect happens immediately) and any potential error during the initiation phase. The main result (user session) is handled by the callback route.
  */
-export const handleOAuthSignIn = async (supabase: SupabaseClient, provider: Provider) => {
-  const redirectTo = new URL('/api/auth/callback', window.location.origin)
-  redirectTo.searchParams.append('provider', provider)
+export const handleOAuthSignIn = async (
+	supabase: SupabaseClient,
+	provider: Provider,
+) => {
+	const redirectTo = new URL("/api/auth/callback", window.location.origin);
+	redirectTo.searchParams.append("provider", provider);
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: redirectTo.toString(),
-    },
-  })
-  return { data, error }
-}
+	const { data, error } = await supabase.auth.signInWithOAuth({
+		provider,
+		options: {
+			redirectTo: redirectTo.toString(),
+		},
+	});
+	return { data, error };
+};

@@ -29,7 +29,7 @@ import {
 	getInvitationsByOrganization,
 } from "@/supabase/queries/invitation";
 import { handleEmailPasswordSignUp } from "@/supabase/utils/auth";
-import { ensureOrganizationSetup } from "@/supabase/utils/organization-setup";
+import { addUserToExistingOrganization } from "@/supabase/utils/organization-setup";
 import {
 	createTRPCRouter,
 	organizationProcedure,
@@ -451,6 +451,8 @@ export const invitationRouter = createTRPCRouter({
 			const { token, firstName, lastName, password } = input;
 
 			try {
+				console.log("🎯 Starting invitation acceptance process...");
+
 				const validationResult = await validateInvitationToken(token);
 
 				if (!validationResult.valid || !validationResult.invitation) {
@@ -461,6 +463,14 @@ export const invitationRouter = createTRPCRouter({
 				}
 
 				const invitation = validationResult.invitation;
+				console.log("📧 Processing invitation:", {
+					invitation_id: invitation.id,
+					invitation_email: invitation.email,
+					invitation_organization_id: invitation.organization_id,
+					invitation_role: invitation.role,
+					expected_org_id: "7255829c-6c65-413e-abcf-9631ad7b40d2",
+				});
+
 				const fullName = `${firstName.trim()} ${lastName.trim()}`;
 				const { data: signUpData, error: signUpError } =
 					await handleEmailPasswordSignUp(
@@ -473,6 +483,7 @@ export const invitationRouter = createTRPCRouter({
 							last_name: lastName.trim(),
 							full_name: fullName,
 						},
+						process.env.NEXT_PUBLIC_URL,
 					);
 
 				if (signUpError || !signUpData.user) {
@@ -482,11 +493,21 @@ export const invitationRouter = createTRPCRouter({
 					});
 				}
 
-				const orgSetupResult = await ensureOrganizationSetup(
+				console.log("👤 User created successfully:", signUpData.user.id);
+
+				console.log("🏢 About to call addUserToExistingOrganization with:", {
+					userId: signUpData.user.id,
+					organizationId: invitation.organization_id,
+					email: invitation.email,
+					role: invitation.role,
+				});
+
+				const orgSetupResult = await addUserToExistingOrganization(
 					ctx.supabase,
 					signUpData.user.id,
 					invitation.organization_id,
 					invitation.email,
+					invitation.role,
 				);
 
 				if (!orgSetupResult.success) {
@@ -495,6 +516,8 @@ export const invitationRouter = createTRPCRouter({
 						message: orgSetupResult.error || "Failed to setup organization",
 					});
 				}
+
+				console.log("✅ Organization setup completed successfully");
 
 				const { data: orgUser, error: orgUserError } = await ctx.supabase
 					.from("organization_users")
@@ -512,6 +535,8 @@ export const invitationRouter = createTRPCRouter({
 
 				if (orgUserError) {
 					console.error("Failed to update organization user:", orgUserError);
+				} else {
+					console.log("📝 Updated organization user record");
 				}
 
 				const { data: acceptedInvitation, error: acceptError } =
@@ -519,7 +544,11 @@ export const invitationRouter = createTRPCRouter({
 
 				if (acceptError) {
 					console.error("Failed to mark invitation as accepted:", acceptError);
+				} else {
+					console.log("✅ Marked invitation as accepted");
 				}
+
+				console.log("🎉 Invitation acceptance process completed successfully!");
 
 				return {
 					user: signUpData.user,
