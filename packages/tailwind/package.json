@@ -1,0 +1,11 @@
+{
+  "name": "@seeds/tailwind",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "globals.css"
+  ],
+  "dependencies": {
+    "tailwindcss": "^4"
+  }
+}
