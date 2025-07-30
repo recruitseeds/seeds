@@ -1,0 +1,105 @@
+
+> web@0.1.0 build
+> next build
+
+   ▲ Next.js 15.2.0-canary.74
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+../../packages/ui/index.tsx
+The requested module './commandy' contains conflicting star exports for the names 'Command', 'CommandEmpty', 'CommandGroup', 'CommandInput', 'CommandItem', 'CommandList', 'CommandSeparator' with the previous requested module './command'
+
+Import trace for requested module:
+../../packages/ui/index.tsx
+../../packages/editor/editor/code-block-button.tsx
+../../packages/editor/index.tsx
+./app/(dashboard)/jobs/create/page.tsx
+
+../../packages/ui/index.tsx
+The requested module './poppy' contains conflicting star exports for the names 'Popover', 'PopoverAnchor', 'PopoverContent', 'PopoverTrigger' with the previous requested module './popover'
+
+Import trace for requested module:
+../../packages/ui/index.tsx
+../../packages/editor/editor/code-block-button.tsx
+../../packages/editor/index.tsx
+./app/(dashboard)/jobs/create/page.tsx
+
+../../packages/ui/index.tsx
+The requested module './lib/conditional-wrap' contains conflicting star exports for the name 'ConditionalWrap' with the previous requested module './poppy'
+
+Import trace for requested module:
+../../packages/ui/index.tsx
+../../packages/editor/editor/code-block-button.tsx
+../../packages/editor/index.tsx
+./app/(dashboard)/jobs/create/page.tsx
+
+Failed to compile.
+
+./lib/invitation/tokens.ts:1:1
+Module not found: Can't resolve 'crypto'
+> 1 | import { randomBytes } from "crypto";
+    | ^
+  2 | import { createClient } from "@/supabase/client/server";
+  3 | import type { Database } from "@/supabase/types/db";
+  4 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./trpc/routers/invitation.ts
+./trpc/routers/_app.ts
+./trpc/server.tsx
+./app/api/job/[id]/og/route.tsx
+../../node_modules/next/dist/build/webpack/loaders/next-edge-app-route-loader/index.js?absolutePagePath=private-next-app-dir%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute.tsx&page=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&appDirLoader=bmV4dC1hcHAtbG9hZGVyP25hbWU9YXBwJTJGYXBpJTJGam9iJTJGJTVCaWQlNUQlMkZvZyUyRnJvdXRlJnBhZ2U9JTJGYXBpJTJGam9iJTJGJTVCaWQlNUQlMkZvZyUyRnJvdXRlJnBhZ2VQYXRoPXByaXZhdGUtbmV4dC1hcHAtZGlyJTJGYXBpJTJGam9iJTJGJTVCaWQlNUQlMkZvZyUyRnJvdXRlLnRzeCZhcHBEaXI9JTJGVXNlcnMlMkZ3aGl0bW9yZSUyRnJlY3J1aXQtc2VlZHMlMkZhcHBzJTJGd2ViJTJGYXBwJmFwcFBhdGhzPSUyRmFwaSUyRmpvYiUyRiU1QmlkJTVEJTJGb2clMkZyb3V0ZSZwYWdlRXh0ZW5zaW9ucz10c3gmcGFnZUV4dGVuc2lvbnM9dHMmcGFnZUV4dGVuc2lvbnM9anN4JnBhZ2VFeHRlbnNpb25zPWpzJmJhc2VQYXRoPSZhc3NldFByZWZpeD0mbmV4dENvbmZpZ091dHB1dD0mcHJlZmVycmVkUmVnaW9uPSZtaWRkbGV3YXJlQ29uZmlnPWUzMCUzRCE%3D&nextConfig=eyJlbnYiOnt9LCJ3ZWJwYWNrIjpudWxsLCJlc2xpbnQiOnsiaWdub3JlRHVyaW5nQnVpbGRzIjp0cnVlfSwidHlwZXNjcmlwdCI6eyJpZ25vcmVCdWlsZEVycm9ycyI6dHJ1ZSwidHNjb25maWdQYXRoIjoidHNjb25maWcuanNvbiJ9LCJkaXN0RGlyIjoiLm5leHQiLCJjbGVhbkRpc3REaXIiOnRydWUsImFzc2V0UHJlZml4IjoiIiwiY2FjaGVNYXhNZW1vcnlTaXplIjo1MjQyODgwMCwiY29uZmlnT3JpZ2luIjoibmV4dC5jb25maWcudHMiLCJ1c2VGaWxlU3lzdGVtUHVibGljUm91dGVzIjp0cnVlLCJnZW5lcmF0ZUV0YWdzIjp0cnVlLCJwYWdlRXh0ZW5zaW9ucyI6WyJ0c3giLCJ0cyIsImpzeCIsImpzIl0sInBvd2VyZWRCeUhlYWRlciI6dHJ1ZSwiY29tcHJlc3MiOnRydWUsImltYWdlcyI6eyJkZXZpY2VTaXplcyI6WzY0MCw3NTAsODI4LDEwODAsMTIwMCwxOTIwLDIwNDgsMzg0MF0sImltYWdlU2l6ZXMiOlsxNiwzMiw0OCw2NCw5NiwxMjgsMjU2LDM4NF0sInBhdGgiOiIvX25leHQvaW1hZ2UiLCJsb2FkZXIiOiJkZWZhdWx0IiwibG9hZGVyRmlsZSI6IiIsImRvbWFpbnMiOltdLCJkaXNhYmxlU3RhdGljSW1hZ2VzIjpmYWxzZSwibWluaW11bUNhY2hlVFRMIjo2MCwiZm9ybWF0cyI6WyJpbWFnZS93ZWJwIl0sImRhbmdlcm91c2x5QWxsb3dTVkciOmZhbHNlLCJjb250ZW50U2VjdXJpdHlQb2xpY3kiOiJzY3JpcHQtc3JjICdub25lJzsgZnJhbWUtc3JjICdub25lJzsgc2FuZGJveDsiLCJjb250ZW50RGlzcG9zaXRpb25UeXBlIjoiYXR0YWNobWVudCIsInJlbW90ZVBhdHRlcm5zIjpbXSwidW5vcHRpbWl6ZWQiOmZhbHNlfSwiZGV2SW5kaWNhdG9ycyI6eyJwb3NpdGlvbiI6ImJvdHRvbS1sZWZ0In0sIm9uRGVtYW5kRW50cmllcyI6eyJtYXhJbmFjdGl2ZUFnZSI6NjAwMDAsInBhZ2VzQnVmZmVyTGVuZ3RoIjo1fSwiYW1wIjp7ImNhbm9uaWNhbEJhc2UiOiIifSwiYmFzZVBhdGgiOiIiLCJzYXNzT3B0aW9ucyI6e30sInRyYWlsaW5nU2xhc2giOmZhbHNlLCJpMThuIjpudWxsLCJwcm9kdWN0aW9uQnJvd3NlclNvdXJjZU1hcHMiOmZhbHNlLCJleGNsdWRlRGVmYXVsdE1vbWVudExvY2FsZXMiOnRydWUsInNlcnZlclJ1bnRpbWVDb25maWciOnt9LCJwdWJsaWNSdW50aW1lQ29uZmlnIjp7fSwicmVhY3RQcm9kdWN0aW9uUHJvZmlsaW5nIjpmYWxzZSwicmVhY3RTdHJpY3RNb2RlIjpudWxsLCJyZWFjdE1heEhlYWRlcnNMZW5ndGgiOjYwMDAsImh0dHBBZ2VudE9wdGlvbnMiOnsia2VlcEFsaXZlIjp0cnVlfSwibG9nZ2luZyI6e30sImV4cGlyZVRpbWUiOjMxNTM2MDAwLCJzdGF0aWNQYWdlR2VuZXJhdGlvblRpbWVvdXQiOjYwLCJtb2R1bGFyaXplSW1wb3J0cyI6eyJAbXVpL2ljb25zLW1hdGVyaWFsIjp7InRyYW5zZm9ybSI6IkBtdWkvaWNvbnMtbWF0ZXJpYWwve3ttZW1iZXJ9fSJ9LCJsb2Rhc2giOnsidHJhbnNmb3JtIjoibG9kYXNoL3t7bWVtYmVyfX0ifX0sIm91dHB1dEZpbGVUcmFjaW5nUm9vdCI6Ii9Vc2Vycy93aGl0bW9yZS9yZWNydWl0LXNlZWRzIiwiZXhwZXJpbWVudGFsIjp7Im5vZGVNaWRkbGV3YXJlIjpmYWxzZSwiY2FjaGVMaWZlIjp7ImRlZmF1bHQiOnsic3RhbGUiOjMwMCwicmV2YWxpZGF0ZSI6OTAwLCJleHBpcmUiOjQyOTQ5NjcyOTR9LCJzZWNvbmRzIjp7InN0YWxlIjowLCJyZXZhbGlkYXRlIjoxLCJleHBpcmUiOjYwfSwibWludXRlcyI6eyJzdGFsZSI6MzAwLCJyZXZhbGlkYXRlIjo2MCwiZXhwaXJlIjozNjAwfSwiaG91cnMiOnsic3RhbGUiOjMwMCwicmV2YWxpZGF0ZSI6MzYwMCwiZXhwaXJlIjo4NjQwMH0sImRheXMiOnsic3RhbGUiOjMwMCwicmV2YWxpZGF0ZSI6ODY0MDAsImV4cGlyZSI6NjA0ODAwfSwid2Vla3MiOnsic3RhbGUiOjMwMCwicmV2YWxpZGF0ZSI6NjA0ODAwLCJleHBpcmUiOjI1OTIwMDB9LCJtYXgiOnsic3RhbGUiOjMwMCwicmV2YWxpZGF0ZSI6MjU5MjAwMCwiZXhwaXJlIjo0Mjk0OTY3Mjk0fX0sImNhY2hlSGFuZGxlcnMiOnt9LCJjc3NDaHVua2luZyI6dHJ1ZSwibXVsdGlab25lRHJhZnRNb2RlIjpmYWxzZSwiYXBwTmF2RmFpbEhhbmRsaW5nIjpmYWxzZSwicHJlcmVuZGVyRWFybHlFeGl0Ijp0cnVlLCJzZXJ2ZXJNaW5pZmljYXRpb24iOnRydWUsInNlcnZlclNvdXJjZU1hcHMiOmZhbHNlLCJsaW5rTm9Ub3VjaFN0YXJ0IjpmYWxzZSwiY2FzZVNlbnNpdGl2ZVJvdXRlcyI6ZmFsc2UsImNsaWVudFNlZ21lbnRDYWNoZSI6ZmFsc2UsInByZWxvYWRFbnRyaWVzT25TdGFydCI6dHJ1ZSwiY2xpZW50Um91dGVyRmlsdGVyIjp0cnVlLCJjbGllbnRSb3V0ZXJGaWx0ZXJSZWRpcmVjdHMiOmZhbHNlLCJmZXRjaENhY2hlS2V5UHJlZml4IjoiIiwibWlkZGxld2FyZVByZWZldGNoIjoiZmxleGlibGUiLCJvcHRpbWlzdGljQ2xpZW50Q2FjaGUiOnRydWUsIm1hbnVhbENsaWVudEJhc2VQYXRoIjpmYWxzZSwiY3B1cyI6NywibWVtb3J5QmFzZWRXb3JrZXJzQ291bnQiOmZhbHNlLCJpbWdPcHRDb25jdXJyZW5jeSI6bnVsbCwiaW1nT3B0VGltZW91dEluU2Vjb25kcyI6NywiaW1nT3B0TWF4SW5wdXRQaXhlbHMiOjI2ODQwMjY4OSwiaW1nT3B0U2VxdWVudGlhbFJlYWQiOm51bGwsImlzckZsdXNoVG9EaXNrIjp0cnVlLCJ3b3JrZXJUaHJlYWRzIjpmYWxzZSwib3B0aW1pemVDc3MiOmZhbHNlLCJuZXh0U2NyaXB0V29ya2VycyI6ZmFsc2UsInNjcm9sbFJlc3RvcmF0aW9uIjpmYWxzZSwiZXh0ZXJuYWxEaXIiOmZhbHNlLCJkaXNhYmxlT3B0aW1pemVkTG9hZGluZyI6ZmFsc2UsImd6aXBTaXplIjp0cnVlLCJjcmFDb21wYXQiOmZhbHNlLCJlc21FeHRlcm5hbHMiOnRydWUsImZ1bGx5U3BlY2lmaWVkIjpmYWxzZSwic3djVHJhY2VQcm9maWxpbmciOmZhbHNlLCJmb3JjZVN3Y1RyYW5zZm9ybXMiOmZhbHNlLCJsYXJnZVBhZ2VEYXRhQnl0ZXMiOjEyODAwMCwidHVyYm8iOnsicm9vdCI6Ii9Vc2Vycy93aGl0bW9yZS9yZWNydWl0LXNlZWRzIn0sInR5cGVkUm91dGVzIjpmYWxzZSwidHlwZWRFbnYiOmZhbHNlLCJwYXJhbGxlbFNlcnZlckNvbXBpbGVzIjpmYWxzZSwicGFyYWxsZWxTZXJ2ZXJCdWlsZFRyYWNlcyI6ZmFsc2UsInBwciI6ZmFsc2UsImF1dGhJbnRlcnJ1cHRzIjpmYWxzZSwid2VicGFja01lbW9yeU9wdGltaXphdGlvbnMiOmZhbHNlLCJvcHRpbWl6ZVNlcnZlclJlYWN0Ijp0cnVlLCJ1c2VFYXJseUltcG9ydCI6ZmFsc2UsInZpZXdUcmFuc2l0aW9uIjpmYWxzZSwic3RhbGVUaW1lcyI6eyJkeW5hbWljIjowLCJzdGF0aWMiOjMwMH0sInNlcnZlckNvbXBvbmVudHNIbXJDYWNoZSI6dHJ1ZSwic3RhdGljR2VuZXJhdGlvbk1heENvbmN1cnJlbmN5Ijo4LCJzdGF0aWNHZW5lcmF0aW9uTWluUGFnZXNQZXJXb3JrZXIiOjI1LCJkeW5hbWljSU8iOmZhbHNlLCJpbmxpbmVDc3MiOmZhbHNlLCJ1c2VDYWNoZSI6ZmFsc2UsIm9wdGltaXplUGFja2FnZUltcG9ydHMiOlsibHVjaWRlLXJlYWN0IiwiZGF0ZS1mbnMiLCJsb2Rhc2gtZXMiLCJyYW1kYSIsImFudGQiLCJyZWFjdC1ib290c3RyYXAiLCJhaG9va3MiLCJAYW50LWRlc2lnbi9pY29ucyIsIkBoZWFkbGVzc3VpL3JlYWN0IiwiQGhlYWRsZXNzdWktZmxvYXQvcmVhY3QiLCJAaGVyb2ljb25zL3JlYWN0LzIwL3NvbGlkIiwiQGhlcm9pY29ucy9yZWFjdC8yNC9zb2xpZCIsIkBoZXJvaWNvbnMvcmVhY3QvMjQvb3V0bGluZSIsIkB2aXN4L3Zpc3giLCJAdHJlbW9yL3JlYWN0IiwicnhqcyIsIkBtdWkvbWF0ZXJpYWwiLCJAbXVpL2ljb25zLW1hdGVyaWFsIiwicmVjaGFydHMiLCJyZWFjdC11c2UiLCJlZmZlY3QiLCJAZWZmZWN0L3NjaGVtYSIsIkBlZmZlY3QvcGxhdGZvcm0iLCJAZWZmZWN0L3BsYXRmb3JtLW5vZGUiLCJAZWZmZWN0L3BsYXRmb3JtLWJyb3dzZXIiLCJAZWZmZWN0L3BsYXRmb3JtLWJ1biIsIkBlZmZlY3Qvc3FsIiwiQGVmZmVjdC9zcWwtbXNzcWwiLCJAZWZmZWN0L3NxbC1teXNxbDIiLCJAZWZmZWN0L3NxbC1wZyIsIkBlZmZlY3Qvc3FsLXNxdWxpdGUtbm9kZSIsIkBlZmZlY3Qvc3FsLXNxdWxpdGUtYnVuIiwiQGVmZmVjdC9zcWwtc3F1bGl0ZS13YXNtIiwiQGVmZmVjdC9zcWwtc3F1bGl0ZS1yZWFjdC1uYXRpdmUiLCJAZWZmZWN0L3JwYyIsIkBlZmZlY3QvcnBjLWh0dHAiLCJAZWZmZWN0L3R5cGVjbGFzcyIsIkBlZmZlY3QvZXhwZXJpbWVudGFsIiwiQGVmZmVjdC9vcGVudGVsZW1ldHJ5IiwiQG1hdGVyaWFsLXVpL2NvcmUiLCJAbWF0ZXJpYWwtdWkvaWNvbnMiLCJAdGFibGVyL2ljb25zLXJlYWN0IiwibXVpLWNvcmUiLCJyZWFjdC1pY29ucy9haSIsInJlYWN0LWljb25zL2JpIiwicmVhY3QtaWNvbnMvYnMiLCJyZWFjdC1pY29ucy9jZyIsInJlYWN0LWljb25zL2NpIiwicmVhY3QtaWNvbnMvZGkiLCJyZWFjdC1pY29ucy9mYSIsInJlYWN0LWljb25zL2ZhNiIsInJlYWN0LWljb25zL2ZjIiwicmVhY3QtaWNvbnMvZmkiLCJyZWFjdC1pY29ucy9naSIsInJlYWN0LWljb25zL2dvIiwicmVhY3QtaWNvbnMvZ3IiLCJyZWFjdC1pY29ucy9oaSIsInJlYWN0LWljb25zL2hpMiIsInJlYWN0LWljb25zL2ltIiwicmVhY3QtaWNvbnMvaW8iLCJyZWFjdC1pY29ucy9pbzUiLCJyZWFjdC1pY29ucy9saWEiLCJyZWFjdC1pY29ucy9saWIiLCJyZWFjdC1pY29ucy9sdSIsInJlYWN0LWljb25zL21kIiwicmVhY3QtaWNvbnMvcGkiLCJyZWFjdC1pY29ucy9yaSIsInJlYWN0LWljb25zL3J4IiwicmVhY3QtaWNvbnMvc2kiLCJyZWFjdC1pY29ucy9zbCIsInJlYWN0LWljb25zL3RiIiwicmVhY3QtaWNvbnMvdGZpIiwicmVhY3QtaWNvbnMvdGkiLCJyZWFjdC1pY29ucy92c2MiLCJyZWFjdC1pY29ucy93aSJdfSwiaHRtbExpbWl0ZWRCb3RzIjoiTWVkaWFwYXJ0bmVycy1Hb29nbGV8U2x1cnB8RHVja0R1Y2tCb3R8YmFpZHVzcGlkZXJ8eWFuZGV4fHNvZ291fGJpdGx5Ym90fHR1bWJscnx2a1NoYXJlfHF1b3JhIGxpbmsgcHJldmlld3xyZWRkaXRib3R8aWFfYXJjaGl2ZXJ8QmluZ2JvdHxCaW5nUHJldmlld3xhcHBsZWJvdHxmYWNlYm9va2V4dGVybmFsaGl0fGZhY2Vib29rY2F0YWxvZ3xUd2l0dGVyYm90fExpbmtlZEluQm90fFNsYWNrYm90fERpc2NvcmRib3R8V2hhdHNBcHB8U2t5cGVVcmlQcmV2aWV3IiwiYnVuZGxlUGFnZXNSb3V0ZXJEZXBlbmRlbmNpZXMiOmZhbHNlLCJjb25maWdGaWxlIjoiL1VzZXJzL3doaXRtb3JlL3JlY3J1aXQtc2VlZHMvYXBwcy93ZWIvbmV4dC5jb25maWcudHMiLCJjb25maWdGaWxlTmFtZSI6Im5leHQuY29uZmlnLnRzIiwic2VydmVyRXh0ZXJuYWxQYWNrYWdlcyI6WyJwZGYtcGFyc2UiXX0%3D&preferredRegion=&middlewareConfig=e30%3D&cacheHandlers=%7B%7D!
+
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+Attempted import error: 'createContext' is not exported from 'react' (imported as 'React').
+
+Import trace for requested module:
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+../../node_modules/@trpc/tanstack-react-query/dist/index.mjs
+./trpc/server.tsx
+./app/api/job/[id]/og/route.tsx
+../../node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&page=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pagePath=private-next-app-dir%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute.tsx&appDir=%2FUsers%2Fwhitmore%2Frecruit-seeds%2Fapps%2Fweb%2Fapp&appPaths=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!./app/api/job/[id]/og/route.tsx?__next_edge_ssr_entry__
+
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+Attempted import error: 'createContext' is not exported from 'react' (imported as 'React').
+
+Import trace for requested module:
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+../../node_modules/@trpc/tanstack-react-query/dist/index.mjs
+./trpc/server.tsx
+./app/api/job/[id]/og/route.tsx
+../../node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&page=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pagePath=private-next-app-dir%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute.tsx&appDir=%2FUsers%2Fwhitmore%2Frecruit-seeds%2Fapps%2Fweb%2Fapp&appPaths=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!./app/api/job/[id]/og/route.tsx?__next_edge_ssr_entry__
+
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+Attempted import error: 'useContext' is not exported from 'react' (imported as 'React').
+
+Import trace for requested module:
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+../../node_modules/@trpc/tanstack-react-query/dist/index.mjs
+./trpc/server.tsx
+./app/api/job/[id]/og/route.tsx
+../../node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&page=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pagePath=private-next-app-dir%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute.tsx&appDir=%2FUsers%2Fwhitmore%2Frecruit-seeds%2Fapps%2Fweb%2Fapp&appPaths=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!./app/api/job/[id]/og/route.tsx?__next_edge_ssr_entry__
+
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+Attempted import error: 'useContext' is not exported from 'react' (imported as 'React').
+
+Import trace for requested module:
+../../node_modules/@trpc/tanstack-react-query/dist/internals/Context.mjs
+../../node_modules/@trpc/tanstack-react-query/dist/index.mjs
+./trpc/server.tsx
+./app/api/job/[id]/og/route.tsx
+../../node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&page=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pagePath=private-next-app-dir%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute.tsx&appDir=%2FUsers%2Fwhitmore%2Frecruit-seeds%2Fapps%2Fweb%2Fapp&appPaths=%2Fapi%2Fjob%2F%5Bid%5D%2Fog%2Froute&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!./app/api/job/[id]/og/route.tsx?__next_edge_ssr_entry__
+
+
+> Build failed because of webpack errors
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /Users/whitmore/recruit-seeds/apps/web
+npm error workspace web@0.1.0
+npm error location /Users/whitmore/recruit-seeds/apps/web
+npm error command failed
+npm error command sh -c next build

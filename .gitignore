@@ -43,6 +43,9 @@ next-env.d.ts
 .npmrc
 *storybook.log
 
+.claude
+.CLAUDE.md
+.claude.md
 .cursor
 venv/
 *.venv

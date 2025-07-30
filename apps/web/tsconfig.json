@@ -1,0 +1,16 @@
+{
+  "extends": "@seeds/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "editor/utils/recreate-transform.js"
+  ],
+  "exclude": ["node_modules"]
+}
