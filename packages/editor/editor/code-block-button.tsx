@@ -1,9 +1,9 @@
 import { Icon } from '@seeds/ui'
-import { Button, type TipTapButtonProps as ButtonProps } from './button'
-import { useTiptapEditor } from '../hooks/use-tiptap-editor'
-import { isNodeInSchema } from '../lib/tiptap-utils'
 import { type Editor, isNodeSelection } from '@tiptap/react'
 import * as React from 'react'
+import { useTiptapEditor } from '../hooks/use-tiptap-editor'
+import { isNodeInSchema } from '../lib/tiptap-utils'
+import { Button, type TipTapButtonProps as ButtonProps } from './button'
 
 export interface CodeBlockButtonProps extends Omit<ButtonProps, 'type'> {
   /**
