@@ -1,7 +1,7 @@
 'use server'
 
-import type { CandidateProfile } from '@/supabase/mutations' // Import CandidateProfile type
-import { updateCandidateProfile } from '@/supabase/mutations'
+import type { CandidateProfile } from '@seeds/supabase/mutations' // Import CandidateProfile type
+import { updateCandidateProfile } from '@seeds/supabase/mutations'
 import { revalidateTag } from 'next/cache'
 // import { redirect } from 'next/navigation' // No longer redirecting from action
 import { z } from 'zod' // Import Zod

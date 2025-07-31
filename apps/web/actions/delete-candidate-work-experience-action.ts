@@ -1,6 +1,6 @@
 'use server'
 
-import { deleteCandidateWorkExperience } from '@/supabase/mutations'
+import { deleteCandidateWorkExperience } from '@seeds/supabase/mutations'
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action'
 import { deleteCandidateWorkExperienceSchema } from './schema'

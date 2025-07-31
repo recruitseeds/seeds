@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@seeds/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@seeds/ui/tabs'
-import type { CandidateUploadedFileMetadata } from '@/supabase/mutations'
+import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations'
 import {
   AlertTriangle,
   ArrowRight,

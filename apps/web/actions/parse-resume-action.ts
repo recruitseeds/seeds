@@ -1,7 +1,7 @@
 'use server'
 
 import { authActionClient } from '@/actions/safe-action'
-import type { Database } from '@/supabase/types/db'
+import type { Database } from '@seeds/supabase/types/db'
 import { openai } from '@ai-sdk/openai'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { SupabaseClient, User } from '@supabase/supabase-js'

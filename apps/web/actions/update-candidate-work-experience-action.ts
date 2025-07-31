@@ -1,11 +1,11 @@
 'use server'
 
-import { updateCandidateWorkExperience } from '@/supabase/mutations' // Adjust path
+import { updateCandidateWorkExperience } from '@seeds/supabase/mutations' // Adjust path
 import type {
   CandidateWorkExperience,
   UpdateCandidateWorkExperienceParams, // Assuming this is exported from mutations or types
-} from '@/supabase/queries' // Or from mutations/types if defined there. Ensure this matches what mutation expects/returns.
-import type { TablesUpdate } from '@/supabase/types/db' // Adjust path
+} from '@seeds/supabase/queries' // Or from mutations/types if defined there. Ensure this matches what mutation expects/returns.
+import type { TablesUpdate } from '@seeds/supabase/types/db' // Adjust path
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action' // Adjust path
 import { updateCandidateWorkExperienceSchema } from './schema' // Adjust path

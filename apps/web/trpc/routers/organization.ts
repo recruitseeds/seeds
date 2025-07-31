@@ -3,9 +3,9 @@ import {
   deleteJobPosting,
   duplicateJobPosting,
   updateJobPosting,
-} from '@/supabase/mutations/organization'
-import { getJobPostingById, getJobPostingsByOrganization, getOrganizationUsers } from '@/supabase/queries/organization'
-import type { Json, TablesInsert } from '@/supabase/types/db'
+} from '@seeds/supabase/mutations/organization'
+import { getJobPostingById, getJobPostingsByOrganization, getOrganizationUsers } from '@seeds/supabase/queries/organization'
+import type { Json, TablesInsert } from '@seeds/supabase/types/db'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { createTRPCRouter, organizationProcedure } from '../init'

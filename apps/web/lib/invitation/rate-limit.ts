@@ -1,4 +1,4 @@
-import { createClient } from "@/supabase/client/server";
+import { createClient } from "@seeds/supabase/client/server";
 
 export interface RateLimitResult {
 	allowed: boolean;

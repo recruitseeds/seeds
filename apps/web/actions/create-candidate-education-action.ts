@@ -1,8 +1,8 @@
 'use server'
 
-import { createCandidateEducation } from '@/supabase/mutations'
-import { CandidateEducation } from '@/supabase/queries'
-import type { TablesInsert } from '@/supabase/types/db'
+import { createCandidateEducation } from '@seeds/supabase/mutations'
+import { CandidateEducation } from '@seeds/supabase/queries'
+import type { TablesInsert } from '@seeds/supabase/types/db'
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action'
 import { createCandidateEducationSchema } from './schema'

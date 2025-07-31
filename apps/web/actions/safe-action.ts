@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger'
-import { createClient } from '@/supabase/client/server'
-import type { Database } from '@/supabase/types/db'
+import { createClient } from '@seeds/supabase/client/server'
+import type { Database } from '@seeds/supabase/types/db'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import {
   DEFAULT_SERVER_ERROR_MESSAGE,

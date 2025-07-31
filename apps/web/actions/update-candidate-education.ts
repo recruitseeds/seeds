@@ -1,8 +1,8 @@
 // src/actions/update-candidate-education.ts
 'use server'
 
-import { updateCandidateEducation } from '@/supabase/mutations'
-import { CandidateEducation } from '@/supabase/queries'
+import { updateCandidateEducation } from '@seeds/supabase/mutations'
+import { CandidateEducation } from '@seeds/supabase/queries'
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action'
 import { updateCandidateEducationSchema } from './schema'

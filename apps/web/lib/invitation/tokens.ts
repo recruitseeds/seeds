@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
-import { createClient } from "@/supabase/client/server";
-import type { Database } from "@/supabase/types/db";
+import { createClient } from "@seeds/supabase/client/server";
+import type { Database } from "@seeds/supabase/types/db";
 
 export interface TokenValidationResult {
 	valid: boolean;

@@ -1,4 +1,4 @@
-import type { Json } from '@/supabase/types/db'
+import type { Json } from '@seeds/supabase/types/db'
 
 export interface NextStep {
   id: string

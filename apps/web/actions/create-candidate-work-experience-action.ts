@@ -1,8 +1,8 @@
 'use server'
 
-import { createCandidateWorkExperience } from '@/supabase/mutations'
-import type { CandidateWorkExperience } from '@/supabase/queries'
-import type { TablesInsert } from '@/supabase/types/db'
+import { createCandidateWorkExperience } from '@seeds/supabase/mutations'
+import type { CandidateWorkExperience } from '@seeds/supabase/queries'
+import type { TablesInsert } from '@seeds/supabase/types/db'
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action'
 import { createCandidateWorkExperienceSchema } from './schema'

@@ -3,7 +3,7 @@
 import {
   type CandidateEducation,
   getCandidateEducation,
-} from '@/supabase/queries'
+} from '@seeds/supabase/queries'
 import { authActionClient } from './safe-action'
 
 export const getCandidateEducationAction = authActionClient

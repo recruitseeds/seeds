@@ -3,7 +3,7 @@
 import {
   getCandidateWorkExperiences,
   type CandidateWorkExperience,
-} from '@/supabase/queries'
+} from '@seeds/supabase/queries'
 import { authActionClient } from './safe-action'
 
 export const getCandidateWorkExperiencesAction = authActionClient

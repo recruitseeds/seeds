@@ -1,9 +1,9 @@
 import { OnboardingEducationForm } from '@/components/candidate/onboarding-education-form'
-import { createClient } from '@/supabase/client/server'
+import { createClient } from '@seeds/supabase/client/server'
 import {
   type CandidateEducation,
   getCandidateEducation,
-} from '@/supabase/queries'
+} from '@seeds/supabase/queries'
 import { redirect } from 'next/navigation'
 
 export default async function EducationOnboardingPage() {

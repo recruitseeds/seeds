@@ -4,8 +4,8 @@ import { authActionClient } from '@/actions/safe-action'
 import {
   uploadFileToR2AndRecord,
   type CandidateUploadedFileMetadata, // Keep this type for the mutation's return value
-} from '@/supabase/mutations' // Assuming mutations/index.ts exports it
-import type { Database } from '@/supabase/types/db'
+} from '@seeds/supabase/mutations' // Assuming mutations/index.ts exports it
+import type { Database } from '@seeds/supabase/types/db'
 import { S3Client } from '@aws-sdk/client-s3'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 

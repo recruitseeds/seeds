@@ -16,7 +16,7 @@ import {
   SheetTitle,
 } from "./sheet";
 import { Skeleton } from "./skeleton";
-// import { useMobile } from "@/hooks/use-mobile"; // TODO: Move this hook
+import { useMobile } from "./hooks/use-mobile";
 import { cn } from "./lib/utils";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
@@ -60,7 +60,7 @@ function SidebarProvider({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const isMobile = false; // TODO: Implement mobile detection
+  const isMobile = useMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
 
   // This is the internal state of the sidebar.
@@ -175,10 +175,6 @@ function Sidebar({
   if (isMobile) {
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetHeader className="sr-only">
-          <SheetTitle>Sidebar</SheetTitle>
-          <SheetDescription>Displays the mobile sidebar.</SheetDescription>
-        </SheetHeader>
         <SheetContent
           data-sidebar="sidebar"
           data-slot="sidebar"

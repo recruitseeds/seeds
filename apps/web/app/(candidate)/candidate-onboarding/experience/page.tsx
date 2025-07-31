@@ -1,10 +1,10 @@
 // src/app/(candidate)/candidate-onboarding/experience/page.tsx
 import { OnboardingWorkExperienceForm } from '@/components/candidate/onboarding-work-experience-form'
-import { createClient } from '@/supabase/client/server'
+import { createClient } from '@seeds/supabase/client/server'
 import {
   getCandidateWorkExperiences,
   type CandidateWorkExperience,
-} from '@/supabase/queries' // Ensure CandidateWorkExperience is exported
+} from '@seeds/supabase/queries' // Ensure CandidateWorkExperience is exported
 import { redirect } from 'next/navigation'
 
 export default async function WorkExperienceOnboardingPage() {

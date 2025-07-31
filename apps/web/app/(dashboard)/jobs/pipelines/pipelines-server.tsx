@@ -1,4 +1,4 @@
-import { createClient } from '@/supabase/client/server'
+import { createClient } from '@seeds/supabase/client/server'
 import { PipelineListingClient } from './pipelines-client'
 
 async function getPipelines() {

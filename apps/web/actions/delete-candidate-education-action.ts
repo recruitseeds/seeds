@@ -1,7 +1,7 @@
 // actions/delete-candidate-education-action.ts
 'use server'
 
-import { deleteCandidateEducation } from '@/supabase/mutations'
+import { deleteCandidateEducation } from '@seeds/supabase/mutations'
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action'
 import { deleteCandidateEducationSchema } from './schema' // Import the schema

@@ -3,7 +3,7 @@
 import { Button } from '@seeds/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@seeds/ui/tabs'
 import { parseDateString } from '@/lib/dates'
-import type { TablesInsert } from '@/supabase/types/db'
+import type { TablesInsert } from '@seeds/supabase/types/db'
 import { useTRPC } from '@/trpc/client'
 import type { AppRouter } from '@/trpc/routers/_app'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

@@ -12,7 +12,7 @@ import {
   updateCandidateEducation,
   updateCandidateProfile,
   updateCandidateWorkExperience,
-} from '@/supabase/mutations'
+} from '@seeds/supabase/mutations'
 import {
   getCandidateApplicationsPaginated,
   getCandidateContactInfo,
@@ -22,8 +22,8 @@ import {
   getCandidateWorkExperienceById,
   getCandidateWorkExperiences,
   getDefaultCandidateResume,
-} from '@/supabase/queries'
-import type { Database, TablesInsert } from '@/supabase/types/db'
+} from '@seeds/supabase/queries'
+import type { Database, TablesInsert } from '@seeds/supabase/types/db'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { TRPCError } from '@trpc/server'

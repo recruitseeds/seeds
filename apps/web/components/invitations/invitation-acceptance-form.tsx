@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@seeds/ui/button";
 import { Input } from "@seeds/ui/input";
 import { Label } from "@seeds/ui/label";
-import type { InvitationWithInviter } from "@/supabase/queries/invitation";
+import type { InvitationWithInviter } from "@seeds/supabase/queries/invitation";
 import { useTRPC } from "@/trpc/client";
 
 interface InvitationAcceptanceFormProps {

@@ -14,7 +14,7 @@ import {
 } from '@seeds/ui/form'
 import { Input } from '@seeds/ui/input'
 import { Textarea } from '@seeds/ui/textarea'
-import type { Database } from '@/supabase/types/db'
+import type { Database } from '@seeds/supabase/types/db'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Briefcase,

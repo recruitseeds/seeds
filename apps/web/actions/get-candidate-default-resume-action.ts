@@ -1,7 +1,7 @@
 'use server'
 
-import type { CandidateFile } from '@/supabase/queries'
-import { getDefaultCandidateResume } from '@/supabase/queries'
+import type { CandidateFile } from '@seeds/supabase/queries'
+import { getDefaultCandidateResume } from '@seeds/supabase/queries'
 import { authActionClient } from './safe-action'
 
 export const getCandidateDefaultResumeAction = authActionClient

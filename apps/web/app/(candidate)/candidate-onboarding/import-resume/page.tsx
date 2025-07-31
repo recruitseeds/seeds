@@ -1,7 +1,7 @@
 // src/app/(candidate)/import-resume/page.tsx
 import { getCandidateDefaultResumeAction } from '@/actions/get-candidate-default-resume-action' // Import the action
 import { PreOnboardingOptions } from '@/components/candidate/onboarding-options'
-import type { CandidateUploadedFileMetadata } from '@/supabase/mutations' // Import the type
+import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations' // Import the type
 
 export default async function ImportResumePage() {
   // Make the function async

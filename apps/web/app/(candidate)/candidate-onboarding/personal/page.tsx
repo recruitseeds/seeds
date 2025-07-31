@@ -1,7 +1,7 @@
 import { getCandidateProfileAction } from '@/actions/get-candidate-profile-action'
 import { PersonalInfoForm } from '@/components/candidate/onboarding-personal-form'
-import { createClient } from '@/supabase/client/server'
-import type { Database } from '@/supabase/types/db'
+import { createClient } from '@seeds/supabase/client/server'
+import type { Database } from '@seeds/supabase/types/db'
 import { redirect } from 'next/navigation'
 
 type CandidateProfile =

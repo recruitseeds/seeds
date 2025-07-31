@@ -1,4 +1,4 @@
-import { createClient } from '@/supabase/client/server'
+import { createClient } from '@seeds/supabase/client/server'
 import { addYears } from 'date-fns'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'

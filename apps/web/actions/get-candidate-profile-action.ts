@@ -1,9 +1,9 @@
 'use server'
 
-import { getCandidateProfile } from '@/supabase/queries'
+import { getCandidateProfile } from '@seeds/supabase/queries'
 import { authActionClient } from './safe-action'
 
-import type { Database } from '@/supabase/types/db'
+import type { Database } from '@seeds/supabase/types/db'
 type CandidateProfile =
   Database['public']['Tables']['candidate_profiles']['Row']
 

@@ -1,4 +1,4 @@
-import type { Database } from '@/supabase/types/db'
+import type { Database } from '@seeds/supabase/types/db'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'

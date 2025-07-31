@@ -1,6 +1,6 @@
 import { getCandidateDefaultResumeAction } from '@/actions/get-candidate-default-resume-action'
 import { OnboardingFilesForm } from '@/components/candidate/onboarding-files-form'
-import type { CandidateUploadedFileMetadata } from '@/supabase/mutations'
+import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations'
 
 export default async function CandidateFilesUploadPage() {
   const resumeActionResult = await getCandidateDefaultResumeAction()

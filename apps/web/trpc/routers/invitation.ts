@@ -7,8 +7,8 @@ import {
 import {
 	checkDuplicateInvitation,
 	checkInvitationRateLimit,
-} from "@/lib/invitation/rate-limit";
-import { validateInvitationToken } from "@/lib/invitation/tokens";
+} from "@seeds/supabase";
+import { validateInvitationToken } from "@seeds/supabase";
 import {
 	acceptInvitationSchema,
 	bulkInvitationSchema,
@@ -21,15 +21,15 @@ import {
 	createBulkInvitations,
 	createInvitation,
 	resendInvitation,
-} from "@/supabase/mutations/invitation";
+} from "@seeds/supabase/mutations/invitation";
 import {
 	getInvitationById,
 	getInvitationByToken,
 	getInvitationStats,
 	getInvitationsByOrganization,
-} from "@/supabase/queries/invitation";
-import { handleEmailPasswordSignUp } from "@/supabase/utils/auth";
-import { addUserToExistingOrganization } from "@/supabase/utils/organization-setup";
+} from "@seeds/supabase/queries/invitation";
+import { handleEmailPasswordSignUp } from "@seeds/supabase/utils/auth";
+import { addUserToExistingOrganization } from "@seeds/supabase/utils/organization-setup";
 import {
 	createTRPCRouter,
 	organizationProcedure,

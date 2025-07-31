@@ -1,7 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { cache } from "react";
 import superjson from "superjson";
-import { createClient } from "@/supabase/client/server";
+import { createClient } from "@seeds/supabase/client/server";
 
 interface UserMetadata {
 	role?: "candidate" | "organization";
