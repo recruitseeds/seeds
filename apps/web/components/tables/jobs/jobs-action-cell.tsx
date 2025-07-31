@@ -9,6 +9,8 @@ import {
   MoreHorizontal,
   Eye,
   CopyPlus,
+  Clock,
+  FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
@@ -26,6 +28,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { JobPost } from "./types";
 import { JobDeleteDialog } from "./jobs-delete-dialog";
 import { JobShareDialog } from "./jobs-share-dialog";
+import { getEffectiveStatus } from "./utils";
 
 interface JobActionsCellProps {
   job: JobPost;
@@ -138,8 +141,7 @@ export function JobActionsCell({ job }: JobActionsCellProps) {
                       ...j,
                       status: variables.status,
                       updated_at: new Date().toISOString(),
-                      ...(variables.status === "published" &&
-                      j.status !== "published"
+                      ...(variables.status === "published"
                         ? { published_at: new Date().toISOString() }
                         : {}),
                     }
@@ -214,6 +216,14 @@ export function JobActionsCell({ job }: JobActionsCellProps) {
     updateStatusMutation.mutate({
       id: job.id,
       status: "published",
+      published_at: new Date().toISOString(),
+    });
+  }, [updateStatusMutation, job.id]);
+
+  const handleMoveToDraft = useCallback(() => {
+    updateStatusMutation.mutate({
+      id: job.id,
+      status: "draft",
     });
   }, [updateStatusMutation, job.id]);
 
@@ -244,9 +254,12 @@ export function JobActionsCell({ job }: JobActionsCellProps) {
     deleteMutation.mutate({ id: job.id });
   }, [deleteMutation, job.id]);
 
-  const canPublish = job.status === "draft" || job.status === "closed";
-  const canUnpublish = job.status === "published";
-  const canClose = job.status === "published" || job.status === "draft";
+  const effectiveStatus = getEffectiveStatus(job.status, job.published_at);
+  
+  const canPublish = effectiveStatus === "staged" || effectiveStatus === "draft" || effectiveStatus === "closed";
+  const canMoveToDraft = effectiveStatus === "staged" || effectiveStatus === "closed";
+  const canUnpublish = effectiveStatus === "published";
+  const canClose = effectiveStatus === "published" || effectiveStatus === "staged" || effectiveStatus === "draft";
 
   return (
     <>
@@ -284,6 +297,12 @@ export function JobActionsCell({ job }: JobActionsCellProps) {
             <DropdownMenuItem onClick={handlePublish}>
               <Eye className="mr-2 h-4 w-4" />
               Publish
+            </DropdownMenuItem>
+          )}
+          {canMoveToDraft && (
+            <DropdownMenuItem onClick={handleMoveToDraft}>
+              <FileText className="mr-2 h-4 w-4" />
+              Move to Draft
             </DropdownMenuItem>
           )}
           {canUnpublish && (

@@ -6,6 +6,7 @@ import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { useTRPC } from '@/trpc/client'
 import { Button } from '@seeds/ui/button'
 import { Calendar } from '@seeds/ui/calendar'
 import {
@@ -25,13 +26,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@seeds/ui/form'
-import { Input } from '@seeds/ui/input'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@seeds/ui/popover'
 import { cn } from '@seeds/ui/lib/utils'
+import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 const languages = [
@@ -47,14 +48,6 @@ const languages = [
 ] as const
 
 const accountFormSchema = z.object({
-  name: z
-    .string()
-    .min(2, {
-      message: 'Name must be at least 2 characters.',
-    })
-    .max(30, {
-      message: 'Name must not be longer than 30 characters.',
-    }),
   dob: z.date({
     required_error: 'A date of birth is required.',
   }),
@@ -65,49 +58,53 @@ const accountFormSchema = z.object({
 
 type AccountFormValues = z.infer<typeof accountFormSchema>
 
-// This can come from your database or API.
-const defaultValues: Partial<AccountFormValues> = {
-  // name: "Your name",
-  // dob: new Date("2023-01-23"),
+interface AccountFormProps {
+  initialSettings?: Record<string, unknown> | null
 }
 
-export function AccountForm() {
+export function AccountForm({ initialSettings }: AccountFormProps) {
+  // Use server-provided data from profile instead of account
+  const profile = initialSettings?.profile as Record<string, unknown> || {}
+  
+  const defaultValues: Partial<AccountFormValues> = {
+    dob: profile.dob ? new Date(profile.dob as string) : undefined,
+    language: (profile.language as string) || 'en',
+  }
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues,
   })
 
-  function onSubmit(data: AccountFormValues) {
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-          <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+  const trpc = useTRPC()
+  const updateSettings = useMutation(trpc.organization.updateUserSettingsPartial.mutationOptions())
+
+  async function onSubmit(data: AccountFormValues) {
+    try {
+      // Get current profile data to merge with
+      const currentProfile = initialSettings?.profile as Record<string, unknown> || {}
+      
+      // Merge account data with existing profile data
+      const updatedProfile = {
+        ...currentProfile,
+        dob: data.dob.toISOString(),
+        language: data.language,
+      }
+      
+      // Save all profile data together
+      await updateSettings.mutateAsync({
+        path: 'profile',
+        value: updatedProfile,
+      })
+
+      toast.success('Account settings updated successfully')
+    } catch (error) {
+      toast.error('Failed to update account settings')
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
-          control={form.control}
-          name='name'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder='Your name' {...field} />
-              </FormControl>
-              <FormDescription>
-                This is the name that will be displayed on your profile and in
-                emails.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name='dob'

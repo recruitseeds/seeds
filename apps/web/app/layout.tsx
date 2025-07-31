@@ -1,13 +1,10 @@
-import { Toaster } from '@seeds/ui/toaster'
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 // import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import '@seeds/tailwind/globals.css'
+import { Toaster } from '@seeds/ui/toaster'
+import type { Metadata } from 'next'
 import { Providers } from './providers'
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-})
+import { getUserFont } from '@/lib/get-user-font'
+import { getFontByName, getAllFontsClassName } from '@/lib/font-loader'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -19,21 +16,21 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)' },
-    { media: '(prefers-color-scheme: dark)' },
-  ],
+  themeColor: [{ media: '(prefers-color-scheme: light)' }, { media: '(prefers-color-scheme: dark)' }],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const userFontName = await getUserFont()
+  const userFont = getFontByName(userFontName)
+  const allFontsClassName = getAllFontsClassName()
+
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased`}>
-        {/* <body className={`${inter.variable} antialiased theme-mono`}> */}
+      <body className={`${allFontsClassName} ${userFont.className} antialiased`}>
         <Providers>
           {/* <NuqsAdapter>{children}</NuqsAdapter> */}
           {children}

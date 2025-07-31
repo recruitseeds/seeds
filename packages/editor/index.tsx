@@ -1,4 +1,5 @@
 // Editor Components
+export * from './components/toolbar-skeleton'
 export * from './editor-dropdown'
 export * from './link-editor'
 

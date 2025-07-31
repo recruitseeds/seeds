@@ -1,7 +1,5 @@
 import { forwardRef, useLayoutEffect, useState } from 'react'
-import ReactTextareaAutosize, {
-  TextareaAutosizeProps,
-} from 'react-textarea-autosize'
+import ReactTextareaAutosize, { type TextareaAutosizeProps } from 'react-textarea-autosize'
 
 /*
   This is a workaround for a bug in react-textarea-autosize where
@@ -17,10 +15,7 @@ import ReactTextareaAutosize, {
   for more details.
 */
 
-export const TextareaAutosize = forwardRef<
-  HTMLTextAreaElement,
-  TextareaAutosizeProps
->((props, ref) => {
+export const TextareaAutosize = forwardRef<HTMLTextAreaElement, TextareaAutosizeProps>((props, ref) => {
   const [, setIsRerendered] = useState(false)
 
   useLayoutEffect(() => setIsRerendered(true), [])

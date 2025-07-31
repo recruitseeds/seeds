@@ -6,7 +6,7 @@ import { Checkbox } from "@seeds/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/column-header";
 import { JobActionsCell } from "./jobs-action-cell";
 import type { JobPost } from "./types";
-import { formatDisplayText } from "./utils";
+import { formatDisplayText, getStatusDisplayText, getStatusVariant } from "./utils";
 
 export type { JobPost };
 
@@ -58,20 +58,13 @@ export const columns: ColumnDef<JobPost>[] = [
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
+      const job = row.original;
       const status = row.getValue("status") as string;
       return (
         <Badge
-          variant={
-            status === "published"
-              ? "default"
-              : status === "draft"
-                ? "secondary"
-                : status === "closed"
-                  ? "destructive"
-                  : "outline"
-          }
+          variant={getStatusVariant(status, job.published_at)}
         >
-          {formatDisplayText(status)}
+          {getStatusDisplayText(status, job.published_at)}
         </Badge>
       );
     },

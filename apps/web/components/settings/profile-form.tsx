@@ -2,29 +2,18 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
+import { useEffect } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { useTRPC } from '@/trpc/client'
 import { cn } from '@seeds/ui/lib/utils'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '../ui/button'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '../ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
 import { Input } from '../ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Textarea } from '../ui/textarea'
 
 const profileFormSchema = z.object({
@@ -55,11 +44,10 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 // This can come from your database or API.
 const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
+  username: '', // Fix uncontrolled input error
+  email: '', // Fix uncontrolled input error
+  bio: '',
+  urls: [],
 }
 
 export function ProfileForm() {
@@ -74,8 +62,37 @@ export function ProfileForm() {
     control: form.control,
   })
 
-  function onSubmit() {
-    toast('Event has been created.')
+  const trpc = useTRPC()
+  const { data: settings, isLoading } = useQuery(trpc.organization.getUserSettings.queryOptions())
+  const updateSettings = useMutation(trpc.organization.updateUserSettingsPartial.mutationOptions())
+
+  // Load current settings
+  useEffect(() => {
+    if (settings) {
+      const profile = settings.profile as Record<string, unknown>
+      if (profile) {
+        if (profile.username !== undefined) form.setValue('username', profile.username as string)
+        if (profile.email !== undefined) form.setValue('email', profile.email as string)
+        if (profile.bio !== undefined) form.setValue('bio', profile.bio as string)
+        if (profile.urls !== undefined) {
+          const urls = profile.urls as Array<{ value: string }>
+          form.setValue('urls', urls)
+        }
+      }
+    }
+  }, [settings, form])
+
+  async function onSubmit(data: ProfileFormValues) {
+    try {
+      await updateSettings.mutateAsync({
+        path: 'profile',
+        value: data,
+      })
+
+      toast.success('Profile updated successfully')
+    } catch (error) {
+      toast.error('Failed to update profile')
+    }
   }
 
   return (
@@ -91,8 +108,8 @@ export function ProfileForm() {
                 <Input placeholder='alexwhitmore' {...field} />
               </FormControl>
               <FormDescription>
-                This is your public display name. It can be your real name or a
-                pseudonym. You can only change this once every 30 days.
+                This is your public display name. It can be your real name or a pseudonym. You can only change this once
+                every 30 days.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -117,8 +134,7 @@ export function ProfileForm() {
                 </SelectContent>
               </Select>
               <FormDescription>
-                You can manage verified email addresses in your{' '}
-                <Link href='/examples/forms'>email settings</Link>.
+                You can manage verified email addresses in your <Link href='/examples/forms'>email settings</Link>.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -131,15 +147,10 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Bio</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder='Tell us a little bit about yourself'
-                  className='resize-none'
-                  {...field}
-                />
+                <Textarea placeholder='Tell us a little bit about yourself' className='resize-none' {...field} />
               </FormControl>
               <FormDescription>
-                You can <span>@mention</span> other users and organizations to
-                link to them.
+                You can <span>@mention</span> other users and organizations to link to them.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -153,9 +164,7 @@ export function ProfileForm() {
               name={`urls.${index}.value`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    URLs
-                  </FormLabel>
+                  <FormLabel className={cn(index !== 0 && 'sr-only')}>URLs</FormLabel>
                   <FormDescription className={cn(index !== 0 && 'sr-only')}>
                     Add links to your website, blog, or social media profiles.
                   </FormDescription>
@@ -167,12 +176,7 @@ export function ProfileForm() {
               )}
             />
           ))}
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='mt-2'
-            onClick={() => append({ value: '' })}>
+          <Button type='button' variant='outline' size='sm' className='mt-2' onClick={() => append({ value: '' })}>
             Add URL
           </Button>
         </div>

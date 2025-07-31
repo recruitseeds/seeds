@@ -1,38 +1,5 @@
-import { ToolbarSkeleton } from '../components/toolbar-skeleton'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@seeds/ui/dialog'
-import { BlockquoteButton } from './blockquote-button'
 import { Button } from '@seeds/ui/button'
-import { CodeBlockButton } from './code-block-button'
-import {
-  ColorHighlightPopover,
-  ColorHighlightPopoverButton,
-  ColorHighlightPopoverContent,
-} from './color-highlight-popover'
-import { ImageBlock } from './extensions/image-block'
-import { ImageBlockMenu } from './extensions/image-block/components/image-block-menu'
-import { ImageUpload } from './extensions/image-upload'
-import { Link } from './extensions/link-extension'
-import { Selection } from './extensions/selection-extension'
-import { TrailingNode } from './extensions/trailing-node-extension'
-import { HeadingDropdownMenu } from './heading-dropdown-menu'
-import { ImageUploadButton } from './image-upload-button'
-import { LinkButton, LinkContent, LinkPopover } from './link-popover'
-import { ListDropdownMenu } from './list-dropdown-menu'
-import { MarkButton } from './mark-button'
-import { Spacer } from './spacer'
-import { TextAlignButton } from './text-align-button'
-import { Toolbar, ToolbarGroup, ToolbarSeparator } from './toolbar'
-import { UndoRedoButton } from './undo-redo-button'
-import { useCursorVisibility } from '../hooks/use-cursor-visibility'
-import { useMobile } from '../hooks/use-mobile'
-import { useWindowSize } from '../hooks/use-window-size'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@seeds/ui/dialog'
 // import { uploadImage } from '../lib/api' // TODO: Move this function
 // TRPC imports moved to parent component
 // import type { AppRouter } from '@/trpc/routers/_app' // TODO: Move this type
@@ -48,26 +15,43 @@ import { Typography } from '@tiptap/extension-typography'
 import { Underline } from '@tiptap/extension-underline'
 import { EditorContent, EditorContext, useEditor } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
-import type { TRPCClientErrorLike } from '@trpc/client'
-import { ArrowLeftIcon, HighlighterIcon, LinkIcon, Loader2 } from 'lucide-react'
+import { ArrowLeftIcon, LinkIcon, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { toast } from 'sonner'
+import { ToolbarSkeleton } from '../components/toolbar-skeleton'
+import { useCursorVisibility } from '../hooks/use-cursor-visibility'
+import { useMobile } from '../hooks/use-mobile'
+import { useWindowSize } from '../hooks/use-window-size'
+import { BlockquoteButton } from './blockquote-button'
+import { CodeBlockButton } from './code-block-button'
+import { ColorHighlightPopover } from './color-highlight-popover'
+import { ImageBlock } from './extensions/image-block'
+import { ImageBlockMenu } from './extensions/image-block/components/image-block-menu'
+import { ImageUpload } from './extensions/image-upload'
+import { Link } from './extensions/link-extension'
+import { Selection } from './extensions/selection-extension'
+import { TrailingNode } from './extensions/trailing-node-extension'
+import { HeadingDropdownMenu } from './heading-dropdown-menu'
+import { ImageUploadButton } from './image-upload-button'
+import { LinkButton, LinkContent, LinkPopover } from './link-popover'
+import { ListDropdownMenu } from './list-dropdown-menu'
+import { MarkButton } from './mark-button'
+import { Spacer } from './spacer'
+import { TextAlignButton } from './text-align-button'
+import { Toolbar, ToolbarGroup, ToolbarSeparator } from './toolbar'
+import { UndoRedoButton } from './undo-redo-button'
 
-const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; onBack: () => void }) => (
+const MobileToolbarContent = ({ type, onBack }: { type: 'link'; onBack: () => void }) => (
   <>
     <ToolbarGroup>
       <Button data-style='ghost' variant='ghost' onClick={onBack}>
         <ArrowLeftIcon className='tiptap-button-icon' />
-        {type === 'highlighter' ? (
-          <HighlighterIcon className='tiptap-button-icon' />
-        ) : (
-          <LinkIcon className='tiptap-button-icon' />
-        )}
+        <LinkIcon className='tiptap-button-icon' />
       </Button>
     </ToolbarGroup>
     <ToolbarSeparator />
-    {type === 'highlighter' ? <ColorHighlightPopoverContent /> : <LinkContent />}
+    <LinkContent />
   </>
 )
 
@@ -75,7 +59,7 @@ interface JobData {
   id?: string
   title: string
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
-  content?: unknown
+  content?: object
   status?: 'draft' | 'published' | 'archived' | 'closed'
   department?: string | null
   experience_level?: string | null
@@ -87,12 +71,12 @@ interface JobData {
 
 interface SimpleEditorProps {
   jobData?: JobData | null
-  existingContent?: any
+  existingContent?: object
   jobId?: string
   isEditing?: boolean
   isJobDataLoading?: boolean
-  onCreateJob?: (payload: any) => void
-  onUpdateJob?: (payload: any) => void
+  onCreateJob?: (payload: object) => void
+  onUpdateJob?: (payload: object) => void
   isCreating?: boolean
   isUpdating?: boolean
 }
@@ -111,7 +95,7 @@ export function BlockEditor({
   const isMobile = useMobile()
   const windowSize = useWindowSize()
   const router = useRouter()
-  const [mobileView, setMobileView] = React.useState<'main' | 'highlighter' | 'link'>('main')
+  const [mobileView, setMobileView] = React.useState<'main' | 'link'>('main')
   const [showDiscardDialog, setShowDiscardDialog] = React.useState(false)
   const toolbarRef = React.useRef<HTMLDivElement>(null)
   const isEditingJob = isEditing || !!jobId
@@ -119,12 +103,12 @@ export function BlockEditor({
   // Create mock mutation objects that match the expected interface
   const createJobPostingMutation = {
     mutate: onCreateJob || (() => console.log('Create job function not provided')),
-    isPending: isCreating
+    isPending: isCreating,
   }
 
   const updateJobPostingMutation = {
     mutate: onUpdateJob || (() => console.log('Update job function not provided')),
-    isPending: isUpdating
+    isPending: isUpdating,
   }
 
   const editor = useEditor({
@@ -151,11 +135,11 @@ export function BlockEditor({
       ImageUpload,
       FileHandler.configure({
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-        onDrop: (currentEditor, files, pos) => {
+        onDrop: () => {
           // TODO: Implement image upload
           console.log('Image drop not implemented')
         },
-        onPaste: (currentEditor, files) => {
+        onPaste: () => {
           // TODO: Implement image paste
           console.log('Image paste not implemented')
         },
@@ -201,11 +185,11 @@ export function BlockEditor({
 
   const canSaveDraft = hasEditorContent()
 
-  const handleSave = (status: 'draft' | 'published' = 'draft') => {
+  const handleSave = (status: 'draft' | 'staged' | 'published' = 'draft') => {
     const content = editor?.getJSON() || null
 
-    if (status === 'published' && !canPublish) {
-      toast.error('Please fill in all required job details before publishing')
+    if ((status === 'published' || status === 'staged') && !canPublish) {
+      toast.error('Please fill in all required job details before saving')
       return
     }
 
@@ -289,9 +273,9 @@ export function BlockEditor({
               status: 'draft' as const,
             }
       createJobPostingMutation.mutate(payload, {
-        onSuccess: () => {
+onSuccess: () => {
           router.push('/jobs/drafts')
-        },
+        }
       })
     }
     setShowDiscardDialog(false)
@@ -358,12 +342,12 @@ export function BlockEditor({
                     <MarkButton editor={editor} type='strike' />
                     <MarkButton editor={editor} type='code' />
                     <MarkButton editor={editor} type='underline' />
+                    <ColorHighlightPopover editor={editor} />
                     {!isMobile ? (
-                      <ColorHighlightPopover editor={editor} />
+                      <LinkPopover editor={editor} />
                     ) : (
-                      <ColorHighlightPopoverButton editor={editor} onClick={() => setMobileView('highlighter')} />
+                      <LinkButton editor={editor} onClick={() => setMobileView('link')} />
                     )}
-                    {!isMobile ? <LinkPopover editor={editor} /> : <LinkButton editor={editor} onClick={() => setMobileView('link')} />}
                   </ToolbarGroup>
                   <ToolbarSeparator />
                   <ToolbarGroup>
@@ -385,11 +369,12 @@ export function BlockEditor({
                 </>
               ) : (
                 <MobileToolbarContent
-                  type={mobileView === 'highlighter' ? 'highlighter' : 'link'}
+                  type='link'
                   onBack={() => setMobileView('main')}
                 />
               )}
             </Toolbar>
+            {/* <ToolbarSkeleton /> */}
           </div>
           {mobileView === 'main' && (
             <div className='flex-shrink-0 px-4 py-2 border-l border-dashed'>
@@ -403,7 +388,7 @@ export function BlockEditor({
                   onClick={() => handleSave('published')}
                   disabled={!canPublish || isLoading}>
                   {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-                  Publish
+                  Save
                 </Button>
               </div>
             </div>

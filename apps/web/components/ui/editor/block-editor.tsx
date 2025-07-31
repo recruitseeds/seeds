@@ -1,4 +1,4 @@
-import { ToolbarSkeleton } from '@/components/skeletons/toolbar'
+import { CodeBlock } from '@/components/icons'
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,11 @@ import { ImageUploadButton } from '@seeds/editor/image-upload-button'
 import { LinkButton, LinkContent, LinkPopover } from '@seeds/editor/link-popover'
 import { ListDropdownMenu } from '@seeds/editor/list-dropdown-menu'
 import { MarkButton } from '@seeds/editor/mark-button'
+import { Separator } from '@seeds/editor/separator' 
 import { Spacer } from '@seeds/editor/spacer'
 import { TextAlignButton } from '@seeds/editor/text-align-button'
 import { Toolbar, ToolbarGroup, ToolbarSeparator } from '@seeds/editor/toolbar'
+import { ToolbarSkeleton } from '@seeds/editor'
 import { UndoRedoButton } from '@seeds/editor/undo-redo-button'
 import { useCursorVisibility } from '@/hooks/use-cursor-visibility'
 import { useMobile } from '@/hooks/use-mobile'
@@ -55,7 +57,12 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; onBack: () => void }) => (
+const MobileToolbarContent = ({ type, onBack, editor, savedSelection }: { 
+  type: 'highlighter' | 'link'; 
+  onBack: () => void; 
+  editor: any;
+  savedSelection?: { from: number; to: number } | null;
+}) => (
   <>
     <ToolbarGroup>
       <Button data-style='ghost' variant='ghost' onClick={onBack}>
@@ -68,7 +75,15 @@ const MobileToolbarContent = ({ type, onBack }: { type: 'highlighter' | 'link'; 
       </Button>
     </ToolbarGroup>
     <ToolbarSeparator />
-    {type === 'highlighter' ? <ColorHighlightPopoverContent /> : <LinkContent />}
+    {type === 'highlighter' ? (
+      <ColorHighlightPopoverContent 
+        editor={editor} 
+        savedSelection={savedSelection}
+        onClose={onBack} // Go back to main view after applying highlight
+      />
+    ) : (
+      <LinkContent />
+    )}
   </>
 )
 
@@ -106,6 +121,8 @@ export function BlockEditor({
   const router = useRouter()
   const [mobileView, setMobileView] = React.useState<'main' | 'highlighter' | 'link'>('main')
   const [showDiscardDialog, setShowDiscardDialog] = React.useState(false)
+  const [isToolbarReady, setIsToolbarReady] = React.useState(false)
+  const [mobileSavedSelection, setMobileSavedSelection] = React.useState<{ from: number; to: number } | null>(null)
   const toolbarRef = React.useRef<HTMLDivElement>(null)
   const trpcClient = useTRPC()
   const queryClient = useQueryClient()
@@ -346,7 +363,18 @@ export function BlockEditor({
     }
   }, [editor, existingContent])
 
-  if (!editor) {
+  React.useEffect(() => {
+    if (editor) {
+      const timer = setTimeout(() => {
+        setIsToolbarReady(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    } else {
+      setIsToolbarReady(false)
+    }
+  }, [editor])
+
+  if (!editor || !isToolbarReady) {
     return <ToolbarSkeleton />
   }
 
@@ -356,67 +384,81 @@ export function BlockEditor({
         <div className='flex items-center'>
           <div className='flex-1 min-w-0 overflow-x-auto'>
             <Toolbar
-              ref={toolbarRef}
-              style={
-                isMobile
-                  ? {
-                      bottom: `calc(100% - ${windowSize.height - bodyRect.y}px)`,
-                    }
-                  : {}
-              }>
-              {mobileView === 'main' ? (
-                <>
-                  <Spacer />
-                  <ToolbarGroup>
-                    <UndoRedoButton action='undo' />
-                    <UndoRedoButton action='redo' />
-                  </ToolbarGroup>
-                  <ToolbarSeparator />
-                  <ToolbarGroup>
-                    <HeadingDropdownMenu levels={[1, 2, 3, 4]} />
-                    <ListDropdownMenu types={['bulletList', 'orderedList', 'taskList']} />
-                    <BlockquoteButton />
-                    <CodeBlockButton />
-                  </ToolbarGroup>
-                  <ToolbarSeparator />
-                  <ToolbarGroup>
-                    <MarkButton type='bold' />
-                    <MarkButton type='italic' />
-                    <MarkButton type='strike' />
-                    <MarkButton type='code' />
-                    <MarkButton type='underline' />
-                    {!isMobile ? (
-                      <ColorHighlightPopover />
-                    ) : (
-                      <ColorHighlightPopoverButton onClick={() => setMobileView('highlighter')} />
-                    )}
-                    {!isMobile ? <LinkPopover /> : <LinkButton onClick={() => setMobileView('link')} />}
-                  </ToolbarGroup>
-                  <ToolbarSeparator />
-                  <ToolbarGroup>
-                    <MarkButton type='superscript' />
-                    <MarkButton type='subscript' />
-                  </ToolbarGroup>
-                  <ToolbarSeparator />
-                  <ToolbarGroup>
-                    <TextAlignButton align='left' />
-                    <TextAlignButton align='center' />
-                    <TextAlignButton align='right' />
-                    <TextAlignButton align='justify' />
-                  </ToolbarGroup>
-                  <ToolbarSeparator />
-                  <ToolbarGroup>
-                    <ImageUploadButton text='Add' />
-                  </ToolbarGroup>
-                  <Spacer />
-                </>
-              ) : (
-                <MobileToolbarContent
-                  type={mobileView === 'highlighter' ? 'highlighter' : 'link'}
-                  onBack={() => setMobileView('main')}
-                />
-              )}
-            </Toolbar>
+                ref={toolbarRef}
+                style={
+                  isMobile
+                    ? {
+                        bottom: `calc(100% - ${windowSize.height - bodyRect.y}px)`,
+                      }
+                    : {}
+                }>
+                {mobileView === 'main' ? (
+                  <>
+                    <Spacer />
+                    <ToolbarGroup>
+                      <UndoRedoButton action='undo' />
+                      <UndoRedoButton action='redo' />
+                    </ToolbarGroup>
+                    <ToolbarSeparator />
+                    <ToolbarGroup>
+                      <HeadingDropdownMenu levels={[1, 2, 3, 4]} />
+                      <ListDropdownMenu types={['bulletList', 'orderedList', 'taskList']} />
+                      <BlockquoteButton />
+                      <CodeBlockButton />
+                    </ToolbarGroup>
+                    <ToolbarSeparator />
+                    <ToolbarGroup>
+                      <MarkButton type='bold' />
+                      <MarkButton type='italic' />
+                      <MarkButton type='strike' />
+                      <MarkButton type='code' />
+                      <MarkButton type='underline' />
+                      {!isMobile ? (
+                        <ColorHighlightPopover />
+                      ) : (
+                        <ColorHighlightPopoverButton onClick={() => {
+                          // Save current selection before switching view
+                          if (editor && !editor.state.selection.empty) {
+                            setMobileSavedSelection({
+                              from: editor.state.selection.from,
+                              to: editor.state.selection.to,
+                            })
+                          }
+                          setMobileView('highlighter')
+                        }} />
+                      )}
+                      {!isMobile ? <LinkPopover /> : <LinkButton onClick={() => setMobileView('link')} />}
+                    </ToolbarGroup>
+                    <ToolbarSeparator />
+                    <ToolbarGroup>
+                      <MarkButton type='superscript' />
+                      <MarkButton type='subscript' />
+                    </ToolbarGroup>
+                    <ToolbarSeparator />
+                    <ToolbarGroup>
+                      <TextAlignButton align='left' />
+                      <TextAlignButton align='center' />
+                      <TextAlignButton align='right' />
+                      <TextAlignButton align='justify' />
+                    </ToolbarGroup>
+                    <ToolbarSeparator />
+                    <ToolbarGroup>
+                      <ImageUploadButton text='Add' />
+                    </ToolbarGroup>
+                    <Spacer />
+                  </>
+                ) : (
+                  <MobileToolbarContent
+                    type={mobileView === 'highlighter' ? 'highlighter' : 'link'}
+                    onBack={() => {
+                      setMobileView('main')
+                      setMobileSavedSelection(null) // Clear saved selection when going back
+                    }}
+                    editor={editor}
+                    savedSelection={mobileSavedSelection}
+                  />
+                )}
+              </Toolbar>
           </div>
           {mobileView === 'main' && (
             <div className='flex-shrink-0 px-4 py-2 border-l border-dashed'>

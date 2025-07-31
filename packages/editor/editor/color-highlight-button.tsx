@@ -2,10 +2,10 @@ import type { Node } from '@tiptap/pm/model'
 import { type Editor, isNodeSelection } from '@tiptap/react'
 import * as React from 'react'
 
-import { Button, type TipTapButtonProps as ButtonProps } from './button'
-import { useTiptapEditor } from '../hooks/use-tiptap-editor'
-import { findNodePosition, isEmptyNode, isMarkInSchema } from '../lib/tiptap-utils'
 import { cn } from '@seeds/ui/lib/utils'
+import { useTiptapEditor } from '../hooks/use-tiptap-editor'
+import { findNodePosition, isMarkInSchema } from '../lib/tiptap-utils'
+import { Button, type TipTapButtonProps as ButtonProps } from './button'
 
 export const HIGHLIGHT_COLORS = [
   {
@@ -182,7 +182,12 @@ export const ColorHighlightButton = React.forwardRef<HTMLButtonElement, ColorHig
       [color, editor, isDisabled, node, nodePos, onClick, onApplied]
     )
 
-    if (!shouldShow || !editor || !editor.isEditable) {
+    // For mobile popover content, always show buttons if editor exists
+    if (!editor) {
+      return null
+    }
+
+    if (!shouldShow && editor.isEditable) {
       return null
     }
 
@@ -191,7 +196,7 @@ export const ColorHighlightButton = React.forwardRef<HTMLButtonElement, ColorHig
         type='button'
         className={`${className.trim()} ${
           isActive ? 'bg-secondary hover:bg-secondary-hover active:bg-secondary-active' : ''
-        } p-1 rounded-full`}
+        } p-2 rounded-full min-w-[40px] min-h-[40px]`}
         disabled={isDisabled}
         variant='ghost'
         size='icon'
@@ -204,7 +209,7 @@ export const ColorHighlightButton = React.forwardRef<HTMLButtonElement, ColorHig
         {children || (
           <>
             <span
-              className='relative size-5 rounded-xl transition-transform duration-200 ease-in-out mx-1 flex border'
+              className='relative size-6 rounded-xl transition-transform duration-200 ease-in-out mx-1 flex border min-w-[24px] min-h-[24px]'
               style={{ backgroundColor: color }}>
               <span
                 className={cn(

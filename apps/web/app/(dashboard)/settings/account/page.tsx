@@ -1,5 +1,11 @@
 import { Separator } from '@seeds/ui/separator'
-import { AccountForm } from './account-form'
+import { AccountServer } from './account-server'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Account Settings',
+  description: 'Manage your account preferences',
+}
 
 export default function SettingsAccountPage() {
   return (
@@ -12,7 +18,7 @@ export default function SettingsAccountPage() {
         </p>
       </div>
       <Separator />
-      <AccountForm />
+      <AccountServer />
     </div>
   )
 }

@@ -139,3 +139,43 @@ export async function deleteJobPosting(
   }
   return { success: true };
 }
+
+export async function updateUserSettings(
+  supabase: Client,
+  userId: string,
+  organizationId: string,
+  settings: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase
+    .from("organization_users")
+    .update({ settings })
+    .eq("user_id", userId)
+    .eq("organization_id", organizationId)
+    .select("settings")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update user settings: ${error.message}`);
+  }
+
+  return (data?.settings as Record<string, unknown>) || null;
+}
+
+export async function getUserSettings(
+  supabase: Client,
+  userId: string,
+  organizationId: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase
+    .from("organization_users")
+    .select("settings")
+    .eq("user_id", userId)
+    .eq("organization_id", organizationId)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to fetch user settings: ${error.message}`);
+  }
+
+  return (data?.settings as Record<string, unknown>) || null;
+}

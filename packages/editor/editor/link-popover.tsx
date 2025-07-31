@@ -1,12 +1,12 @@
-import { Button, type TipTapButtonProps as ButtonProps } from './button'
-import { Popover, PopoverContent, PopoverTrigger } from './popover'
-import { Separator } from './separator'
 import { Input } from '@seeds/ui/input'
-import { useTiptapEditor } from '../hooks/use-tiptap-editor'
-import { isMarkInSchema, sanitizeUrl } from '../lib/tiptap-utils'
 import { type Editor, isNodeSelection } from '@tiptap/react'
 import { CornerDownLeftIcon, ExternalLinkIcon, LinkIcon, TrashIcon } from 'lucide-react'
 import * as React from 'react'
+import { useTiptapEditor } from '../hooks/use-tiptap-editor'
+import { isMarkInSchema, sanitizeUrl } from '../lib/tiptap-utils'
+import { Button, type TipTapButtonProps as ButtonProps } from './button'
+import { Popover, PopoverContent, PopoverTrigger } from './popover'
+import { Separator } from './separator'
 
 export interface LinkHandlerProps {
   editor: Editor | null
@@ -129,7 +129,7 @@ const LinkMain: React.FC<LinkMainProps> = ({ url, setUrl, setLink, removeLink, i
   }
 
   return (
-    <>
+    <div className='flex flex-row items-center gap-2 p-0 sm:p-1'>
       <Input
         type='url'
         placeholder='Paste a link'
@@ -139,25 +139,23 @@ const LinkMain: React.FC<LinkMainProps> = ({ url, setUrl, setLink, removeLink, i
         autoComplete='off'
         autoCorrect='off'
         autoCapitalize='off'
-        className='min-w-[12rem] ml-[1px]'
+        className='min-w-[12rem] flex-1'
       />
 
-      <div data-orientation='horizontal' className='border-r pr-2 pl-1'>
-        <Button
-          type='button'
-          onClick={setLink}
-          tooltip='Apply link'
-          disabled={!url && !isActive}
-          data-style='ghost'
-          variant='ghost'
-          className='size-9'>
-          <CornerDownLeftIcon className='tiptap-button-icon' />
-        </Button>
-      </div>
+      <Button
+        type='button'
+        onClick={setLink}
+        tooltip='Apply link'
+        disabled={!url && !isActive}
+        data-style='ghost'
+        variant='ghost'
+        className='size-9 flex-shrink-0'>
+        <CornerDownLeftIcon className='tiptap-button-icon' />
+      </Button>
 
-      <Separator />
+      <Separator orientation='vertical' className='h-6' />
 
-      <div className='flex gap-1' data-orientation='horizontal'>
+      <div className='flex gap-1'>
         <Button
           type='button'
           variant='ghost'
@@ -181,7 +179,7 @@ const LinkMain: React.FC<LinkMainProps> = ({ url, setUrl, setLink, removeLink, i
           <TrashIcon className='tiptap-button-icon' />
         </Button>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -271,7 +269,7 @@ export function LinkPopover({
         />
       </PopoverTrigger>
 
-      <PopoverContent className='!border !border-border !rounded-lg mt-1 !bg-background'>
+      <PopoverContent className='!border !border-border !rounded-lg mt-1 !bg-background z-[50]'>
         <LinkMain {...linkHandler} />
       </PopoverContent>
     </Popover>

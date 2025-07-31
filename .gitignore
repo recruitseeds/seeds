@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+**/.next/
 /out/
 
 # production
@@ -47,6 +48,8 @@ next-env.d.ts
 .claude
 .CLAUDE.md
 .claude.md
+claude.md
+CLAUDE.md
 .cursor
 venv/
 *.venv

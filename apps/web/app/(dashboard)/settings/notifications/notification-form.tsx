@@ -1,12 +1,12 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useEffect } from 'react'
 
+import { useTRPC } from '@/trpc/client'
 import { Button } from '@seeds/ui/button'
-import { Checkbox } from '@seeds/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -16,97 +16,110 @@ import {
   FormLabel,
   FormMessage,
 } from '@seeds/ui/form'
-import { RadioGroup, RadioGroupItem } from '@seeds/ui/radio-group'
 import { Switch } from '@seeds/ui/switch'
+import { Alert, AlertDescription } from '@seeds/ui/alert'
+import { InfoIcon } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 const notificationsFormSchema = z.object({
-  type: z.enum(['all', 'mentions', 'none'], {
-    required_error: 'You need to select a notification type.',
-  }),
-  mobile: z.boolean().default(false).optional(),
-  communication_emails: z.boolean().default(false).optional(),
-  social_emails: z.boolean().default(false).optional(),
-  marketing_emails: z.boolean().default(false).optional(),
-  security_emails: z.boolean(),
+  // Application activity notifications
+  new_application: z.boolean().default(true),
+  application_status_change: z.boolean().default(true),
+  application_reminders: z.boolean().default(true),
+  
+  // Team collaboration notifications
+  team_mentions: z.boolean().default(true),
+  new_comments: z.boolean().default(true),
+  assigned_to_application: z.boolean().default(true),
+  
+  // System notifications
+  pipeline_updates: z.boolean().default(false),
+  job_posting_expiry: z.boolean().default(true),
+  weekly_summary: z.boolean().default(false),
+  
+  // Critical notifications (always on)
+  security_alerts: z.boolean().default(true),
 })
 
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>
 
-// This can come from your database or API.
-const defaultValues: Partial<NotificationsFormValues> = {
-  communication_emails: false,
-  marketing_emails: false,
-  social_emails: true,
-  security_emails: true,
+interface NotificationsFormProps {
+  initialSettings?: Record<string, unknown> | null
 }
 
-export function NotificationsForm() {
+export function NotificationsForm({ initialSettings }: NotificationsFormProps) {
   const form = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsFormSchema),
-    defaultValues,
+    defaultValues: {
+      new_application: true,
+      application_status_change: true,
+      application_reminders: true,
+      team_mentions: true,
+      new_comments: true,
+      assigned_to_application: true,
+      pipeline_updates: false,
+      job_posting_expiry: true,
+      weekly_summary: false,
+      security_alerts: true,
+    },
   })
 
-  function onSubmit() {
-    toast('You submitted the following values:')
+  const trpc = useTRPC()
+  const updateSettings = useMutation(trpc.organization.updateUserSettingsPartial.mutationOptions())
+
+  // Load saved notification preferences
+  useEffect(() => {
+    if (initialSettings) {
+      const notifications = initialSettings.notifications as Record<string, boolean>
+      if (notifications) {
+        Object.entries(notifications).forEach(([key, value]) => {
+          if (key in notificationsFormSchema.shape) {
+            form.setValue(key as keyof NotificationsFormValues, value)
+          }
+        })
+      }
+    }
+  }, [initialSettings, form])
+
+  async function onSubmit(data: NotificationsFormValues) {
+    try {
+      await updateSettings.mutateAsync({
+        path: 'notifications',
+        value: data,
+      })
+
+      toast.success('Notification preferences updated successfully')
+    } catch (error) {
+      toast.error('Failed to update notification preferences')
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
-          control={form.control}
-          name='type'
-          render={({ field }) => (
-            <FormItem className='space-y-3'>
-              <FormLabel>Notify me about...</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className='flex flex-col space-y-1'>
-                  <FormItem className='flex items-center space-x-3 space-y-0'>
-                    <FormControl>
-                      <RadioGroupItem value='all' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>
-                      All new messages
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className='flex items-center space-x-3 space-y-0'>
-                    <FormControl>
-                      <RadioGroupItem value='mentions' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>
-                      Direct messages and mentions
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className='flex items-center space-x-3 space-y-0'>
-                    <FormControl>
-                      <RadioGroupItem value='none' />
-                    </FormControl>
-                    <FormLabel className='font-normal'>Nothing</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Alert>
+          <InfoIcon className="h-4 w-4" />
+          <AlertDescription>
+            Notification settings are being prepared for future implementation. 
+            Configure your preferences now to be ready when the notification system launches.
+          </AlertDescription>
+        </Alert>
+
         <div>
-          <h3 className='mb-4 text-lg font-medium'>Email Notifications</h3>
+          <h3 className='mb-4 text-lg font-medium'>Application Activity</h3>
           <div className='space-y-4'>
             <FormField
               control={form.control}
-              name='communication_emails'
+              name='new_application'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
                     <FormLabel className='text-base'>
-                      Communication emails
+                      New applications
                     </FormLabel>
                     <FormDescription>
-                      Receive emails about your account activity.
+                      Get notified when someone applies to your job postings.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -120,15 +133,15 @@ export function NotificationsForm() {
             />
             <FormField
               control={form.control}
-              name='marketing_emails'
+              name='application_status_change'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
                     <FormLabel className='text-base'>
-                      Marketing emails
+                      Application status changes
                     </FormLabel>
                     <FormDescription>
-                      Receive emails about new products, features, and more.
+                      Receive updates when applications move through your pipeline.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -142,13 +155,43 @@ export function NotificationsForm() {
             />
             <FormField
               control={form.control}
-              name='social_emails'
+              name='application_reminders'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>Social emails</FormLabel>
+                    <FormLabel className='text-base'>
+                      Application reminders
+                    </FormLabel>
                     <FormDescription>
-                      Receive emails for friend requests, follows, and more.
+                      Get reminded about applications requiring action.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h3 className='mb-4 text-lg font-medium'>Team Collaboration</h3>
+          <div className='space-y-4'>
+            <FormField
+              control={form.control}
+              name='team_mentions'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      Team mentions
+                    </FormLabel>
+                    <FormDescription>
+                      Get notified when teammates mention you in comments.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -162,13 +205,131 @@ export function NotificationsForm() {
             />
             <FormField
               control={form.control}
-              name='security_emails'
+              name='new_comments'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
-                    <FormLabel className='text-base'>Security emails</FormLabel>
+                    <FormLabel className='text-base'>
+                      New comments
+                    </FormLabel>
                     <FormDescription>
-                      Receive emails about your account activity and security.
+                      Receive notifications for new comments on applications you're involved with.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='assigned_to_application'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      Application assignments
+                    </FormLabel>
+                    <FormDescription>
+                      Get notified when you're assigned to review an application.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h3 className='mb-4 text-lg font-medium'>System Updates</h3>
+          <div className='space-y-4'>
+            <FormField
+              control={form.control}
+              name='pipeline_updates'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      Pipeline updates
+                    </FormLabel>
+                    <FormDescription>
+                      Get notified about changes to hiring pipelines.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='job_posting_expiry'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      Job posting expiry
+                    </FormLabel>
+                    <FormDescription>
+                      Get reminded before your job postings expire.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='weekly_summary'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      Weekly summary
+                    </FormLabel>
+                    <FormDescription>
+                      Receive a weekly summary of your recruiting activity.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='security_alerts'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                  <div className='space-y-0.5'>
+                    <FormLabel className='text-base'>
+                      Security alerts
+                    </FormLabel>
+                    <FormDescription>
+                      Important security notifications about your account.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -184,30 +345,8 @@ export function NotificationsForm() {
             />
           </div>
         </div>
-        <FormField
-          control={form.control}
-          name='mobile'
-          render={({ field }) => (
-            <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className='space-y-1 leading-none'>
-                <FormLabel>
-                  Use different settings for my mobile devices
-                </FormLabel>
-                <FormDescription>
-                  You can manage your mobile notifications in the{' '}
-                  <Link href='/examples/forms'>mobile settings</Link> page.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
-        <Button type='submit'>Update notifications</Button>
+
+        <Button type='submit'>Update notification preferences</Button>
       </form>
     </Form>
   )

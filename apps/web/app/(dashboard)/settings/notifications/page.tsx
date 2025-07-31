@@ -1,5 +1,5 @@
 import { Separator } from '@seeds/ui/separator'
-import { NotificationsForm } from './notification-form'
+import { NotificationsServer } from './notifications-server'
 
 export default function SettingsNotificationsPage() {
   return (
@@ -11,7 +11,7 @@ export default function SettingsNotificationsPage() {
         </p>
       </div>
       <Separator />
-      <NotificationsForm />
+      <NotificationsServer />
     </div>
   )
 }

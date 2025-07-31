@@ -1,5 +1,5 @@
-import { Separator } from './separator'
 import * as React from 'react'
+import { Separator } from './separator'
 
 type BaseProps = React.HTMLAttributes<HTMLDivElement>
 

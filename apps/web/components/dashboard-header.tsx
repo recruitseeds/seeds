@@ -44,6 +44,14 @@ export function DashboardHeader({ overrideTitle, showSidebar = true }: Dashboard
         /^[0-9a-fA-F-]+$/.test(lastSegment)
       ) {
         title = 'Create Job'
+      } else if (
+        segments.length >= 4 &&
+        segments[0] === 'jobs' &&
+        segments[1] === 'pipelines' &&
+        segments[2] === 'edit' &&
+        /^[0-9a-fA-F-]+$/.test(lastSegment)
+      ) {
+        title = 'Edit Pipeline'
       } else if (/^[0-9a-fA-F-]+$/.test(lastSegment)) {
         title = segments.length > 1 ? `${segments[segments.length - 2]} Details` : 'Details'
       } else {

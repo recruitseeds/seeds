@@ -1,18 +1,13 @@
 import { type Editor, isNodeSelection } from '@tiptap/react'
+import { Ban, Highlighter } from 'lucide-react'
 import * as React from 'react'
-
 import { useMenuNavigation } from '../hooks/use-menu-navigation'
 import { useTiptapEditor } from '../hooks/use-tiptap-editor'
-
-import { Ban, Highlighter } from 'lucide-react'
-
 import { isMarkInSchema } from '../lib/tiptap-utils'
-
 import { Button, type TipTapButtonProps as ButtonProps } from './button'
+import { canToggleHighlight } from './color-highlight-button'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { Separator } from './separator'
-
-import { ColorHighlightButton, canToggleHighlight } from './color-highlight-button'
 
 export interface ColorHighlightPopoverColor {
   label: string
@@ -35,36 +30,36 @@ export interface ColorHighlightPopoverProps extends Omit<ButtonProps, 'type'> {
 export const DEFAULT_HIGHLIGHT_COLORS: ColorHighlightPopoverColor[] = [
   {
     label: 'Green',
-    value: 'var(--tt-color-highlight-green)',
-    border: 'var(--tt-color-highlight-green-contrast)',
+    value: 'var(--tt-color-highlight-green, #dcfce7)',
+    border: 'var(--tt-color-highlight-green-contrast, #16a34a)',
   },
   {
     label: 'Blue',
-    value: 'var(--tt-color-highlight-blue)',
-    border: 'var(--tt-color-highlight-blue-contrast)',
+    value: 'var(--tt-color-highlight-blue, #dbeafe)',
+    border: 'var(--tt-color-highlight-blue-contrast, #2563eb)',
   },
   {
     label: 'Red',
-    value: 'var(--tt-color-highlight-red)',
-    border: 'var(--tt-color-highlight-red-contrast)',
+    value: 'var(--tt-color-highlight-red, #fee2e2)',
+    border: 'var(--tt-color-highlight-red-contrast, #dc2626)',
   },
   {
     label: 'Purple',
-    value: 'var(--tt-color-highlight-purple)',
-    border: 'var(--tt-color-highlight-purple-contrast)',
+    value: 'var(--tt-color-highlight-purple, #f3e8ff)',
+    border: 'var(--tt-color-highlight-purple-contrast, #9333ea)',
   },
   {
     label: 'Yellow',
-    value: 'var(--tt-color-highlight-yellow)',
-    border: 'var(--tt-color-highlight-yellow-contrast)',
+    value: 'var(--tt-color-highlight-yellow, #fef3c7)',
+    border: 'var(--tt-color-highlight-yellow-contrast, #d97706)',
   },
 ]
 
 export const ColorHighlightPopoverButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, ...props }, ref) => (
+  ({ className, children, active, ...props }, ref) => (
     <Button
       type='button'
-      className={className}
+      className={`${className || ''} ${active ? 'bg-important hover:bg-important-hover active:bg-important-active' : ''}`}
       variant='ghost'
       size='icon'
       role='button'
@@ -73,7 +68,7 @@ export const ColorHighlightPopoverButton = React.forwardRef<HTMLButtonElement, B
       tooltip='Highlight'
       ref={ref}
       {...props}>
-      {children || <Highlighter />}
+      {children || <Highlighter className={active ? 'text-background dark:text-foreground' : ''} />}
     </Button>
   )
 )
@@ -102,24 +97,50 @@ export function ColorHighlightPopoverContent({
   })
 
   return (
-    <div ref={containerRef} className='flex items-center gap-1 outline-none'>
-      <div className='flex flex-row items-center gap-0.5'>
-        {colors.map((color, index) => (
-          <ColorHighlightButton
-            key={color.value}
-            editor={editor}
-            color={color.value}
-            aria-label={`${color.label} highlight color`}
-            tabIndex={index === selectedIndex ? 0 : -1}
-            active={selectedIndex === index}
-            onClick={onClose}
-          />
-        ))}
+    <div
+      ref={containerRef}
+      className='flex items-center gap-1 sm:gap-2 outline-none bg-background border border-border rounded-xl p-2 h-12 max-h-12'>
+      <div className='flex flex-row items-center gap-1 flex-nowrap overflow-x-auto'>
+        {colors.map((color, index) => {
+          const isActive = editor?.isActive('highlight', { color: color.value }) ?? false
+
+          return (
+            <Button
+              key={color.value}
+              type='button'
+              className='flex-shrink-0 p-0 rounded-full w-8 h-8 sm:w-10 sm:h-10 hover:bg-transparent'
+              style={isActive ? ({ '--tw-ring-color': color.border || color.value } as React.CSSProperties) : {}}
+              variant='ghost'
+              size='icon'
+              aria-label={`${color.label} highlight color`}
+              tabIndex={index === selectedIndex ? 0 : -1}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+
+                // Ensure we can toggle highlight
+                if (!editor || !canToggleHighlight(editor)) return
+
+                if (isActive) {
+                  editor.chain().focus().unsetMark('highlight').run()
+                } else {
+                  editor.chain().focus().setMark('highlight', { color: color.value }).run()
+                }
+                onClose?.()
+              }}>
+              <span
+                className='w-6 h-6 rounded-full border'
+                style={{
+                  backgroundColor: color.value,
+                  borderColor: color.border || color.value,
+                }}
+              />
+            </Button>
+          )
+        })}
       </div>
-
-      <Separator />
-
-      <div className='flex flex-col items-center gap-0.5'>
+      <Separator orientation='vertical' className='mx-1 h-6' />
+      <div className='flex flex-row items-center gap-1'>
         <Button
           onClick={removeHighlight}
           aria-label='Remove highlight'
@@ -127,8 +148,10 @@ export function ColorHighlightPopoverContent({
           type='button'
           role='menuitem'
           variant='ghost'
+          size='icon'
+          className='h-8 w-8'
           active={selectedIndex === colors.length}>
-          <Ban />
+          <Ban className='h-4 w-4' />
         </Button>
       </div>
     </div>
@@ -144,7 +167,6 @@ export function ColorHighlightPopover({
   const editor = useTiptapEditor(providedEditor)
   const [isOpen, setIsOpen] = React.useState(false)
   const [isDisabled, setIsDisabled] = React.useState(false)
-
   const markAvailable = isMarkInSchema('highlight', editor)
 
   React.useEffect(() => {
@@ -164,11 +186,17 @@ export function ColorHighlightPopover({
         isDisabled = true
       }
 
+      // Check if we can actually toggle highlight
+      if (!canToggleHighlight(editor)) {
+        isDisabled = true
+      }
+
       setIsDisabled(isDisabled)
     }
 
     editor.on('selectionUpdate', updateIsDisabled)
     editor.on('update', updateIsDisabled)
+    updateIsDisabled() // Initial check
 
     return () => {
       editor.off('selectionUpdate', updateIsDisabled)
@@ -180,7 +208,6 @@ export function ColorHighlightPopover({
 
   const shouldShow = React.useMemo(() => {
     if (!hideWhenUnavailable || !editor) return true
-
     return !(isNodeSelection(editor.state.selection) || !canToggleHighlight(editor))
   }, [hideWhenUnavailable, editor])
 
@@ -193,8 +220,7 @@ export function ColorHighlightPopover({
       <PopoverTrigger asChild>
         <ColorHighlightPopoverButton disabled={isDisabled} active={isActive} aria-pressed={isActive} {...props} />
       </PopoverTrigger>
-
-      <PopoverContent aria-label='Highlight colors'>
+      <PopoverContent aria-label='Highlight colors' className='z-[9999] p-0 w-auto' align='start' sideOffset={5}>
         <ColorHighlightPopoverContent editor={editor} colors={colors} onClose={() => setIsOpen(false)} />
       </PopoverContent>
     </Popover>

@@ -1,5 +1,5 @@
 import { Separator } from '@seeds/ui/separator'
-import { AppearanceForm } from './appearance-form'
+import { AppearanceServer } from './appearance-server'
 
 export default function SettingsAppearancePage() {
   return (
@@ -12,7 +12,7 @@ export default function SettingsAppearancePage() {
         </p>
       </div>
       <Separator />
-      <AppearanceForm />
+      <AppearanceServer />
     </div>
   )
 }

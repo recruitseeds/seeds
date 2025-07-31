@@ -1,16 +1,16 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 import { SidebarNav } from '@/components/settings/sidebar-nav'
 
 export const metadata: Metadata = {
-  title: 'Forms',
-  description: 'Advanced form example using react-hook-form and Zod.',
+  title: 'Settings',
+  description: 'Manage your account settings and preferences',
 }
 
 const sidebarNavItems = [
   {
     title: 'Profile',
-    href: '/settings',
+    href: '/settings/profile',
   },
   {
     title: 'Account',
@@ -23,10 +23,6 @@ const sidebarNavItems = [
   {
     title: 'Notifications',
     href: '/settings/notifications',
-  },
-  {
-    title: 'Display',
-    href: '/settings/display',
   },
 ]
 
