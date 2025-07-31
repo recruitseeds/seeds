@@ -16,8 +16,8 @@ import { formatDate } from '@/lib/dates'
 import { parseNextSteps } from '@/lib/next-steps'
 import { AlertCircle, ArrowUpRight, Calendar, CheckCircle2, Clock, Info, XCircle as XCircleStatus } from 'lucide-react'
 import { useMemo } from 'react'
-import { Alert, AlertDescription } from '../ui/alert'
-import { Button } from '../ui/button'
+import { Alert, AlertDescription } from '@seeds/ui/alert'
+import { Button } from '@seeds/ui/button'
 
 type Application = {
   id: string

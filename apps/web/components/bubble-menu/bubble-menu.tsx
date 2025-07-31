@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { type MouseEvent, memo, useCallback, useEffect, useRef, useState } from 'react'
 import { isMobile } from 'react-device-detect'
 import { isValidUrl } from '../../lib/is-valid-url'
-import { Button } from '../ui/button'
+import { Button } from '@seeds/ui/button'
 import { type AnyEvent, LinkEditor } from '../ui/link-editor'
 import { Tooltip } from '../ui/tippy'
 
@@ -27,7 +27,7 @@ import {
   Underline as UnderlineIcon,
   List as UnorderedListIcon,
 } from 'lucide-react'
-import { DropdownMenu } from '../ui/desktop-dropdown'
+import { DropdownMenu } from '@seeds/ui/desktop-dropdown'
 
 import { useForceUpdate } from '../../hooks/use-force-update'
 import { BubbleMenuSeparator } from './bubble-menu-separator'

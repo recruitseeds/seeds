@@ -19,9 +19,9 @@ import {
 import { ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Button } from '@seeds/ui/button'
+import { Input } from '@seeds/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
 
 declare module '@tanstack/table-core' {
   interface ColumnMeta<TData, TValue> {
