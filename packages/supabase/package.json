@@ -1,0 +1,22 @@
+{
+  "name": "@seeds/supabase",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.1",
+    "@supabase/supabase-js": "^2.48.0"
+  },
+  "devDependencies": {
+    "@seeds/tsconfig": "*",
+    "@types/node": "^22",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "next": "^15.0.0"
+  }
+}
