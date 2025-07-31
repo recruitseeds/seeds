@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { Checkbox } from '@seeds/ui/checkbox'
-import { DatePicker } from '@seeds/ui/date-picker'
+import { Button } from '../ui/button'
+import { Checkbox } from '../ui/checkbox'
+import { DatePicker } from '../ui/date-picker'
 import {
   Dialog,
   DialogContent,
@@ -11,11 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@seeds/ui/dialog'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
-import { Textarea } from '@seeds/ui/textarea'
+} from '../ui/dialog'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Textarea } from '../ui/textarea'
 import { parseNextSteps } from '@/lib/next-steps'
 import { useTRPC } from '@/trpc/client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

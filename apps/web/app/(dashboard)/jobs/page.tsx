@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/container";
 import { JobsTable } from "@/components/tables/jobs/index";
-import { Button } from "@seeds/ui/button";
+import { Button } from "@/components/ui/button";
 import { getServerTRPCCaller, HydrateClient } from "@/trpc/server";
 
 export const metadata: Metadata = {

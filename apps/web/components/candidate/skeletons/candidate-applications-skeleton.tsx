@@ -1,11 +1,11 @@
-import { Button } from '@seeds/ui/button'
+import { Button } from '../../ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@seeds/ui/card'
+} from '../../ui/card'
 import { Plus } from 'lucide-react'
 
 export function CandidateApplicationsSkeleton() {

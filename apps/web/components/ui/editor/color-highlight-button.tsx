@@ -5,7 +5,7 @@ import * as React from 'react'
 import { Button, type TipTapButtonProps as ButtonProps } from '@seeds/editor/button'
 import { useTiptapEditor } from '@/hooks/use-tiptap-editor'
 import { findNodePosition, isEmptyNode, isMarkInSchema } from '@/lib/tiptap-utils'
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 
 export const HIGHLIGHT_COLORS = [
   {

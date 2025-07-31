@@ -7,8 +7,8 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { useTRPC } from '@/trpc/client'
-import { Button } from '@seeds/ui/button'
-import { Calendar } from '@seeds/ui/calendar'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Command,
   CommandEmpty,
@@ -16,7 +16,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@seeds/ui/command'
+} from '@/components/ui/command'
 import {
   Form,
   FormControl,
@@ -25,13 +25,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@seeds/ui/form'
+} from '@/components/ui/form'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@seeds/ui/popover'
-import { cn } from '@seeds/ui/lib/utils'
+} from '@/components/ui/popover'
+import { cn } from '@/components/ui/lib/utils'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 

@@ -1,7 +1,7 @@
 'use client'
-import { Badge } from '@seeds/ui/badge'
-import { Label } from '@seeds/ui/label'
-import { ScrollArea } from '@seeds/ui/scroll-area'
+import { Badge } from '../ui/badge'
+import { Label } from '../ui/label'
+import { ScrollArea } from '../ui/scroll-area'
 import {
   Timeline,
   TimelineContent,
@@ -11,7 +11,7 @@ import {
   TimelineItem,
   TimelineSeparator,
   TimelineTitle,
-} from '@seeds/ui/timeline'
+} from '../ui/timeline'
 import { formatDate } from '@/lib/dates'
 import { parseNextSteps } from '@/lib/next-steps'
 import { AlertCircle, ArrowUpRight, Calendar, CheckCircle2, Clock, Info, XCircle as XCircleStatus } from 'lucide-react'

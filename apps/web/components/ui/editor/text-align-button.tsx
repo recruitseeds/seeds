@@ -1,4 +1,4 @@
-import type { ButtonProps } from '@seeds/ui/button'
+import type { ButtonProps } from './button'
 import { Button } from '@seeds/editor/button'
 import { useTiptapEditor } from '@/hooks/use-tiptap-editor'
 import type { ChainedCommands, Editor } from '@tiptap/react'

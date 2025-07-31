@@ -1,4 +1,4 @@
-import { Separator } from '@seeds/ui/separator'
+import { Separator } from '@/components/ui/separator'
 import { AppearanceServer } from './appearance-server'
 
 export default function SettingsAppearancePage() {

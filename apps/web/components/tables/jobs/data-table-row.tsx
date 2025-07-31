@@ -1,7 +1,7 @@
 'use client'
 
-import { TableCell, TableRow } from '@seeds/ui/table'
-import { cn } from '@seeds/ui/lib/utils'
+import { TableCell, TableRow } from '../../ui/table'
+import { cn } from '../../ui/lib/utils'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { type Row, flexRender } from '@tanstack/react-table'
 

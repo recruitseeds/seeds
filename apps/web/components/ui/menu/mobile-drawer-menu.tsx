@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'

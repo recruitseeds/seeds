@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { type ButtonHTMLAttributes, type HTMLProps, forwardRef } from 'react'
 import { Button } from './button'
 import { Surface } from './surface'

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useId } from 'react'
 
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { LayeredHotkeys } from './dismissible-layer'
 import { commandScore } from './utils/command-score'
 

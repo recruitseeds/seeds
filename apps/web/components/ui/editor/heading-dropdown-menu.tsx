@@ -1,4 +1,4 @@
-import type { ButtonProps } from "@seeds/ui/button";
+import type { ButtonProps } from "./button";
 import { Button } from "@seeds/editor/button";
 import {
   DropdownMenu,

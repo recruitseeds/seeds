@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { SheetDropdownMenu } from '@seeds/ui/sheet'
+import { Button } from '../ui/button'
+import { SheetDropdownMenu } from '../ui/sheet'
 import { FileTextIcon, PlusIcon, UploadCloudIcon } from 'lucide-react'
 import { CreateCandidateApplicationForm } from './create-candidate-application-form'
 import { ImportCandidateApplicationsContent } from './import-candidate-applications-form'

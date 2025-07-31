@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { DismissibleLayer } from '../dismissible-layer'

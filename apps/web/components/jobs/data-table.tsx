@@ -1,7 +1,7 @@
 'use client'
 import { DataTableViewOptions } from '@/components/data-table/column-toggle'
 import { DataTablePagination } from '@/components/data-table/pagination'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@seeds/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import type { JobTemplate } from '@/data/job-templates'
 import {
   type ColumnDef,

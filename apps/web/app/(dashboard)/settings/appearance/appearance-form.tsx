@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChevronDown } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
@@ -10,9 +10,9 @@ import { z } from 'zod'
 
 import { FontSwitcher } from '@/components/font-switcher'
 import { useTRPC } from '@/trpc/client'
-import { Button } from '@seeds/ui/button'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@seeds/ui/form'
-import { RadioGroup, RadioGroupItem } from '@seeds/ui/radio-group'
+import { Button } from '@/components/ui/button'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 

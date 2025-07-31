@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@seeds/ui": "*",
     "@seeds/editor": "*",
     "@seeds/supabase": "*",
     "@seeds/tailwind": "*",

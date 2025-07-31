@@ -7,9 +7,9 @@ import {
   MinusIcon,
   UsersIcon,
 } from "lucide-react";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@seeds/ui/card";
-import { Badge } from "@seeds/ui/badge";
-import { cn } from "@seeds/ui/lib/utils";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "../../ui/card";
+import { Badge } from "../../ui/badge";
+import { cn } from "../../ui/lib/utils";
 
 interface TrendData {
   direction: "up" | "down" | "neutral";

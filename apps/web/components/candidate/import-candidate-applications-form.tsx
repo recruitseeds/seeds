@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@seeds/ui/tabs'
+import { Button } from '../ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { parseDateString } from '@/lib/dates'
 import type { TablesInsert } from '@seeds/supabase/types/db'
 import { useTRPC } from '@/trpc/client'

@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import type { Node } from '@tiptap/pm/model'
 import { type Editor, NodeViewWrapper } from '@tiptap/react'
 import { useCallback, useRef } from 'react'

@@ -2,7 +2,7 @@
 
 import React, { forwardRef } from 'react'
 
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 
 export interface BaseTextProps {
   /** The element name to use for the text */

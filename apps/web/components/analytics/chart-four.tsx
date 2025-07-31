@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import {
   type ChartConfig,
   ChartContainer,
@@ -11,8 +11,8 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from '@seeds/ui/chart'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
+} from '../ui/chart'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 const chartData = [
   { date: '2024-04-01', desktop: 222, mobile: 150 },
   { date: '2024-04-02', desktop: 97, mobile: 180 },

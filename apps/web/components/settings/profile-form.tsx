@@ -7,7 +7,7 @@ import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { useTRPC } from '@/trpc/client'
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from '../ui/lib/utils'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '../ui/button'

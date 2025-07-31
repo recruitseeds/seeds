@@ -1,8 +1,8 @@
 'use client'
 
 import { Container } from '@/components/container'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { HiringManagerTable } from './hiring-manger-table'
 
 export default function Page() {

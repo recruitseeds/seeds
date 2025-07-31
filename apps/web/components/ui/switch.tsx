@@ -1,5 +1,5 @@
 'use client'
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import * as SwitchPrimitive from '@radix-ui/react-switch'
 import * as React from 'react'
 

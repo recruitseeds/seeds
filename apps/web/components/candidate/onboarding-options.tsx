@@ -2,15 +2,15 @@
 
 import { parseAndStoreResumeAction } from '@/actions/parse-resume-action'
 import { ResumeUploader } from '@/components/candidate/resume-uploader'
-import { Button } from '@seeds/ui/button'
+import { Button } from '../ui/button'
 import {
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@seeds/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@seeds/ui/tabs'
+} from '../ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations'
 import {
   AlertTriangle,

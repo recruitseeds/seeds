@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from '../ui/lib/utils'
 import { ChevronDown as ChevronDownIcon } from 'lucide-react'
 import { type MouseEvent, forwardRef } from 'react'
 import { ConditionalWrap } from '../../lib/conditional-wrap'

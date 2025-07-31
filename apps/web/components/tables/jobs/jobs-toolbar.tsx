@@ -1,21 +1,21 @@
 import { Table as ReactTable } from "@tanstack/react-table";
 import { ChevronDown, Plus, Search, Trash2 } from "lucide-react";
-import { Button } from "@seeds/ui/button";
+import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@seeds/ui/dropdown-menu";
-import { Input } from "@seeds/ui/input";
+} from "../../ui/dropdown-menu";
+import { Input } from "../../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@seeds/ui/select";
+} from "../../ui/select";
 
 interface JobsTableToolbarProps {
   table: ReactTable<any>;

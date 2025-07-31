@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@seeds/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
 import type React from 'react'
 

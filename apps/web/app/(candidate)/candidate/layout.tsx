@@ -1,6 +1,6 @@
 import { ClientAvatarUpload } from '@/components/candidate/avatar-upload'
-import { Badge } from '@seeds/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { getServerTRPCCaller } from '@/trpc/server'
 import { Calendar, MapPin } from 'lucide-react'

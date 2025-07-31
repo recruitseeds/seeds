@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { Card, CardContent } from '@seeds/ui/card'
+import { Button } from '../../ui/button'
+import { Card, CardContent } from '../../ui/card'
 import { Briefcase, Plus, Search, X } from 'lucide-react'
 import Link from 'next/link'
 

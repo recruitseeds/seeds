@@ -2,9 +2,9 @@
 
 import type React from 'react'
 
-import { Button } from '@seeds/ui/button'
-import { Progress } from '@seeds/ui/progress'
-import { cn } from '@seeds/ui/lib/utils'
+import { Button } from '../ui/button'
+import { Progress } from '../ui/progress'
+import { cn } from '../ui/lib/utils'
 import { AlertCircle, FileText, Upload, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 

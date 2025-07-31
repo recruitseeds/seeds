@@ -1,7 +1,7 @@
 import React, { forwardRef, KeyboardEvent, useRef } from 'react'
 import toast from 'react-hot-toast'
 
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard'
 import { isMetaEnter } from '../../lib/is-meta-enter'
 import { LimitIndicator } from '../../lib/limit-indicator'

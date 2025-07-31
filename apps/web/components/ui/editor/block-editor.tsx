@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@seeds/ui/dialog'
+} from './dialog'
 import { BlockquoteButton } from '@seeds/editor/blockquote-button'
 import { Button } from '@seeds/editor/button'
 import { CodeBlockButton } from '@seeds/editor/code-block-button'

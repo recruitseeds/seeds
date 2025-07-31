@@ -1,6 +1,6 @@
 // import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import '@seeds/tailwind/globals.css'
-import { Toaster } from '@seeds/ui/toaster'
+import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
 import { Providers } from './providers'
 import { getUserFont } from '@/lib/get-user-font'

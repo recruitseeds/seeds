@@ -1,7 +1,7 @@
-import { Button } from '@seeds/ui/button'
-import { Icon } from '@seeds/ui/icon'
-import { Spinner } from '@seeds/ui/spinner'
-import { cn } from '@seeds/ui/lib/utils'
+import { Button } from './button'
+import { Icon } from './icon'
+import { Spinner } from './spinner'
+import { cn } from './lib/utils'
 import { type ChangeEvent, useCallback } from 'react'
 import { useDropZone, useFileUpload, useUploader } from './hooks'
 

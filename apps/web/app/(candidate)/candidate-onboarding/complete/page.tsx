@@ -1,7 +1,7 @@
 'use client'
 
 import { updateCandidateOnboardingStatusAction } from '@/actions/update-candidate-onboarding-status'
-import { Button } from '@seeds/ui/button'
+import { Button } from '@/components/ui/button'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'

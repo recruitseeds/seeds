@@ -1,5 +1,5 @@
 import { Button } from '@seeds/editor/button'
-import { Icon } from '@seeds/ui/icon'
+import { Icon } from './icon'
 import { getRenderContainer } from '@/lib/get-render-container'
 import type { Editor } from '@tiptap/react'
 import { BubbleMenu as BaseBubbleMenu, useEditorState } from '@tiptap/react'

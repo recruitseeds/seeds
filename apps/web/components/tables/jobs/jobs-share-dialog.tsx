@@ -10,16 +10,16 @@ import {
   X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Button } from "@seeds/ui/button";
-import { Checkbox } from "@seeds/ui/checkbox";
-import { DismissibleLayer } from "@seeds/ui/dismissible-layer";
+import { Button } from "../../ui/button";
+import { Checkbox } from "../../ui/checkbox";
+import { DismissibleLayer } from "../../ui/dismissible-layer";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@seeds/ui/select";
+} from "../../ui/select";
 import type { JobPost } from "./types";
 
 interface JobShareDialogProps {

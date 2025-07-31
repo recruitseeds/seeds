@@ -1,4 +1,4 @@
-import { Separator } from '@seeds/ui/separator'
+import { Separator } from '@/components/ui/separator'
 import { AccountServer } from './account-server'
 import type { Metadata } from 'next'
 

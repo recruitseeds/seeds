@@ -1,5 +1,5 @@
 'use client'
-import { Button } from '@seeds/ui/button'
+import { Button } from './ui/button'
 import {
   Dialog,
   DialogContent,
@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@seeds/ui/dialog'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
+} from './ui/dialog'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import {
   Sheet,
   SheetContent,
@@ -19,7 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@seeds/ui/sheet'
+} from './ui/sheet'
 import { useTRPC } from '@/trpc/client'
 import { useQuery } from '@tanstack/react-query'
 import type { Editor } from '@tiptap/react'

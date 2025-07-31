@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@seeds/ui/card'
+} from '../ui/card'
 import { usePathname } from 'next/navigation'
 import React from 'react'
 

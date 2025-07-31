@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './ui/lib/utils'
 
 export function Container({
   children,

@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 
 export const CONTAINER_STYLES = {
   base: cn(

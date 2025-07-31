@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from '@/components/ui/lib/utils'
 
 interface Props {
   maxLength: number

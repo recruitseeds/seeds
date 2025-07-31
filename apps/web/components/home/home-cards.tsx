@@ -12,9 +12,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@seeds/ui/card'
+} from '../ui/card'
 
-import { Badge } from '@seeds/ui/badge'
+import { Badge } from '../ui/badge'
 
 export function HomeCards() {
   const activities = [

@@ -1,7 +1,7 @@
 'use client'
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@seeds/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ApplicationsList } from './applications-list'

@@ -1,4 +1,4 @@
-import { Button as CoreButton, type ButtonProps as CoreButtonProps } from '@seeds/ui/button'
+import { Button as CoreButton, type ButtonProps as CoreButtonProps } from './button'
 import * as React from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 

@@ -8,7 +8,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@seeds/ui/alert-dialog";
+} from "../../ui/alert-dialog";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;

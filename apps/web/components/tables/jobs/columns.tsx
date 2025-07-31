@@ -1,8 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@seeds/ui/badge";
-import { Checkbox } from "@seeds/ui/checkbox";
+import { Badge } from "../../ui/badge";
+import { Checkbox } from "../../ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/column-header";
 import { JobActionsCell } from "./jobs-action-cell";
 import type { JobPost } from "./types";

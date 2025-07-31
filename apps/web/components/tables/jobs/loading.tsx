@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@seeds/ui/skeleton";
+import { Skeleton } from "../../ui/skeleton";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@seeds/ui/table";
+} from "../../ui/table";
 
 export function Loading() {
   return (

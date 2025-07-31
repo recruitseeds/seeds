@@ -1,15 +1,15 @@
 'use client'
 
 import { DataTableColumnHeader } from '@/components/data-table/column-header'
-import { Badge } from '@seeds/ui/badge'
-import { Button } from '@seeds/ui/button'
-import { Checkbox } from '@seeds/ui/checkbox'
+import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
+import { Checkbox } from '../ui/checkbox'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@seeds/ui/dialog'
+} from '../ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@seeds/ui/dropdown-menu'
+} from '../ui/dropdown-menu'
 import { Interview } from '@/data/interview-data'
 import { ColumnDef, Row } from '@tanstack/react-table'
 import { Calendar, Mail, MoreHorizontal } from 'lucide-react'

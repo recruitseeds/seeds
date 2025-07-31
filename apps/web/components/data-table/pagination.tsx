@@ -6,7 +6,7 @@ import {
   ChevronsRight,
 } from 'lucide-react'
 
-import { Button } from '@seeds/ui/button'
+import { Button } from '../ui/button'
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>

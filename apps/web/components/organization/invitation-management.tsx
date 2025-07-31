@@ -13,15 +13,15 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@seeds/ui/badge";
-import { Button } from "@seeds/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@seeds/ui/card";
+} from "../ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -30,16 +30,16 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@seeds/ui/dialog";
-import { Input } from "@seeds/ui/input";
-import { Label } from "@seeds/ui/label";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@seeds/ui/select";
+} from "../ui/select";
 import {
 	Table,
 	TableBody,
@@ -47,7 +47,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "@seeds/ui/table";
+} from "../ui/table";
 import { useTRPC } from "@/trpc/client";
 
 export function InvitationManagement() {

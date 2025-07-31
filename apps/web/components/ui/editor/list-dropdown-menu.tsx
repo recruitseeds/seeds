@@ -9,7 +9,7 @@ import { isNodeInSchema } from '@/lib/tiptap-utils'
 
 import { ListButton, type ListType, canToggleList, isListActive, listOptions } from '@seeds/editor/list-button'
 
-import type { ButtonProps } from '@seeds/ui/button'
+import type { ButtonProps } from './button'
 import { Button } from '@seeds/editor/button'
 import {
   DropdownMenu,

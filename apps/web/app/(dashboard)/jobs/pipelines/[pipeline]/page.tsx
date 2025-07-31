@@ -26,12 +26,12 @@ import ReactFlow, {
 import 'reactflow/dist/style.css' // Import React Flow CSS
 
 // Shadcn/ui and Utils
-import { Button } from '@seeds/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@seeds/ui/card'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
-import { cn } from '@seeds/ui/lib/utils' // Assuming your cn utility is here
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { cn } from '@/components/ui/lib/utils' // Assuming your cn utility is here
 import { ArrowLeft, ArrowRight, PlusCircle, Trash2 } from 'lucide-react' // Icons
 
 // --- Constants ---

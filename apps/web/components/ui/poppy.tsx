@@ -6,7 +6,7 @@ import { PropsWithChildren } from 'react'
 import { Drawer } from 'vaul'
 
 import { useBreakpoint } from '@/hooks/use-breakpoint'
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { DismissibleLayer } from './dismissible-layer'
 
 export interface PopoverProps extends PopoverPrimitive.PopoverProps {

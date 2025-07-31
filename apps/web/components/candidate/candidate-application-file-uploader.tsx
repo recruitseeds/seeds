@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
+import { Button } from '../ui/button'
 import { formatBytes, useFileUpload } from '@/hooks/use-file-upload'
 import { AlertCircleIcon, PaperclipIcon, UploadIcon, XIcon } from 'lucide-react'
 

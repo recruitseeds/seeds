@@ -1,5 +1,5 @@
-import type { ButtonProps } from '@seeds/ui/button'
-import { Button } from '@seeds/ui/button'
+import type { ButtonProps } from './button'
+import { Button } from './button'
 import { useTiptapEditor } from '@/hooks/use-tiptap-editor'
 import type { Editor } from '@tiptap/react'
 import { ImagePlus } from 'lucide-react'

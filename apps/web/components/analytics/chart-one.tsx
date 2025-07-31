@@ -3,10 +3,10 @@
 import * as React from 'react'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@seeds/ui/chart'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@seeds/ui/toggle-group'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '../ui/chart'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { useMobile } from '@/hooks/use-mobile'
 const chartData = [
   { date: '2024-04-01', desktop: 222, mobile: 150 },

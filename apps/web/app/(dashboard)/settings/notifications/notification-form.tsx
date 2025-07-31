@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { useEffect } from 'react'
 
 import { useTRPC } from '@/trpc/client'
-import { Button } from '@seeds/ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
@@ -15,9 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@seeds/ui/form'
-import { Switch } from '@seeds/ui/switch'
-import { Alert, AlertDescription } from '@seeds/ui/alert'
+} from '@/components/ui/form'
+import { Switch } from '@/components/ui/switch'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InfoIcon } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'

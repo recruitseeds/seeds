@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { isMacOs, isMobile } from 'react-device-detect'
 
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { UIText } from './text'
 
 export function getShortcutKeySymbol(key: string) {

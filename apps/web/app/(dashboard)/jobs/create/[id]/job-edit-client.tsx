@@ -2,7 +2,7 @@
 
 import { JobProfileSheet } from '@/components/job-profile-sheet'
 import { BlockEditor } from '@seeds/editor'
-import { SidebarInset, SidebarProvider } from '@seeds/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import type { Json } from '@seeds/supabase/types/db'
 import { useState } from 'react'
 import { useTRPC } from '@/trpc/client'

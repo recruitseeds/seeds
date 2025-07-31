@@ -4,8 +4,8 @@ import type { JobPost } from '@/data/jobs-posts'
 import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
 
-import { Button } from '@seeds/ui/button'
-import { Checkbox } from '@seeds/ui/checkbox'
+import { Button } from '../ui/button'
+import { Checkbox } from '../ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@seeds/ui/dropdown-menu'
+} from '../ui/dropdown-menu'
 
 import { DataTableColumnHeader } from '@/components/data-table/column-header'
 

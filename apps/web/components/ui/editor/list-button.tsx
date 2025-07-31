@@ -7,7 +7,7 @@ import { ListIcon, ListOrderedIcon, ListTodoIcon } from 'lucide-react'
 
 import { cn, isNodeInSchema } from '@/lib/tiptap-utils'
 
-import type { ButtonProps } from '@seeds/ui/button'
+import type { ButtonProps } from './button'
 import { Button } from '@seeds/editor/button'
 
 export type ListType = 'bulletList' | 'orderedList' | 'taskList'

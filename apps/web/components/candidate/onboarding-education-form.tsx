@@ -18,10 +18,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@seeds/ui/alert-dialog'
-import { Button } from '@seeds/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
-import { DatePicker } from '@seeds/ui/date-picker'
+} from '../ui/alert-dialog'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { DatePicker } from '../ui/date-picker'
 import {
   Dialog,
   DialogContent,
@@ -29,10 +29,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@seeds/ui/dialog'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@seeds/ui/form'
-import { Input } from '@seeds/ui/input'
-import { Textarea } from '@seeds/ui/textarea'
+} from '../ui/dialog'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
 import { formatDateToYYYYMMDD, parseDateString } from '@/lib/dates'
 import type { CandidateEducation } from '@seeds/supabase/queries'
 import type { Json } from '@seeds/supabase/types/db'

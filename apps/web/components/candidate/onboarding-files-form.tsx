@@ -4,10 +4,10 @@ import {
   type CandidateFileUploadsActionResult,
   handleCandidateFileUploadsAction,
 } from '@/actions/create-file-uploads-action'
-import { Button } from '@seeds/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations'
 import { FileIcon, FileImage, FileSpreadsheet, FileText, Loader2, Upload, X } from 'lucide-react'
 import { useAction } from 'next-safe-action/hooks'

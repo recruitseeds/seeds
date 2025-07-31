@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { cn } from '@seeds/ui/lib/utils'
+import { Button } from './ui/button'
+import { cn } from './ui/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface HorizontalPaginationProps {

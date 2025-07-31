@@ -1,4 +1,4 @@
-import { Separator } from '@seeds/ui/separator'
+import { Separator } from '@/components/ui/separator'
 import { NotificationsServer } from './notifications-server'
 
 export default function SettingsNotificationsPage() {

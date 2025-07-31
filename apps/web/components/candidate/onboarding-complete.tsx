@@ -1,7 +1,7 @@
 'use client'
 
 import { updateCandidateOnboardingStatusAction } from '@/actions/update-candidate-onboarding-status'
-import { Button } from '@seeds/ui/button'
+import { Button } from '../ui/button'
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@seeds/ui/card'
+} from '../ui/card'
 import { CheckCircle2 } from 'lucide-react'
 import { useTransition } from 'react'
 import { toast } from 'sonner'

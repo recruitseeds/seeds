@@ -13,8 +13,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@seeds/ui/dropdown-menu'
-import { cn } from '@seeds/ui/lib/utils'
+} from './dropdown-menu'
+import { cn } from './lib/utils'
 
 const Sheet = SheetPrimitive.Root
 

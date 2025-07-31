@@ -12,14 +12,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@seeds/ui/alert-dialog'
-import { Badge } from '@seeds/ui/badge'
-import { Button } from '@seeds/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@seeds/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@seeds/ui/dialog'
-import { Input } from '@seeds/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@seeds/ui/table'
-import { Tabs, TabsList, TabsTrigger } from '@seeds/ui/tabs'
+} from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ArrowRight, Clock, Edit3, Search, Target, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'

@@ -1,6 +1,6 @@
 import { Table as ReactTable, flexRender } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
-import { Button } from "@seeds/ui/button";
+import { Button } from "../../ui/button";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@seeds/ui/table";
+} from "../../ui/table";
 import { DataTablePagination } from "./pagination";
 
 interface JobsTableCoreProps {

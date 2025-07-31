@@ -1,6 +1,6 @@
 'use client'
-import { Separator } from '@seeds/ui/separator'
-import { SidebarTrigger } from '@seeds/ui/sidebar'
+import { Separator } from './ui/separator'
+import { SidebarTrigger } from './ui/sidebar'
 import { usePathname } from 'next/navigation'
 
 const ROUTE_TITLES: Record<string, string> = {

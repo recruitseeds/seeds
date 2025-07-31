@@ -1,9 +1,9 @@
 'use client'
 
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Alert, AlertDescription, AlertTitle } from '@seeds/ui/alert'
-import { Avatar, AvatarFallback, AvatarImage } from '@seeds/ui/avatar'
-import { Badge } from '@seeds/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -12,8 +12,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@seeds/ui/breadcrumb'
-import { Button } from '@seeds/ui/button'
+} from '@/components/ui/breadcrumb'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@seeds/ui/dialog'
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -38,8 +38,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@seeds/ui/dropdown-menu'
-import { Input } from '@seeds/ui/input'
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -49,8 +49,8 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from '@seeds/ui/select'
-import { Switch } from '@seeds/ui/switch'
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   Bluetooth,
   CreditCard,

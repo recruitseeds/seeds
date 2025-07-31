@@ -1,13 +1,13 @@
 'use client'
 
-import { Badge } from '@seeds/ui/badge'
-import { Button } from '@seeds/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@seeds/ui/sheet'
-import { Switch } from '@seeds/ui/switch'
-import { Textarea } from '@seeds/ui/textarea'
+import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet'
+import { Switch } from '../ui/switch'
+import { Textarea } from '../ui/textarea'
 import { useTRPC } from '@/trpc/client'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -23,9 +23,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@seeds/ui/alert-dialog'
-import { DatePicker } from '@seeds/ui/date-picker'
-import { ScrollArea } from '@seeds/ui/scroll-area'
+} from '../ui/alert-dialog'
+import { DatePicker } from '../ui/date-picker'
+import { ScrollArea } from '../ui/scroll-area'
 import { format } from 'date-fns'
 
 interface WorkExperiencePropsWithData {

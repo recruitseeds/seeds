@@ -1,8 +1,8 @@
 'use client'
 
-import { Badge } from '@seeds/ui/badge'
-import { Button, buttonVariants } from '@seeds/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
+import { Badge } from '../ui/badge'
+import { Button, buttonVariants } from '../ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@seeds/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@seeds/ui/dropdown-menu'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
-import { cn } from '@seeds/ui/lib/utils'
+} from '../ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { cn } from '../ui/lib/utils'
 import { useTRPC } from '@/trpc/client'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'

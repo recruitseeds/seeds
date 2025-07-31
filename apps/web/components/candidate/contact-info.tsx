@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@seeds/ui/card'
+import { Card, CardContent } from '../ui/card'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import { ContactInfoForm } from './contact-info-form'
 

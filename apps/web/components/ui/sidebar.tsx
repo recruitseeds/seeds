@@ -5,19 +5,19 @@ import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
 import * as React from "react";
 
-import { Button } from "@seeds/ui/button";
-import { Input } from "@seeds/ui/input";
-import { Separator } from "@seeds/ui/separator";
+import { Button } from "./button";
+import { Input } from "./input";
+import { Separator } from "./separator";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@seeds/ui/sheet";
-import { Skeleton } from "@seeds/ui/skeleton";
+} from "./sheet";
+import { Skeleton } from "./skeleton";
 import { useMobile } from "@/hooks/use-mobile";
-import { cn } from "@seeds/ui/lib/utils";
+import { cn } from "./lib/utils";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;

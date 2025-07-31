@@ -1,4 +1,4 @@
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { Slot } from '@radix-ui/react-slot'
 import React from 'react'
 

@@ -8,7 +8,7 @@ import { Ban, Highlighter } from 'lucide-react'
 
 import { isMarkInSchema } from '@/lib/tiptap-utils'
 
-import type { ButtonProps } from '@seeds/ui/button'
+import type { ButtonProps } from './button'
 import { Button } from '@seeds/editor/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@seeds/editor/popover'
 import { Separator } from '@seeds/editor/separator'

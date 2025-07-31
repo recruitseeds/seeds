@@ -2,7 +2,7 @@
 
 import { DashboardHeader } from '@/components/dashboard-header'
 import { AppSidebar } from '@/components/left-sidebar'
-import { SidebarInset, SidebarProvider } from '@seeds/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 export default function DashboardLayout({
   children,

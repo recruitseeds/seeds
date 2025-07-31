@@ -2,7 +2,7 @@
 
 import { updateCandidateProfileSchema } from '@/actions/schema'
 import { updateCandidateProfileAction } from '@/actions/update-candidate-action'
-import { Button } from '@seeds/ui/button'
+import { Button } from '../ui/button'
 import {
   Form,
   FormControl,
@@ -11,9 +11,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@seeds/ui/form'
-import { Input } from '@seeds/ui/input'
-import { Textarea } from '@seeds/ui/textarea'
+} from '../ui/form'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
 import type { Database } from '@seeds/supabase/types/db'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {

@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@seeds/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { useR2Upload } from '@/hooks/use-candidate-upload'
 import { useTRPC } from '@/trpc/client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

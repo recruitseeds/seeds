@@ -5,7 +5,7 @@ import NextLink from 'next/link'
 // import { WEB_URL } from '@campsite/config'
 const WEB_URL = 'http://localhost:3000'
 
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from './lib/utils'
 import { linkType } from './utils'
 
 export type LinkProps = React.ComponentProps<typeof NextLink> & {

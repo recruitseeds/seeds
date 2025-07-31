@@ -1,9 +1,9 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { Calendar } from '@seeds/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@seeds/ui/popover'
-import { cn } from '@seeds/ui/lib/utils'
+import { Button } from './button'
+import { Calendar } from './calendar'
+import { Popover, PopoverContent, PopoverTrigger } from './popover'
+import { cn } from './lib/utils'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
 

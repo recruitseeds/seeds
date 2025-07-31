@@ -1,5 +1,5 @@
 import { InvitationAcceptanceForm } from '@/components/invitations/invitation-acceptance-form'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@seeds/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getServerTRPCCaller } from '@/trpc/server'
 import { redirect } from 'next/navigation'
 

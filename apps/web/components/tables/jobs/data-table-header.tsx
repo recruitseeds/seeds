@@ -1,15 +1,15 @@
 'use client'
 
-import { Button } from '@seeds/ui/button'
-import { Checkbox } from '@seeds/ui/checkbox'
+import { Button } from '../../ui/button'
+import { Checkbox } from '../../ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@seeds/ui/dropdown-menu'
-import { TableHead, TableHeader, TableRow } from '@seeds/ui/table'
-import { cn } from '@seeds/ui/lib/utils'
+} from '../../ui/dropdown-menu'
+import { TableHead, TableHeader, TableRow } from '../../ui/table'
+import { cn } from '../../ui/lib/utils'
 import type { RouterOutputs } from '@/trpc/routers/_app'
 import type { Table } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react'
