@@ -44,8 +44,8 @@ import {
 	SidebarMenuSubItem,
 } from "@seeds/ui/sidebar";
 import { sidebarData } from "@/data/data";
-import { Badge } from "@seeds/ui/badge";
-import { Button } from "@seeds/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 const Logo = (props) => (
 	<svg

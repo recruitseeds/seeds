@@ -6,7 +6,7 @@ import {
   Clock,
   XCircle,
 } from 'lucide-react'
-import { Badge } from '@seeds/ui/badge'
+import { Badge } from '../ui/badge'
 
 export type ApplicationStatus =
   | 'applied'

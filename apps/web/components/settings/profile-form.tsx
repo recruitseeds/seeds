@@ -10,11 +10,11 @@ import { useTRPC } from '@/trpc/client'
 import { cn } from '@seeds/ui/lib/utils'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Button } from '@seeds/ui/button'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@seeds/ui/form'
-import { Input } from '@seeds/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@seeds/ui/select'
-import { Textarea } from '@seeds/ui/textarea'
+import { Button } from '../ui/button'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
+import { Input } from '../ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Textarea } from '../ui/textarea'
 
 const profileFormSchema = z.object({
   username: z

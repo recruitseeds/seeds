@@ -2,8 +2,8 @@ import { cn } from '@seeds/ui/lib/utils'
 import { ChevronDown as ChevronDownIcon } from 'lucide-react'
 import { type MouseEvent, forwardRef } from 'react'
 import { ConditionalWrap } from '../../lib/conditional-wrap'
-import { Button } from '@seeds/ui/button'
-import { UIText } from '@seeds/ui/text'
+import { Button } from '../ui/button'
+import { UIText } from '../ui/text'
 import { Tooltip } from '../ui/tippy'
 
 type BubbleMenuButtonElement = React.ElementRef<'button'>
