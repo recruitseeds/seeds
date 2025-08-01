@@ -1,0 +1,49 @@
+{
+  "name": "@seeds/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^1.0.0",
+    "@effect/platform": "^0.74.0",
+    "@effect/platform-node": "^0.70.0",
+    "@effect/schema": "^0.75.0",
+    "@hono/node-server": "^1.13.7",
+    "@hono/swagger-ui": "^0.4.1",
+    "@hono/zod-openapi": "^0.18.4",
+    "@hono/zod-validator": "^0.4.0",
+    "@seeds/supabase": "*",
+    "@sentry/node": "^8.45.0",
+    "@sentry/profiling-node": "^8.45.0",
+    "ai": "^4.0.46",
+    "dotenv": "^17.2.1",
+    "effect": "^3.9.0",
+    "fuse.js": "^7.0.0",
+    "hono": "^4.6.10",
+    "mammoth": "^1.9.1",
+    "pdf-parse-new": "^1.4.1",
+    "posthog-node": "^4.4.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@seeds/tsconfig": "*",
+    "@types/node": "^20",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5",
+    "vitest": "^2.1.8"
+  }
+}
