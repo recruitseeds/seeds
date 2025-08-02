@@ -46,6 +46,13 @@ export const internalAuth = () => {
         )
       }
 
+      // Temporary debug logging
+      console.log('DEBUG: Token comparison')
+      console.log('Received token:', token)
+      console.log('Expected token:', internalSecret)
+      console.log('Tokens match:', token === internalSecret)
+      console.log('Token length:', token?.length, 'vs', internalSecret?.length)
+
       if (token === internalSecret) {
         c.set('userId', 'system')
         c.set('permissions', ['*'])
