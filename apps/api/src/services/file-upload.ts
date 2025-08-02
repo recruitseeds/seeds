@@ -179,9 +179,13 @@ export class FileUploadService {
 			this.logger.error("Failed to create file record in database", {
 				candidateId: request.candidateId,
 				storagePath,
-				error: error?.message || "Unknown database error",
+				error: error,
+				errorMessage: error?.message,
+				errorDetails: error?.details,
+				errorHint: error?.hint,
+				insertedData: fileRecord,
 			});
-			throw new Error("Failed to save file metadata");
+			throw new Error(`Failed to save file metadata: ${error?.message || "Unknown database error"}`);
 		}
 
 		return {
