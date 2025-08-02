@@ -388,10 +388,16 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			);
 		}
 
-		const temporaryCandidateId = crypto.randomUUID();
+		// Create candidate first to get valid candidate ID
+		const application = await applicationService.createApplication({
+			jobPostingId: jobId,
+			candidateData,
+			resumeFileId: "", // Will be updated after file upload
+		});
 
+		// Upload file with the real candidate ID
 		const uploadedFile = await fileUploadService.uploadResume({
-			candidateId: temporaryCandidateId,
+			candidateId: application.candidateId,
 			fileName: resumeFile.fileName,
 			fileContent,
 			mimeType: resumeFile.mimeType,
@@ -400,16 +406,11 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			isDefaultResume: true,
 		});
 
-		const application = await applicationService.createApplication({
-			jobPostingId: jobId,
-			candidateData,
-			resumeFileId: uploadedFile.id,
-		});
-
+		// Update application with the file ID
 		await supabase
-			.from("candidate_files")
-			.update({ candidate_id: application.candidateId })
-			.eq("id", uploadedFile.id);
+			.from("job_applications")
+			.update({ resume_file_id: uploadedFile.id })
+			.eq("id", application.applicationId);
 
 		logger.info("Job application created, starting resume parsing", {
 			applicationId: application.applicationId,
