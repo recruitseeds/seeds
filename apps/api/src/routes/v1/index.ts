@@ -6,8 +6,6 @@ import { apiKeyAuth } from '../../middleware/api-auth.js'
 
 const v1Routes = createOpenAPIApp()
 
-v1Routes.use('*', apiKeyAuth())
-
 v1Routes.use('*', async (c, next) => {
   await next()
   c.header('API-Version', 'v1')
@@ -23,6 +21,10 @@ v1Routes.openapi(healthRoute, (c) => {
     environment: process.env.NODE_ENV || 'development',
   })
 })
+
+// Apply API key auth only to public routes and candidates
+v1Routes.use('/candidates/*', apiKeyAuth())
+v1Routes.use('/public/*', apiKeyAuth())
 
 v1Routes.route('/candidates', candidatesRoutes)
 v1Routes.route('/internal', internalRoutes)
