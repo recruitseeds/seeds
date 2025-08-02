@@ -164,3 +164,5 @@ if (!INTERNAL_TOKEN || INTERNAL_TOKEN === 'your-internal-secret') {
   console.error('   Set it with: export INTERNAL_API_SECRET=your-actual-secret')
   process.exit(1)
 }
+
+curl -X POST https://api.recruitseeds.com/api/v1/internal/cron/send-rejection-emails -H "Authorization: Internal f2b9acdf932dd0135a497516ce3fd0a7d002d027307918e0a44090ec059b63f1" -H "Content-Type: application/json" -d '{"dry_run": true}'
