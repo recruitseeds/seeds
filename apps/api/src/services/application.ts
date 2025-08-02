@@ -101,75 +101,16 @@ export class ApplicationService {
 		email: string;
 		phone?: string;
 	}): Promise<string> {
-		const existingCandidate = await this.findExistingCandidate(
-			candidateData.email,
-		);
-
-		if (existingCandidate) {
-			await this.updateCandidateIfNeeded(existingCandidate.id, candidateData);
-			return existingCandidate.id;
-		}
+		// For external API applications, always create new candidate profiles
+		// since we can't reliably find existing ones without email in candidate_profiles
+		// Email will be stored in the application context or associated separately
+		this.logger.info("Creating new candidate profile for external application", {
+			candidateEmail: candidateData.email,
+		});
 
 		return await this.createNewCandidate(candidateData);
 	}
 
-	private async findExistingCandidate(
-		email: string,
-	): Promise<{ id: string } | null> {
-		const { data, error } = await this.supabase
-			.from("candidate_profiles")
-			.select("id")
-			.eq("email", email)
-			.maybeSingle();
-
-		if (error) {
-			this.logger.error("Error finding existing candidate", {
-				email,
-				error: error.message,
-			});
-			throw new Error("Failed to check for existing candidate");
-		}
-
-		return data;
-	}
-
-	private async updateCandidateIfNeeded(
-		candidateId: string,
-		candidateData: { name: string; email: string; phone?: string },
-	): Promise<void> {
-		const [firstName, ...lastNameParts] = candidateData.name.split(" ");
-		const lastName = lastNameParts.join(" ");
-
-		const updates: Partial<
-			Database["public"]["Tables"]["candidate_profiles"]["Update"]
-		> = {};
-
-		if (firstName && !lastName) {
-			updates.first_name = firstName;
-		} else if (firstName && lastName) {
-			updates.first_name = firstName;
-			updates.last_name = lastName;
-		}
-
-		if (candidateData.phone) {
-			updates.phone_number = candidateData.phone;
-		}
-
-		if (Object.keys(updates).length > 0) {
-			const { error } = await this.supabase
-				.from("candidate_profiles")
-				.update(updates)
-				.eq("id", candidateId);
-
-			if (error) {
-				this.logger.error("Failed to update candidate profile", {
-					candidateId,
-					error: error.message,
-				});
-				throw new Error("Failed to update candidate profile");
-			}
-		}
-	}
 
 	private async createNewCandidate(candidateData: {
 		name: string;
