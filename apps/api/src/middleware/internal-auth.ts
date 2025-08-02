@@ -13,7 +13,7 @@ export interface InternalAuthContext {
 export const internalAuth = () => {
   return async (c: Context<InternalAuthContext>, next: Next) => {
     const authHeader = c.req.header('Authorization')
-    const token = authHeader?.replace('Bearer ', '') || authHeader?.replace('Internal ', '')
+    const token = authHeader?.replace('Bearer ', '').replace('Internal ', '')
 
     if (!token) {
       return c.json(
@@ -46,12 +46,7 @@ export const internalAuth = () => {
         )
       }
 
-      // Temporary debug logging
-      console.log('DEBUG: Token comparison')
-      console.log('Received token:', token)
-      console.log('Expected token:', internalSecret)
-      console.log('Tokens match:', token === internalSecret)
-      console.log('Token length:', token?.length, 'vs', internalSecret?.length)
+      // Remove debug logging after fix
 
       if (token === internalSecret) {
         c.set('userId', 'system')
