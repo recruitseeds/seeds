@@ -119,7 +119,7 @@ export class ApplicationService {
 		const { data, error } = await this.supabase
 			.from("candidate_profiles")
 			.select("id")
-			.eq("id", email)
+			.eq("email", email)
 			.maybeSingle();
 
 		if (error) {
