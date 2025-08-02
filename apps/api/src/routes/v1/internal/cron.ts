@@ -209,11 +209,11 @@ cronRoutes.openapi(sendRejectionEmailsRoute, async (c: Context): Promise<any> =>
               }
             )
 
-            // Mock email status update - RPC function doesn't exist yet
-            // await supabase.rpc('mark_rejection_email_sent', {
-            //   p_email_id: email.email_id,
-            //   p_service_id: emailId,
-            // })
+            // Mark email as sent in database
+            await supabase.rpc('mark_rejection_email_sent' as any, {
+              p_email_id: email.email_id,
+              p_service_id: emailId,
+            })
 
             logger.info('Rejection email sent successfully', {
               email_id: email.email_id,
@@ -230,11 +230,11 @@ cronRoutes.openapi(sendRejectionEmailsRoute, async (c: Context): Promise<any> =>
               candidate_name: email.candidate_name,
             })
 
-            // Mock email error status update - RPC function doesn't exist yet
-            // await supabase.rpc('mark_rejection_email_failed', {
-            //   p_email_id: email.email_id,
-            //   p_error_message: error instanceof Error ? error.message : 'Unknown error',
-            // })
+            // Mark email as failed in database
+            await supabase.rpc('mark_rejection_email_failed' as any, {
+              p_email_id: email.email_id,
+              p_error_message: error instanceof Error ? error.message : 'Unknown error',
+            })
 
             return { success: false, email_id: email.email_id, error }
           }
