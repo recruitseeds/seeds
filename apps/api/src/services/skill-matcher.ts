@@ -1,235 +1,264 @@
-import Fuse from 'fuse.js'
-import { ParsedResumeData, SkillMatch } from '../types/resume.js'
-import { CandidateScore } from './candidate-scoring.js'
-import { JobRequirements } from './job-requirements.js'
-import { Logger } from './logger.js'
+import Fuse from "fuse.js";
+import type { ParsedResumeData, SkillMatch } from "../types/resume.js";
+import type { CandidateScore } from "./candidate-scoring.js";
+import type { JobRequirements } from "./job-requirements.js";
+import type { Logger } from "./logger.js";
 
 export class SkillMatcherService {
-  private logger: Logger
+	private logger: Logger;
 
-  constructor(logger: Logger) {
-    this.logger = logger
-  }
+	constructor(logger: Logger) {
+		this.logger = logger;
+	}
 
-  matchSkills(
-    candidateSkills: string[],
-    requiredSkills: string[],
-    niceToHaveSkills: string[]
-  ): SkillMatch[] {
-    const filteredCandidateSkills = candidateSkills.filter(skill => skill && typeof skill === 'string')
-    const filteredRequiredSkills = requiredSkills.filter(skill => skill && typeof skill === 'string')
-    const filteredNiceToHaveSkills = niceToHaveSkills.filter(skill => skill && typeof skill === 'string')
-    const allJobSkills = [...filteredRequiredSkills, ...filteredNiceToHaveSkills]
-    
-    const fuse = new Fuse(filteredCandidateSkills, {
-      threshold: 0.3,
-      includeScore: true,
-    })
+	matchSkills(
+		candidateSkills: string[],
+		requiredSkills: string[],
+		niceToHaveSkills: string[],
+	): SkillMatch[] {
+		const filteredCandidateSkills = candidateSkills.filter(
+			(skill) => skill && typeof skill === "string",
+		);
+		const filteredRequiredSkills = requiredSkills.filter(
+			(skill) => skill && typeof skill === "string",
+		);
+		const filteredNiceToHaveSkills = niceToHaveSkills.filter(
+			(skill) => skill && typeof skill === "string",
+		);
+		const allJobSkills = [
+			...filteredRequiredSkills,
+			...filteredNiceToHaveSkills,
+		];
 
-    const skillMatches: SkillMatch[] = []
+		const fuse = new Fuse(filteredCandidateSkills, {
+			threshold: 0.3,
+			includeScore: true,
+		});
 
-    for (const jobSkill of allJobSkills) {
-      const results = fuse.search(jobSkill)
-      const isRequired = filteredRequiredSkills.includes(jobSkill)
+		const skillMatches: SkillMatch[] = [];
 
-      if (results.length > 0) {
-        const bestMatch = results[0]
-        const confidence = bestMatch.score ? 1 - bestMatch.score : 1
+		for (const jobSkill of allJobSkills) {
+			const results = fuse.search(jobSkill);
+			const isRequired = filteredRequiredSkills.includes(jobSkill);
 
-        skillMatches.push({
-          skill: jobSkill,
-          found: true,
-          confidence,
-          context: `Found match: "${bestMatch.item}" (${isRequired ? 'required' : 'nice-to-have'})`,
-        })
-      } else {
-        skillMatches.push({
-          skill: jobSkill,
-          found: false,
-          confidence: 0,
-          context: isRequired ? 'Required skill missing' : 'Nice-to-have skill missing',
-        })
-      }
-    }
+			if (results.length > 0) {
+				const bestMatch = results[0];
+				const confidence = bestMatch.score ? 1 - bestMatch.score : 1;
 
-    return skillMatches
-  }
+				skillMatches.push({
+					skill: jobSkill,
+					found: true,
+					confidence,
+					context: `Found match: "${bestMatch.item}" (${isRequired ? "required" : "nice-to-have"})`,
+				});
+			} else {
+				skillMatches.push({
+					skill: jobSkill,
+					found: false,
+					confidence: 0,
+					context: isRequired
+						? "Required skill missing"
+						: "Nice-to-have skill missing",
+				});
+			}
+		}
 
-  calculateCandidateScore(
-    resumeData: ParsedResumeData,
-    jobRequirements: JobRequirements
-  ): Omit<CandidateScore, 'candidateId'> {
-    const candidateSkills = resumeData.skills || []
-    const requiredSkills = jobRequirements.required_skills || []
-    const niceToHaveSkills = jobRequirements.nice_to_have_skills || []
-    
-    this.logger.debug('Calculating candidate score', {
-      jobId: jobRequirements.id,
-      candidateSkillsCount: candidateSkills.length,
-      requiredSkillsCount: requiredSkills.length,
-    })
+		return skillMatches;
+	}
 
-    const skillMatches = this.matchSkills(
-      candidateSkills,
-      requiredSkills,
-      niceToHaveSkills
-    )
+	calculateCandidateScore(
+		resumeData: ParsedResumeData,
+		jobRequirements: JobRequirements,
+	): Omit<CandidateScore, "candidateId"> {
+		const candidateSkills = resumeData.skills || [];
+		const requiredSkills = jobRequirements.required_skills || [];
+		const niceToHaveSkills = jobRequirements.nice_to_have_skills || [];
 
-    const requiredSkillMatches = skillMatches.filter(
-      (match) => requiredSkills.includes(match.skill) && match.found
-    )
-    const requiredSkillsScore = requiredSkills.length > 0 
-      ? Math.round((requiredSkillMatches.length / requiredSkills.length) * 100)
-      : 0
+		this.logger.debug("Calculating candidate score", {
+			jobId: jobRequirements.id,
+			candidateSkillsCount: candidateSkills.length,
+			requiredSkillsCount: requiredSkills.length,
+		});
 
-    const missingRequiredSkills = skillMatches
-      .filter((match) => requiredSkills.includes(match.skill) && !match.found)
-      .map((match) => match.skill)
+		const skillMatches = this.matchSkills(
+			candidateSkills,
+			requiredSkills,
+			niceToHaveSkills,
+		);
 
-    const experienceScore = this.calculateExperienceScore(resumeData, jobRequirements)
-    const educationScore = this.calculateEducationScore(resumeData, jobRequirements)
+		const requiredSkillMatches = skillMatches.filter(
+			(match) => requiredSkills.includes(match.skill) && match.found,
+		);
+		const requiredSkillsScore =
+			requiredSkills.length > 0
+				? Math.round(
+						(requiredSkillMatches.length / requiredSkills.length) * 100,
+					)
+				: 0;
 
-    const overallScore = Math.round(
-      requiredSkillsScore * 0.4 + experienceScore * 0.4 + educationScore * 0.2
-    )
+		const missingRequiredSkills = skillMatches
+			.filter((match) => requiredSkills.includes(match.skill) && !match.found)
+			.map((match) => match.skill);
 
-    return {
-      jobId: jobRequirements.id,
-      overallScore,
-      requiredSkillsScore,
-      experienceScore,
-      educationScore,
-      skillMatches,
-      missingRequiredSkills,
-      recommendations: [],
-    }
-  }
+		const experienceScore = this.calculateExperienceScore(
+			resumeData,
+			jobRequirements,
+		);
+		const educationScore = this.calculateEducationScore(
+			resumeData,
+			jobRequirements,
+		);
 
-  generateRecommendations(
-    resumeData: ParsedResumeData,
-    score: Omit<CandidateScore, 'candidateId'>,
-    jobRequirements: JobRequirements
-  ): string[] {
-    const recommendations: string[] = []
+		const overallScore = Math.round(
+			requiredSkillsScore * 0.4 + experienceScore * 0.4 + educationScore * 0.2,
+		);
 
-    if (score.overallScore >= 85) {
-      recommendations.push('🌟 Excellent candidate - highly recommended for interview')
-    } else if (score.overallScore >= 70) {
-      recommendations.push('👍 Good candidate - recommended for consideration')
-    } else if (score.overallScore >= 50) {
-      recommendations.push('⚠️ Marginal candidate - may need additional evaluation')
-    } else {
-      recommendations.push('❌ Below threshold - consider rejection')
-    }
+		return {
+			jobId: jobRequirements.id,
+			overallScore,
+			requiredSkillsScore,
+			experienceScore,
+			educationScore,
+			skillMatches,
+			missingRequiredSkills,
+			recommendations: [],
+		};
+	}
 
-    if (score.requiredSkillsScore >= 90) {
-      recommendations.push('💯 Has all required technical skills')
-    } else if (score.missingRequiredSkills.length > 0) {
-      recommendations.push(
-        `⚠️ Missing ${score.missingRequiredSkills.length} required skill(s): ${score.missingRequiredSkills.slice(0, 3).join(', ')}`
-      )
-    }
+	generateRecommendations(
+		resumeData: ParsedResumeData,
+		score: Omit<CandidateScore, "candidateId">,
+		jobRequirements: JobRequirements,
+	): string[] {
+		const recommendations: string[] = [];
 
-    if (score.experienceScore >= 80) {
-      recommendations.push('💼 Strong relevant experience')
-    }
+		if (score.overallScore >= 85) {
+			recommendations.push(
+				"🌟 Excellent candidate - highly recommended for interview",
+			);
+		} else if (score.overallScore >= 70) {
+			recommendations.push("👍 Good candidate - recommended for consideration");
+		} else if (score.overallScore >= 50) {
+			recommendations.push(
+				"⚠️ Marginal candidate - may need additional evaluation",
+			);
+		} else {
+			recommendations.push("❌ Below threshold - consider rejection");
+		}
 
-    if (resumeData.certifications.length > 0) {
-      recommendations.push(`🏆 Has ${resumeData.certifications.length} professional certification(s)`)
-    }
+		if (score.requiredSkillsScore >= 90) {
+			recommendations.push("💯 Has all required technical skills");
+		} else if (score.missingRequiredSkills.length > 0) {
+			recommendations.push(
+				`⚠️ Missing ${score.missingRequiredSkills.length} required skill(s): ${score.missingRequiredSkills.slice(0, 3).join(", ")}`,
+			);
+		}
 
-    if (resumeData.projects.length >= 3) {
-      recommendations.push('🚀 Strong project portfolio')
-    }
+		if (score.experienceScore >= 80) {
+			recommendations.push("💼 Strong relevant experience");
+		}
 
-    return recommendations
-  }
+		if (resumeData.certifications.length > 0) {
+			recommendations.push(
+				`🏆 Has ${resumeData.certifications.length} professional certification(s)`,
+			);
+		}
 
-  shouldAutoReject(
-    score: Omit<CandidateScore, 'candidateId'>,
-    jobRequirements: JobRequirements
-  ): boolean {
-    if (score.overallScore < 40) {
-      return true
-    }
+		if (resumeData.projects.length >= 3) {
+			recommendations.push("🚀 Strong project portfolio");
+		}
 
-    if (score.requiredSkillsScore < 50) {
-      return true
-    }
+		return recommendations;
+	}
 
-    const criticalSkillsMissing = score.missingRequiredSkills.length > jobRequirements.required_skills.length / 2
+	shouldAutoReject(
+		score: Omit<CandidateScore, "candidateId">,
+		jobRequirements: JobRequirements,
+	): boolean {
+		if (score.overallScore < 40) {
+			return true;
+		}
 
-    if (criticalSkillsMissing) {
-      return true
-    }
+		if (score.requiredSkillsScore < 50) {
+			return true;
+		}
 
-    return false
-  }
+		const criticalSkillsMissing =
+			score.missingRequiredSkills.length >
+			jobRequirements.required_skills.length / 2;
 
-  private calculateExperienceScore(
-    resumeData: ParsedResumeData,
-    jobRequirements: JobRequirements
-  ): number {
-    if (resumeData.experience.length === 0) {
-      return 0
-    }
+		if (criticalSkillsMissing) {
+			return true;
+		}
 
-    const totalMonths = resumeData.experience.reduce((total, exp) => {
-      const startDate = new Date(exp.startDate + '-01')
-      const endDate = exp.endDate ? new Date(exp.endDate + '-01') : new Date()
-      const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                    (endDate.getMonth() - startDate.getMonth())
-      return total + Math.max(0, months)
-    }, 0)
+		return false;
+	}
 
-    const yearsOfExperience = totalMonths / 12
-    const minRequired = jobRequirements.min_experience_years
+	private calculateExperienceScore(
+		resumeData: ParsedResumeData,
+		jobRequirements: JobRequirements,
+	): number {
+		if (resumeData.experience.length === 0) {
+			return 0;
+		}
 
-    if (yearsOfExperience >= minRequired * 1.5) {
-      return 100
-    } else if (yearsOfExperience >= minRequired) {
-      return 80
-    } else if (yearsOfExperience >= minRequired * 0.75) {
-      return 60
-    } else {
-      return Math.round((yearsOfExperience / minRequired) * 40)
-    }
-  }
+		const totalMonths = resumeData.experience.reduce((total, exp) => {
+			const startDate = new Date(exp.startDate + "-01");
+			const endDate = exp.endDate ? new Date(exp.endDate + "-01") : new Date();
+			const months =
+				(endDate.getFullYear() - startDate.getFullYear()) * 12 +
+				(endDate.getMonth() - startDate.getMonth());
+			return total + Math.max(0, months);
+		}, 0);
 
-  private calculateEducationScore(
-    resumeData: ParsedResumeData,
-    jobRequirements: JobRequirements
-  ): number {
-    if (resumeData.education.length === 0) {
-      return 50
-    }
+		const yearsOfExperience = totalMonths / 12;
+		const minRequired = jobRequirements.min_experience_years;
 
-    const hasRelevantDegree = resumeData.education.some(
-      (edu) => 
-        edu.field.toLowerCase().includes('computer') ||
-        edu.field.toLowerCase().includes('software') ||
-        edu.field.toLowerCase().includes('engineering') ||
-        edu.field.toLowerCase().includes('technology')
-    )
+		if (yearsOfExperience >= minRequired * 1.5) {
+			return 100;
+		} else if (yearsOfExperience >= minRequired) {
+			return 80;
+		} else if (yearsOfExperience >= minRequired * 0.75) {
+			return 60;
+		} else {
+			return Math.round((yearsOfExperience / minRequired) * 40);
+		}
+	}
 
-    const hasBachelorOrHigher = resumeData.education.some(
-      (edu) => 
-        edu.degree.toLowerCase().includes('bachelor') ||
-        edu.degree.toLowerCase().includes('master') ||
-        edu.degree.toLowerCase().includes('phd') ||
-        edu.degree.toLowerCase().includes('doctorate')
-    )
+	private calculateEducationScore(
+		resumeData: ParsedResumeData,
+		jobRequirements: JobRequirements,
+	): number {
+		if (resumeData.education.length === 0) {
+			return 50;
+		}
 
-    let score = 50
+		const hasRelevantDegree = resumeData.education.some(
+			(edu) =>
+				edu.field.toLowerCase().includes("computer") ||
+				edu.field.toLowerCase().includes("software") ||
+				edu.field.toLowerCase().includes("engineering") ||
+				edu.field.toLowerCase().includes("technology"),
+		);
 
-    if (hasRelevantDegree) {
-      score += 30
-    }
+		const hasBachelorOrHigher = resumeData.education.some(
+			(edu) =>
+				edu.degree.toLowerCase().includes("bachelor") ||
+				edu.degree.toLowerCase().includes("master") ||
+				edu.degree.toLowerCase().includes("phd") ||
+				edu.degree.toLowerCase().includes("doctorate"),
+		);
 
-    if (hasBachelorOrHigher) {
-      score += 20
-    }
+		let score = 50;
 
-    return Math.min(100, score)
-  }
+		if (hasRelevantDegree) {
+			score += 30;
+		}
+
+		if (hasBachelorOrHigher) {
+			score += 20;
+		}
+
+		return Math.min(100, score);
+	}
 }

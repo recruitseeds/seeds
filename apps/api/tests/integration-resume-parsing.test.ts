@@ -1,65 +1,65 @@
-import { describe, it, expect, beforeAll } from 'vitest'
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '../../../packages/supabase/types/db.js'
+import { createClient } from "@supabase/supabase-js";
+import { beforeAll, describe, expect, it } from "vitest";
+import type { Database } from "../../../packages/supabase/types/db.js";
 
-describe('Resume Parsing Integration', () => {
-  let supabase: ReturnType<typeof createClient<Database>>
-  let testJobId: string
-  let testCandidateId: string
+describe("Resume Parsing Integration", () => {
+	let supabase: ReturnType<typeof createClient<Database>>;
+	let testJobId: string;
+	let testCandidateId: string;
 
-  beforeAll(async () => {
-    // Setup database connection
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+	beforeAll(async () => {
+		// Setup database connection
+		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables')
-    }
+		if (!supabaseUrl || !supabaseAnonKey) {
+			throw new Error("Missing Supabase environment variables");
+		}
 
-    supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+		supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-    // Check if we have test data available
-    const { data: jobs } = await supabase
-      .from('job_postings')
-      .select('id')
-      .limit(1)
+		// Check if we have test data available
+		const { data: jobs } = await supabase
+			.from("job_postings")
+			.select("id")
+			.limit(1);
 
-    if (!jobs || jobs.length === 0) {
-      console.warn('⚠️ No job postings found - some tests may be skipped')
-      return
-    }
+		if (!jobs || jobs.length === 0) {
+			console.warn("⚠️ No job postings found - some tests may be skipped");
+			return;
+		}
 
-    testJobId = jobs[0].id
+		testJobId = jobs[0].id;
 
-    // Create a test candidate profile for testing
-    const { data: candidate, error } = await supabase
-      .from('candidate_profiles')
-      .insert({
-        email: `test-candidate-${Date.now()}@example.com`,
-        first_name: 'Test',
-        last_name: 'Candidate',
-        phone: '+1-555-0123',
-        current_location: 'San Francisco, CA'
-      })
-      .select('id')
-      .single()
+		// Create a test candidate profile for testing
+		const { data: candidate, error } = await supabase
+			.from("candidate_profiles")
+			.insert({
+				email: `test-candidate-${Date.now()}@example.com`,
+				first_name: "Test",
+				last_name: "Candidate",
+				phone: "+1-555-0123",
+				current_location: "San Francisco, CA",
+			})
+			.select("id")
+			.single();
 
-    if (error) {
-      console.warn('⚠️ Could not create test candidate:', error.message)
-      return 
-    }
+		if (error) {
+			console.warn("⚠️ Could not create test candidate:", error.message);
+			return;
+		}
 
-    testCandidateId = candidate.id
-  })
+		testCandidateId = candidate.id;
+	});
 
-  it('should handle complete resume parsing workflow', async () => {
-    // Skip if we don't have test data
-    if (!testJobId || !testCandidateId) {
-      console.log('⚠️ Skipping integration test - missing test data')
-      return
-    }
+	it("should handle complete resume parsing workflow", async () => {
+		// Skip if we don't have test data
+		if (!testJobId || !testCandidateId) {
+			console.log("⚠️ Skipping integration test - missing test data");
+			return;
+		}
 
-    const mockResumeContent = `
+		const mockResumeContent = `
 SARAH JOHNSON
 Senior Software Engineer
 Email: sarah.johnson@email.com
@@ -100,137 +100,147 @@ E-commerce Analytics Dashboard
 CERTIFICATIONS
 AWS Solutions Architect Associate (2023-05 to 2026-05)
 Credential ID: AWS-ASA-123456
-    `.trim()
+    `.trim();
 
-    // Test the parsing by calling the API endpoint directly
-    const response = await fetch(`http://localhost:3001/api/v1/candidates/${testCandidateId}/parse-resume`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.UNKEY_API_KEY}` // Use the test API key
-      },
-      body: JSON.stringify({
-        candidateId: testCandidateId,
-        jobId: testJobId,
-        fileContent: mockResumeContent,
-        fileName: 'sarah_johnson_resume.pdf'
-      })
-    })
+		// Test the parsing by calling the API endpoint directly
+		const response = await fetch(
+			`http://localhost:3001/api/v1/candidates/${testCandidateId}/parse-resume`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${process.env.UNKEY_API_KEY}`, // Use the test API key
+				},
+				body: JSON.stringify({
+					candidateId: testCandidateId,
+					jobId: testJobId,
+					fileContent: mockResumeContent,
+					fileName: "sarah_johnson_resume.pdf",
+				}),
+			},
+		);
 
-    // Check if server is running
-    if (!response.ok) {
-      if (response.status === 0 || response.status >= 500) {
-        console.log('⚠️ Server not running - skipping API integration test')  
-        console.log('   Start the server with: npm run dev')
-        return
-      }
-      
-      const errorText = await response.text()
-      throw new Error(`API request failed: ${response.status} ${response.statusText}\n${errorText}`)
-    }
+		// Check if server is running
+		if (!response.ok) {
+			if (response.status === 0 || response.status >= 500) {
+				console.log("⚠️ Server not running - skipping API integration test");
+				console.log("   Start the server with: npm run dev");
+				return;
+			}
 
-    const result = await response.json()
+			const errorText = await response.text();
+			throw new Error(
+				`API request failed: ${response.status} ${response.statusText}\n${errorText}`,
+			);
+		}
 
-    // Verify the response structure
-    expect(result).toHaveProperty('success', true)
-    expect(result).toHaveProperty('data')
-    expect(result.data).toHaveProperty('parsedData')
-    expect(result.data).toHaveProperty('score')
-    expect(result).toHaveProperty('metadata')
+		const result = await response.json();
 
-    // Verify parsed data structure
-    const parsedData = result.data.parsedData
-    expect(parsedData).toHaveProperty('personalInfo')
-    expect(parsedData.personalInfo).toHaveProperty('name')
-    expect(parsedData.personalInfo).toHaveProperty('email')
-    expect(parsedData.personalInfo).toHaveProperty('githubUrl')
-    expect(parsedData).toHaveProperty('experience')
-    expect(parsedData).toHaveProperty('education')
-    expect(parsedData).toHaveProperty('skills')
-    expect(parsedData).toHaveProperty('projects')
-    expect(parsedData).toHaveProperty('certifications')
+		// Verify the response structure
+		expect(result).toHaveProperty("success", true);
+		expect(result).toHaveProperty("data");
+		expect(result.data).toHaveProperty("parsedData");
+		expect(result.data).toHaveProperty("score");
+		expect(result).toHaveProperty("metadata");
 
-    // Verify scoring structure
-    const score = result.data.score
-    expect(score).toHaveProperty('candidateId', testCandidateId)
-    expect(score).toHaveProperty('jobId', testJobId)
-    expect(score).toHaveProperty('overallScore')
-    expect(score).toHaveProperty('requiredSkillsScore')
-    expect(score).toHaveProperty('experienceScore')
-    expect(score).toHaveProperty('educationScore')
-    expect(score).toHaveProperty('skillMatches')
-    expect(score).toHaveProperty('missingRequiredSkills')
-    expect(score).toHaveProperty('recommendations')
+		// Verify parsed data structure
+		const parsedData = result.data.parsedData;
+		expect(parsedData).toHaveProperty("personalInfo");
+		expect(parsedData.personalInfo).toHaveProperty("name");
+		expect(parsedData.personalInfo).toHaveProperty("email");
+		expect(parsedData.personalInfo).toHaveProperty("githubUrl");
+		expect(parsedData).toHaveProperty("experience");
+		expect(parsedData).toHaveProperty("education");
+		expect(parsedData).toHaveProperty("skills");
+		expect(parsedData).toHaveProperty("projects");
+		expect(parsedData).toHaveProperty("certifications");
 
-    // Verify scores are within valid ranges
-    expect(score.overallScore).toBeGreaterThanOrEqual(0)
-    expect(score.overallScore).toBeLessThanOrEqual(100)
-    expect(score.requiredSkillsScore).toBeGreaterThanOrEqual(0)
-    expect(score.requiredSkillsScore).toBeLessThanOrEqual(100)
+		// Verify scoring structure
+		const score = result.data.score;
+		expect(score).toHaveProperty("candidateId", testCandidateId);
+		expect(score).toHaveProperty("jobId", testJobId);
+		expect(score).toHaveProperty("overallScore");
+		expect(score).toHaveProperty("requiredSkillsScore");
+		expect(score).toHaveProperty("experienceScore");
+		expect(score).toHaveProperty("educationScore");
+		expect(score).toHaveProperty("skillMatches");
+		expect(score).toHaveProperty("missingRequiredSkills");
+		expect(score).toHaveProperty("recommendations");
 
-    // Verify arrays are properly structured
-    expect(Array.isArray(score.skillMatches)).toBe(true)
-    expect(Array.isArray(score.missingRequiredSkills)).toBe(true)
-    expect(Array.isArray(score.recommendations)).toBe(true)
+		// Verify scores are within valid ranges
+		expect(score.overallScore).toBeGreaterThanOrEqual(0);
+		expect(score.overallScore).toBeLessThanOrEqual(100);
+		expect(score.requiredSkillsScore).toBeGreaterThanOrEqual(0);
+		expect(score.requiredSkillsScore).toBeLessThanOrEqual(100);
 
-    // Verify metadata
-    expect(result.metadata).toHaveProperty('processingTimeMs')
-    expect(result.metadata).toHaveProperty('correlationId')
-    expect(result.metadata).toHaveProperty('timestamp')
+		// Verify arrays are properly structured
+		expect(Array.isArray(score.skillMatches)).toBe(true);
+		expect(Array.isArray(score.missingRequiredSkills)).toBe(true);
+		expect(Array.isArray(score.recommendations)).toBe(true);
 
-    console.log('✅ Resume parsing workflow completed successfully!')
-    console.log(`   Overall Score: ${score.overallScore}`)
-    console.log(`   Skills Found: ${score.skillMatches.length}`)
-    console.log(`   Missing Skills: ${score.missingRequiredSkills.length}`)
-    console.log(`   Recommendations: ${score.recommendations.length}`)
+		// Verify metadata
+		expect(result.metadata).toHaveProperty("processingTimeMs");
+		expect(result.metadata).toHaveProperty("correlationId");
+		expect(result.metadata).toHaveProperty("timestamp");
 
-    // Verify the score was persisted to database
-    const { data: savedScore, error: scoreError } = await supabase
-      .from('candidate_skill_scores')
-      .select('*')
-      .eq('candidate_id', testCandidateId)
-      .eq('job_posting_id', testJobId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+		console.log("✅ Resume parsing workflow completed successfully!");
+		console.log(`   Overall Score: ${score.overallScore}`);
+		console.log(`   Skills Found: ${score.skillMatches.length}`);
+		console.log(`   Missing Skills: ${score.missingRequiredSkills.length}`);
+		console.log(`   Recommendations: ${score.recommendations.length}`);
 
-    if (scoreError) {
-      console.warn('⚠️ Could not verify database persistence:', scoreError.message)
-    } else {
-      expect(savedScore).toBeDefined()
-      expect(savedScore.overall_score).toBe(score.overallScore)
-      expect(savedScore.skill_matches).toBeDefined()
-      expect(savedScore.recommendations).toBeDefined()
-      console.log('✅ Score successfully persisted to database')
-    }
+		// Verify the score was persisted to database
+		const { data: savedScore, error: scoreError } = await supabase
+			.from("candidate_skill_scores")
+			.select("*")
+			.eq("candidate_id", testCandidateId)
+			.eq("job_posting_id", testJobId)
+			.order("created_at", { ascending: false })
+			.limit(1)
+			.single();
 
-  }, 60000) // 60 second timeout for AI processing
+		if (scoreError) {
+			console.warn(
+				"⚠️ Could not verify database persistence:",
+				scoreError.message,
+			);
+		} else {
+			expect(savedScore).toBeDefined();
+			expect(savedScore.overall_score).toBe(score.overallScore);
+			expect(savedScore.skill_matches).toBeDefined();
+			expect(savedScore.recommendations).toBeDefined();
+			console.log("✅ Score successfully persisted to database");
+		}
+	}, 60000); // 60 second timeout for AI processing
 
-  it('should handle authentication errors', async () => {
-    if (!testJobId || !testCandidateId) {
-      console.log('⚠️ Skipping auth test - missing test data')
-      return
-    }
+	it("should handle authentication errors", async () => {
+		if (!testJobId || !testCandidateId) {
+			console.log("⚠️ Skipping auth test - missing test data");
+			return;
+		}
 
-    const response = await fetch(`http://localhost:3001/api/v1/candidates/${testCandidateId}/parse-resume`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer invalid-key'
-      },
-      body: JSON.stringify({
-        candidateId: testCandidateId,
-        jobId: testJobId, 
-        fileContent: 'test content',
-        fileName: 'test.pdf'
-      })
-    })
+		const response = await fetch(
+			`http://localhost:3001/api/v1/candidates/${testCandidateId}/parse-resume`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: "Bearer invalid-key",
+				},
+				body: JSON.stringify({
+					candidateId: testCandidateId,
+					jobId: testJobId,
+					fileContent: "test content",
+					fileName: "test.pdf",
+				}),
+			},
+		);
 
-    if (response.status === 0) {
-      console.log('⚠️ Server not running - skipping auth test')
-      return
-    }
+		if (response.status === 0) {
+			console.log("⚠️ Server not running - skipping auth test");
+			return;
+		}
 
-    expect(response.status).toBe(401)
-  })
-})
+		expect(response.status).toBe(401);
+	});
+});

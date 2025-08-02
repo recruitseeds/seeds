@@ -1,48 +1,61 @@
-import { createRoute, z } from '@hono/zod-openapi'
-import type { Context } from 'hono'
-import { ErrorResponseSchema, MetadataSchema, createOpenAPIApp } from '../../../lib/openapi.js'
-import { publicAuth, type PublicAuthContext } from '../../../middleware/public-auth.js'
-import { adaptiveRateLimit } from '../../../middleware/rate-limit.js'
-import { businessValidation, validate } from '../../../middleware/validation.js'
-import { type CandidateApplicationEmailData, EmailService } from '../../../services/email.js'
-import { Logger } from '../../../services/logger.js'
+import { createRoute, z } from "@hono/zod-openapi";
+import type { Context } from "hono";
+import {
+	createOpenAPIApp,
+	ErrorResponseSchema,
+	MetadataSchema,
+} from "../../../lib/openapi.js";
+import {
+	type PublicAuthContext,
+	publicAuth,
+} from "../../../middleware/public-auth.js";
+import { adaptiveRateLimit } from "../../../middleware/rate-limit.js";
+import {
+	businessValidation,
+	validate,
+} from "../../../middleware/validation.js";
+import {
+	type CandidateApplicationEmailData,
+	EmailService,
+} from "../../../services/email.js";
+import { Logger } from "../../../services/logger.js";
 
-const publicNotificationsRoutes = createOpenAPIApp()
+const publicNotificationsRoutes = createOpenAPIApp();
 
-publicNotificationsRoutes.use('*', publicAuth())
-publicNotificationsRoutes.use('*', adaptiveRateLimit())
+publicNotificationsRoutes.use("*", publicAuth());
+publicNotificationsRoutes.use("*", adaptiveRateLimit());
 
 const SendApplicationEmailRequestSchema = z.object({
-  body: z.object({
-    candidateId: z.string().uuid('Must be a valid UUID'),
-    candidateName: z.string().min(1, 'Candidate name is required'),
-    candidateEmail: z.string().email('Must be a valid email address'),
-    jobId: z.string().uuid('Must be a valid UUID'),
-    jobTitle: z.string().min(1, 'Job title is required'),
-    companyName: z.string().min(1, 'Company name is required'),
-    applicationId: z.string().uuid('Must be a valid UUID'),
-    portalUrl: z.string().url().optional(),
-    companyLogo: z.string().url().optional(),
-    contactEmail: z.string().email().optional(),
-  }),
-})
+	body: z.object({
+		candidateId: z.string().uuid("Must be a valid UUID"),
+		candidateName: z.string().min(1, "Candidate name is required"),
+		candidateEmail: z.string().email("Must be a valid email address"),
+		jobId: z.string().uuid("Must be a valid UUID"),
+		jobTitle: z.string().min(1, "Job title is required"),
+		companyName: z.string().min(1, "Company name is required"),
+		applicationId: z.string().uuid("Must be a valid UUID"),
+		portalUrl: z.string().url().optional(),
+		companyLogo: z.string().url().optional(),
+		contactEmail: z.string().email().optional(),
+	}),
+});
 
 const SendApplicationEmailResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.object({
-    emailId: z.string(),
-    candidateEmail: z.string(),
-    status: z.literal('sent'),
-  }),
-  metadata: MetadataSchema,
-})
+	success: z.literal(true),
+	data: z.object({
+		emailId: z.string(),
+		candidateEmail: z.string(),
+		status: z.literal("sent"),
+	}),
+	metadata: MetadataSchema,
+});
 
 const sendApplicationEmailRoute = createRoute({
-  method: 'post',
-  path: '/application-received',
-  tags: ['Public - Notifications'],
-  summary: 'Send application received confirmation email',
-  description: `Send an automated confirmation email to a candidate when their application is received.
+	method: "post",
+	path: "/application-received",
+	tags: ["Public - Notifications"],
+	summary: "Send application received confirmation email",
+	description: `Send an automated confirmation email to a candidate when their application is received.
     
     **Key Features:**
     - Professional HTML email template with company branding
@@ -68,221 +81,267 @@ const sendApplicationEmailRoute = createRoute({
     - Free tier: 100 emails/hour
     - Pro tier: 1,000 emails/hour  
     - Enterprise: Custom limits`,
-  security: [{ bearerAuth: [] }],
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: z.object({
-            candidateId: z.string().uuid().describe('Unique identifier for the candidate'),
-            candidateName: z.string().min(1).describe('Full name of the candidate'),
-            candidateEmail: z.string().email().describe('Email address where confirmation will be sent'),
-            jobId: z.string().uuid().describe('Job posting ID the candidate applied for'),
-            jobTitle: z.string().min(1).describe('Title of the position applied for'),
-            companyName: z.string().min(1).describe('Name of the hiring company'),
-            applicationId: z.string().uuid().describe('Unique application tracking ID'),
-            portalUrl: z.string().url().optional().describe('Optional URL to candidate portal for status tracking'),
-            companyLogo: z.string().url().optional().describe('Optional company logo URL for email branding'),
-            contactEmail: z.string().email().optional().describe('Optional contact email for candidate questions'),
-          }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: SendApplicationEmailResponseSchema,
-        },
-      },
-      description: 'Email sent successfully',
-    },
-    400: {
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-      description: 'Invalid request data or validation failed',
-    },
-    401: {
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-      description: 'Authentication required - invalid or missing API key',
-    },
-    403: {
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-      description: 'Access denied - insufficient permissions for email sending',
-    },
-    429: {
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-      description: 'Rate limit exceeded - email sending limits reached',
-    },
-    503: {
-      content: {
-        'application/json': {
-          schema: ErrorResponseSchema,
-        },
-      },
-      description: 'Email service temporarily unavailable',
-    },
-  },
-})
+	security: [{ bearerAuth: [] }],
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						candidateId: z
+							.string()
+							.uuid()
+							.describe("Unique identifier for the candidate"),
+						candidateName: z
+							.string()
+							.min(1)
+							.describe("Full name of the candidate"),
+						candidateEmail: z
+							.string()
+							.email()
+							.describe("Email address where confirmation will be sent"),
+						jobId: z
+							.string()
+							.uuid()
+							.describe("Job posting ID the candidate applied for"),
+						jobTitle: z
+							.string()
+							.min(1)
+							.describe("Title of the position applied for"),
+						companyName: z
+							.string()
+							.min(1)
+							.describe("Name of the hiring company"),
+						applicationId: z
+							.string()
+							.uuid()
+							.describe("Unique application tracking ID"),
+						portalUrl: z
+							.string()
+							.url()
+							.optional()
+							.describe("Optional URL to candidate portal for status tracking"),
+						companyLogo: z
+							.string()
+							.url()
+							.optional()
+							.describe("Optional company logo URL for email branding"),
+						contactEmail: z
+							.string()
+							.email()
+							.optional()
+							.describe("Optional contact email for candidate questions"),
+					}),
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: SendApplicationEmailResponseSchema,
+				},
+			},
+			description: "Email sent successfully",
+		},
+		400: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Invalid request data or validation failed",
+		},
+		401: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Authentication required - invalid or missing API key",
+		},
+		403: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Access denied - insufficient permissions for email sending",
+		},
+		429: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Rate limit exceeded - email sending limits reached",
+		},
+		503: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Email service temporarily unavailable",
+		},
+	},
+});
 
 const validateEmailPermissions = async (c: Context) => {
-  const { permissions } = c.get('apiKeyMeta')
+	const { permissions } = c.get("apiKeyMeta");
 
-  if (!permissions.includes('notifications:send')) {
-    throw new Error('Email sending requires notifications:send permission')
-  }
-}
+	if (!permissions.includes("notifications:send")) {
+		throw new Error("Email sending requires notifications:send permission");
+	}
+};
 
 publicNotificationsRoutes.openapi(
-  sendApplicationEmailRoute,
-  async (c: Context): Promise<any> => {
-    // Validate request
-    try {
-      const body = await c.req.json()
-      const validatedData = SendApplicationEmailRequestSchema.parse({ body })
-      c.set('validatedData', validatedData)
-      
-      // Business validation
-      const { permissions } = c.get('apiKeyMeta') || { permissions: [] }
-      
-      if (!permissions.includes('notifications:send')) {
-        return c.json({
-          success: false as const,
-          error: {
-            code: 'INSUFFICIENT_PERMISSIONS',
-            message: 'Email sending requires notifications:send permission',
-          },
-          timestamp: new Date().toISOString(),
-          correlationId: c.get('correlationId'),
-        }, 403)
-      }
-    } catch (error) {
-      return c.json({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-        },
-        timestamp: new Date().toISOString(),
-        correlationId: c.get('correlationId'),
-      }, 400)
-    }
-    const correlationId = c.get('correlationId')
-    const logger = new Logger({ correlationId, requestId: c.get('requestId') })
-    const { body } = c.get('validatedData')
-    const { companyId } = c.get('apiKeyMeta')
+	sendApplicationEmailRoute,
+	async (c: Context): Promise<any> => {
+		// Validate request
+		try {
+			const body = await c.req.json();
+			const validatedData = SendApplicationEmailRequestSchema.parse({ body });
+			c.set("validatedData", validatedData);
 
-    const getTimer = () => {
-      const start = Date.now()
-      return () => Date.now() - start
-    }
-    const timer = getTimer()
+			// Business validation
+			const { permissions } = c.get("apiKeyMeta") || { permissions: [] };
 
-    try {
-      logger.info('Public API: Sending application confirmation email', {
-        candidateId: body.candidateId,
-        candidateEmail: body.candidateEmail,
-        jobId: body.jobId,
-        jobTitle: body.jobTitle,
-        companyName: body.companyName,
-        applicationId: body.applicationId,
-        companyId,
-      })
+			if (!permissions.includes("notifications:send")) {
+				return c.json(
+					{
+						success: false as const,
+						error: {
+							code: "INSUFFICIENT_PERMISSIONS",
+							message: "Email sending requires notifications:send permission",
+						},
+						timestamp: new Date().toISOString(),
+						correlationId: c.get("correlationId"),
+					},
+					403,
+				);
+			}
+		} catch (error) {
+			return c.json(
+				{
+					success: false,
+					error: {
+						code: "VALIDATION_ERROR",
+						message: "Invalid request data",
+					},
+					timestamp: new Date().toISOString(),
+					correlationId: c.get("correlationId"),
+				},
+				400,
+			);
+		}
+		const correlationId = c.get("correlationId");
+		const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+		const { body } = c.get("validatedData");
+		const { companyId } = c.get("apiKeyMeta");
 
-      const emailService = new EmailService(logger)
+		const getTimer = () => {
+			const start = Date.now();
+			return () => Date.now() - start;
+		};
+		const timer = getTimer();
 
-      const emailData: CandidateApplicationEmailData = {
-        candidateName: body.candidateName,
-        candidateEmail: body.candidateEmail,
-        jobTitle: body.jobTitle,
-        companyName: body.companyName,
-        applicationId: body.applicationId,
-        portalUrl: body.portalUrl,
-        companyLogo: body.companyLogo,
-        contactEmail: body.contactEmail,
-      }
+		try {
+			logger.info("Public API: Sending application confirmation email", {
+				candidateId: body.candidateId,
+				candidateEmail: body.candidateEmail,
+				jobId: body.jobId,
+				jobTitle: body.jobTitle,
+				companyName: body.companyName,
+				applicationId: body.applicationId,
+				companyId,
+			});
 
-      const emailId = await emailService.sendApplicationReceivedEmail(emailData, { correlationId })
+			const emailService = new EmailService(logger);
 
-      logger.info('Public API: Application email sent successfully', {
-        emailId,
-        candidateId: body.candidateId,
-        candidateEmail: body.candidateEmail,
-        applicationId: body.applicationId,
-        processingTimeMs: timer(),
-        companyId,
-      })
+			const emailData: CandidateApplicationEmailData = {
+				candidateName: body.candidateName,
+				candidateEmail: body.candidateEmail,
+				jobTitle: body.jobTitle,
+				companyName: body.companyName,
+				applicationId: body.applicationId,
+				portalUrl: body.portalUrl,
+				companyLogo: body.companyLogo,
+				contactEmail: body.contactEmail,
+			};
 
-      return c.json({
-        success: true as const,
-        data: {
-          emailId,
-          candidateEmail: body.candidateEmail,
-          status: 'sent' as const,
-        },
-        metadata: {
-          processingTimeMs: timer(),
-          correlationId,
-          timestamp: new Date().toISOString(),
-        },
-      })
-    } catch (error) {
-      const processingTime = timer()
+			const emailId = await emailService.sendApplicationReceivedEmail(
+				emailData,
+				{ correlationId },
+			);
 
-      logger.error('Public API: Application email sending failed', error, {
-        candidateId: body.candidateId,
-        candidateEmail: body.candidateEmail,
-        applicationId: body.applicationId,
-        processingTimeMs: processingTime,
-        companyId,
-      })
+			logger.info("Public API: Application email sent successfully", {
+				emailId,
+				candidateId: body.candidateId,
+				candidateEmail: body.candidateEmail,
+				applicationId: body.applicationId,
+				processingTimeMs: timer(),
+				companyId,
+			});
 
-      if (error instanceof Error && (error.message.includes('Resend') || error.message.includes('Email'))) {
-        return c.json(
-          {
-            success: false as const,
-            error: {
-              code: 'EMAIL_SERVICE_UNAVAILABLE',
-              message: 'Email service is temporarily unavailable. Please try again in a few moments.',
-              retryAfter: '60s',
-            },
-            timestamp: new Date().toISOString(),
-            correlationId,
-          },
-          503
-        )
-      }
+			return c.json({
+				success: true as const,
+				data: {
+					emailId,
+					candidateEmail: body.candidateEmail,
+					status: "sent" as const,
+				},
+				metadata: {
+					processingTimeMs: timer(),
+					correlationId,
+					timestamp: new Date().toISOString(),
+				},
+			});
+		} catch (error) {
+			const processingTime = timer();
 
-      return c.json(
-        {
-          success: false as const,
-          error: {
-            code: 'INTERNAL_ERROR',
-            message: 'An error occurred while sending the email',
-          },
-          timestamp: new Date().toISOString(),
-          correlationId,
-        },
-        500
-      )
-    }
-  }
-)
+			logger.error("Public API: Application email sending failed", error, {
+				candidateId: body.candidateId,
+				candidateEmail: body.candidateEmail,
+				applicationId: body.applicationId,
+				processingTimeMs: processingTime,
+				companyId,
+			});
 
-export { publicNotificationsRoutes }
+			if (
+				error instanceof Error &&
+				(error.message.includes("Resend") || error.message.includes("Email"))
+			) {
+				return c.json(
+					{
+						success: false as const,
+						error: {
+							code: "EMAIL_SERVICE_UNAVAILABLE",
+							message:
+								"Email service is temporarily unavailable. Please try again in a few moments.",
+							retryAfter: "60s",
+						},
+						timestamp: new Date().toISOString(),
+						correlationId,
+					},
+					503,
+				);
+			}
+
+			return c.json(
+				{
+					success: false as const,
+					error: {
+						code: "INTERNAL_ERROR",
+						message: "An error occurred while sending the email",
+					},
+					timestamp: new Date().toISOString(),
+					correlationId,
+				},
+				500,
+			);
+		}
+	},
+);
+
+export { publicNotificationsRoutes };

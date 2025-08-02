@@ -1,22 +1,22 @@
-import { createMiddleware } from 'hono/factory'
-import { randomUUID } from 'node:crypto'
+import { randomUUID } from "node:crypto";
+import { createMiddleware } from "hono/factory";
 
 export interface CorrelationContext {
-  correlationId: string
-  requestId: string
+	correlationId: string;
+	requestId: string;
 }
 
 export const correlationMiddleware = () => {
-  return createMiddleware(async (c, next) => {
-    const correlationId = c.req.header('x-correlation-id') || randomUUID()
-    const requestId = randomUUID()
+	return createMiddleware(async (c, next) => {
+		const correlationId = c.req.header("x-correlation-id") || randomUUID();
+		const requestId = randomUUID();
 
-    c.header('x-correlation-id', correlationId)
-    c.header('x-request-id', requestId)
+		c.header("x-correlation-id", correlationId);
+		c.header("x-request-id", requestId);
 
-    c.set('correlationId', correlationId)
-    c.set('requestId', requestId)
+		c.set("correlationId", correlationId);
+		c.set("requestId", requestId);
 
-    await next()
-  })
-}
+		await next();
+	});
+};

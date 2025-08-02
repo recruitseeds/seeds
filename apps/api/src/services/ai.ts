@@ -1,25 +1,28 @@
-import { ConfigService } from './config.js'
-import { Logger } from './logger.js'
-import { ParsedResumeData } from '../types/resume.js'
+import type { ParsedResumeData } from "../types/resume.js";
+import { ConfigService } from "./config.js";
+import type { Logger } from "./logger.js";
 
 export class AIService {
-  private config
-  private logger: Logger
+	private config;
+	private logger: Logger;
 
-  constructor(logger: Logger) {
-    this.config = ConfigService.getInstance().getConfig()
-    this.logger = logger
-  }
+	constructor(logger: Logger) {
+		this.config = ConfigService.getInstance().getConfig();
+		this.logger = logger;
+	}
 
-  async parseResume(fileContent: string, fileName: string): Promise<ParsedResumeData> {
-    const startTime = Date.now()
-    
-    this.logger.info('Starting resume parsing with AI', {
-      fileName,
-      contentLength: fileContent.length,
-    })
+	async parseResume(
+		fileContent: string,
+		fileName: string,
+	): Promise<ParsedResumeData> {
+		const startTime = Date.now();
 
-    const systemPrompt = `You are an expert resume parser. Extract structured data from the resume text provided.
+		this.logger.info("Starting resume parsing with AI", {
+			fileName,
+			contentLength: fileContent.length,
+		});
+
+		const systemPrompt = `You are an expert resume parser. Extract structured data from the resume text provided.
 
 Return a JSON object with the following structure:
 {
@@ -75,69 +78,74 @@ Return a JSON object with the following structure:
   "languages": ["English", "Spanish"]
 }
 
-Extract only information that is explicitly mentioned in the resume. If information is not available, omit the field or use null.`
+Extract only information that is explicitly mentioned in the resume. If information is not available, omit the field or use null.`;
 
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.openaiApiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Parse this resume:\n\n${fileContent}` }
-          ],
-          temperature: 0.1,
-          max_tokens: 2000,
-        }),
-      })
+		try {
+			const response = await fetch(
+				"https://api.openai.com/v1/chat/completions",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${this.config.openaiApiKey}`,
+					},
+					body: JSON.stringify({
+						model: "gpt-4o",
+						messages: [
+							{ role: "system", content: systemPrompt },
+							{ role: "user", content: `Parse this resume:\n\n${fileContent}` },
+						],
+						temperature: 0.1,
+						max_tokens: 2000,
+					}),
+				},
+			);
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`OpenAI API error: ${response.status} ${errorText}`)
-      }
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`OpenAI API error: ${response.status} ${errorText}`);
+			}
 
-      const result = await response.json() as {
-        choices: Array<{ message: { content: string } }>
-        usage?: { total_tokens: number }
-      }
-      const content = result.choices[0]?.message?.content
+			const result = (await response.json()) as {
+				choices: Array<{ message: { content: string } }>;
+				usage?: { total_tokens: number };
+			};
+			const content = result.choices[0]?.message?.content;
 
-      if (!content) {
-        throw new Error('No content received from OpenAI')
-      }
+			if (!content) {
+				throw new Error("No content received from OpenAI");
+			}
 
-      const cleanContent = content.replace(/```json\n?/, '').replace(/\n?```$/, '').trim()
-      const parsedData = JSON.parse(cleanContent) as ParsedResumeData
+			const cleanContent = content
+				.replace(/```json\n?/, "")
+				.replace(/\n?```$/, "")
+				.trim();
+			const parsedData = JSON.parse(cleanContent) as ParsedResumeData;
 
-      const processingTime = Date.now() - startTime
+			const processingTime = Date.now() - startTime;
 
-      this.logger.info('Resume parsing completed successfully', {
-        fileName,
-        processingTimeMs: processingTime,
-        skillsCount: parsedData.skills?.length || 0,
-        experienceCount: parsedData.experience?.length || 0,
-        educationCount: parsedData.education?.length || 0,
-        projectsCount: parsedData.projects?.length || 0,
-        certificationsCount: parsedData.certifications?.length || 0,
-        tokensUsed: result.usage?.total_tokens || 0,
-      })
+			this.logger.info("Resume parsing completed successfully", {
+				fileName,
+				processingTimeMs: processingTime,
+				skillsCount: parsedData.skills?.length || 0,
+				experienceCount: parsedData.experience?.length || 0,
+				educationCount: parsedData.education?.length || 0,
+				projectsCount: parsedData.projects?.length || 0,
+				certificationsCount: parsedData.certifications?.length || 0,
+				tokensUsed: result.usage?.total_tokens || 0,
+			});
 
-      return parsedData
+			return parsedData;
+		} catch (error) {
+			const processingTime = Date.now() - startTime;
 
-    } catch (error) {
-      const processingTime = Date.now() - startTime
-      
-      this.logger.error('Resume parsing failed', error, {
-        fileName,
-        processingTimeMs: processingTime,
-        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-      })
-      
-      throw error
-    }
-  }
+			this.logger.error("Resume parsing failed", error, {
+				fileName,
+				processingTimeMs: processingTime,
+				errorType: error instanceof Error ? error.constructor.name : "Unknown",
+			});
+
+			throw error;
+		}
+	}
 }

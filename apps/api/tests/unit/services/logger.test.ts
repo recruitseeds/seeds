@@ -1,59 +1,67 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Logger } from '../../../src/services/logger.js'
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Logger } from "../../../src/services/logger.js";
 
-describe('Logger', () => {
-  let consoleSpy: ReturnType<typeof vi.spyOn>
+describe("Logger", () => {
+	let consoleSpy: ReturnType<typeof vi.spyOn>;
 
-  beforeEach(() => {
-    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
-  })
+	beforeEach(() => {
+		consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+	});
 
-  it('should log info messages with structured format', () => {
-    const logger = new Logger({ correlationId: 'test-correlation' })
-    logger.info('Test message', { key: 'value' })
+	it("should log info messages with structured format", () => {
+		const logger = new Logger({ correlationId: "test-correlation" });
+		logger.info("Test message", { key: "value" });
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"level":"INFO"'))
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"message":"Test message"'))
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"metadata":{"key":"value"}'))
-  })
+		expect(consoleSpy).toHaveBeenCalledWith(
+			expect.stringContaining('"level":"INFO"'),
+		);
+		expect(consoleSpy).toHaveBeenCalledWith(
+			expect.stringContaining('"message":"Test message"'),
+		);
+		expect(consoleSpy).toHaveBeenCalledWith(
+			expect.stringContaining('"metadata":{"key":"value"}'),
+		);
+	});
 
-  it('should include correlation ID when provided', () => {
-    const logger = new Logger({ correlationId: 'test-correlation-id' })
-    logger.info('Test message')
+	it("should include correlation ID when provided", () => {
+		const logger = new Logger({ correlationId: "test-correlation-id" });
+		logger.info("Test message");
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"correlationId":"test-correlation-id"'))
-  })
+		expect(consoleSpy).toHaveBeenCalledWith(
+			expect.stringContaining('"correlationId":"test-correlation-id"'),
+		);
+	});
 
-  it('should track timing correctly', () => {
-    const logger = new Logger()
-    const getTimer = logger.startTimer()
+	it("should track timing correctly", () => {
+		const logger = new Logger();
+		const getTimer = logger.startTimer();
 
-    const duration = getTimer()
-    expect(duration).toBeGreaterThan(0)
-  })
+		const duration = getTimer();
+		expect(duration).toBeGreaterThan(0);
+	});
 
-  it('should format errors properly', () => {
-    const logger = new Logger()
-    const error = new Error('Test error')
-    logger.error('Error occurred', error)
+	it("should format errors properly", () => {
+		const logger = new Logger();
+		const error = new Error("Test error");
+		logger.error("Error occurred", error);
 
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('"error":{"name":"Error","message":"Test error"')
-    )
-  })
+		expect(console.error).toHaveBeenCalledWith(
+			expect.stringContaining('"error":{"name":"Error","message":"Test error"'),
+		);
+	});
 
-  it('should include request context', () => {
-    const logger = new Logger({ 
-      correlationId: 'correlation-123',
-      requestId: 'request-456'
-    })
-    
-    logger.info('Contextual message')
+	it("should include request context", () => {
+		const logger = new Logger({
+			correlationId: "correlation-123",
+			requestId: "request-456",
+		});
 
-    const logCall = consoleSpy.mock.calls[0][0]
-    expect(logCall).toContain('"correlationId":"correlation-123"')
-    expect(logCall).toContain('"requestId":"request-456"')
-  })
-})
+		logger.info("Contextual message");
+
+		const logCall = consoleSpy.mock.calls[0][0];
+		expect(logCall).toContain('"correlationId":"correlation-123"');
+		expect(logCall).toContain('"requestId":"request-456"');
+	});
+});

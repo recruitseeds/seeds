@@ -1,10 +1,12 @@
-import { createOpenAPIApp } from '../../../lib/openapi.js'
-import { publicCandidatesRoutes } from './candidates.js'
-import { publicNotificationsRoutes } from './notifications.js'
+import { createOpenAPIApp } from "../../../lib/openapi.js";
+import { publicCandidatesRoutes } from "./candidates.js";
+import { publicJobsRoutes } from "./jobs.js";
+import { publicNotificationsRoutes } from "./notifications.js";
 
-const publicRoutes = createOpenAPIApp()
+const publicRoutes = createOpenAPIApp();
 
-publicRoutes.route('/candidates', publicCandidatesRoutes)
-publicRoutes.route('/notifications', publicNotificationsRoutes)
+publicRoutes.route("/candidates", publicCandidatesRoutes);
+publicRoutes.route("/jobs", publicJobsRoutes);
+publicRoutes.route("/notifications", publicNotificationsRoutes);
 
-export { publicRoutes }
+export { publicRoutes };

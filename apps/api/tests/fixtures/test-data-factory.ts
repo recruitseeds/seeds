@@ -76,7 +76,14 @@ export const TestDataFactory = {
 					endDate: "2021-02",
 					description:
 						"Built full-stack applications using React, Express.js, and MongoDB. Implemented CI/CD pipelines and automated testing.",
-					skills: ["React", "JavaScript", "Express.js", "MongoDB", "Jest", "CI/CD"],
+					skills: [
+						"React",
+						"JavaScript",
+						"Express.js",
+						"MongoDB",
+						"Jest",
+						"CI/CD",
+					],
 					location: "Austin, TX",
 				},
 			],

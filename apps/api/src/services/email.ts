@@ -1,58 +1,84 @@
-import { Resend } from 'resend'
-import { ConfigService } from './config.js'
-import type { Logger } from './logger.js'
+import type { Database } from "@seeds/supabase/types/db";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+import { ConfigService } from "./config.js";
+import type { Logger } from "./logger.js";
 
 export interface EmailTemplate {
-  id: string
-  name: string
-  subject: string
-  htmlTemplate: string
-  textTemplate?: string
-  requiredVariables: string[]
+	id: string;
+	name: string;
+	subject: string;
+	htmlTemplate: string;
+	textTemplate?: string;
+	requiredVariables: string[];
 }
 
 export interface EmailData {
-  to: string
-  from?: string
-  subject: string
-  html: string
-  text?: string
-  tags?: { name: string; value: string }[]
-  headers?: Record<string, string>
+	to: string;
+	from?: string;
+	subject: string;
+	html: string;
+	text?: string;
+	tags?: { name: string; value: string }[];
+	headers?: Record<string, string>;
 }
 
 export interface CandidateApplicationEmailData {
-  candidateName: string
-  candidateEmail: string
-  jobTitle: string
-  companyName: string
-  applicationId: string
-  portalUrl?: string
-  companyLogo?: string
-  contactEmail?: string
+	candidateName: string;
+	candidateEmail: string;
+	jobTitle: string;
+	companyName: string;
+	applicationId: string;
+	portalUrl?: string;
+	companyLogo?: string;
+	contactEmail?: string;
+}
+
+export interface EmailScheduleRequest {
+	candidateId: string;
+	applicationId: string;
+	recipientEmail: string;
+	emailType: "application_confirmation" | "auto_rejection" | "manual_rejection";
+	scheduledFor?: Date;
+	templateData?: Record<string, any>;
+}
+
+export interface ScheduledEmail {
+	id: string;
+	candidateId: string;
+	applicationId: string;
+	recipientEmail: string;
+	emailType: string;
+	scheduledFor: Date;
+	status: "pending" | "sent" | "failed" | "cancelled";
+	templateData: Record<string, any>;
+	createdAt: Date;
 }
 
 export class EmailService {
-  private resend: Resend
-  private logger: Logger
-  private defaultFromEmail: string
-  private templates: Map<string, EmailTemplate> = new Map()
+	private resend: Resend;
+	private logger: Logger;
+	private defaultFromEmail: string;
+	private templates: Map<string, EmailTemplate> = new Map();
+	private supabase?: SupabaseClient<Database>;
 
-  constructor(logger: Logger) {
-    const config = ConfigService.getInstance().getConfig()
-    this.resend = new Resend(config.resendApiKey)
-    this.logger = logger
-    this.defaultFromEmail = config.defaultFromEmail || 'noreply@recruitseed.com'
+	constructor(logger: Logger, supabase?: SupabaseClient<Database>) {
+		const config = ConfigService.getInstance().getConfig();
+		this.resend = new Resend(config.resendApiKey);
+		this.logger = logger;
+		this.defaultFromEmail =
+			config.defaultFromEmail || "noreply@recruitseed.com";
+		this.supabase = supabase;
 
-    this.loadEmailTemplates()
-  }
+		this.loadEmailTemplates();
+	}
 
-  private loadEmailTemplates(): void {
-    const applicationReceivedTemplate: EmailTemplate = {
-      id: 'application-received',
-      name: 'Application Received Confirmation',
-      subject: 'Application received for {{jobTitle}} at {{companyName}}',
-      htmlTemplate: `
+	private loadEmailTemplates(): void {
+		const applicationReceivedTemplate: EmailTemplate = {
+			id: "application-received",
+			name: "Application Received Confirmation",
+			subject: "Application received for {{jobTitle}} at {{companyName}}",
+			htmlTemplate: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -117,7 +143,7 @@ export class EmailService {
         </body>
         </html>
       `,
-      textTemplate: `
+			textTemplate: `
         Thank you for your application!
         
         Hi {{candidateName}},
@@ -142,14 +168,19 @@ export class EmailService {
         This is an automated message regarding your job application (ID: {{applicationId}}).
         Please do not reply to this email.
       `,
-      requiredVariables: ['candidateName', 'jobTitle', 'companyName', 'applicationId'],
-    }
+			requiredVariables: [
+				"candidateName",
+				"jobTitle",
+				"companyName",
+				"applicationId",
+			],
+		};
 
-    const candidateRejectionTemplate: EmailTemplate = {
-      id: 'candidate-rejection',
-      name: 'Candidate Rejection',
-      subject: 'Update on your application for {{jobTitle}} at {{companyName}}',
-      htmlTemplate: `
+		const candidateRejectionTemplate: EmailTemplate = {
+			id: "candidate-rejection",
+			name: "Candidate Rejection",
+			subject: "Update on your application for {{jobTitle}} at {{companyName}}",
+			htmlTemplate: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -190,7 +221,7 @@ export class EmailService {
         </body>
         </html>
       `,
-      textTemplate: `
+			textTemplate: `
         Thank you for your interest in {{companyName}}
         
         Hi {{candidateName}},
@@ -210,170 +241,416 @@ export class EmailService {
         This is an automated message regarding your job application (ID: {{applicationId}}).
         Please do not reply to this email.
       `,
-      requiredVariables: ['candidateName', 'jobTitle', 'companyName', 'applicationId'],
-    }
+			requiredVariables: [
+				"candidateName",
+				"jobTitle",
+				"companyName",
+				"applicationId",
+			],
+		};
 
-    this.templates.set('application-received', applicationReceivedTemplate)
-    this.templates.set('candidate-rejection', candidateRejectionTemplate)
-  }
+		this.templates.set("application-received", applicationReceivedTemplate);
+		this.templates.set("candidate-rejection", candidateRejectionTemplate);
+	}
 
-  private renderTemplate(template: string, data: Record<string, unknown>): string {
-    let rendered = template
+	private renderTemplate(
+		template: string,
+		data: Record<string, unknown>,
+	): string {
+		let rendered = template;
 
-    for (const [key, value] of Object.entries(data)) {
-      const regex = new RegExp(`{{${key}}}`, 'g')
-      rendered = rendered.replace(regex, String(value || ''))
-    }
+		for (const [key, value] of Object.entries(data)) {
+			const regex = new RegExp(`{{${key}}}`, "g");
+			rendered = rendered.replace(regex, String(value || ""));
+		}
 
-    rendered = rendered.replace(/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g, (_, variable, content) => {
-      return data[variable] ? content : ''
-    })
+		rendered = rendered.replace(
+			/{{#if\s+(\w+)}}([\s\S]*?){{\/if}}/g,
+			(_, variable, content) => {
+				return data[variable] ? content : "";
+			},
+		);
 
-    rendered = rendered.replace(
-      /{{#if\s+(\w+)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g,
-      (_, variable, ifContent, elseContent) => {
-        return data[variable] ? ifContent : elseContent
-      }
-    )
+		rendered = rendered.replace(
+			/{{#if\s+(\w+)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g,
+			(_, variable, ifContent, elseContent) => {
+				return data[variable] ? ifContent : elseContent;
+			},
+		);
 
-    return rendered.trim()
-  }
+		return rendered.trim();
+	}
 
-  async sendEmail(
-    emailData: EmailData,
-    metadata?: {
-      correlationId?: string
-      candidateId?: string
-      companyId?: string
-    }
-  ): Promise<string> {
-    try {
-      this.logger.info('Sending email', {
-        to: emailData.to,
-        subject: emailData.subject,
-        tags: emailData.tags,
-        correlationId: metadata?.correlationId,
-        candidateId: metadata?.candidateId,
-        companyId: metadata?.companyId,
-      })
+	async sendEmail(
+		emailData: EmailData,
+		metadata?: {
+			correlationId?: string;
+			candidateId?: string;
+			companyId?: string;
+		},
+	): Promise<string> {
+		try {
+			this.logger.info("Sending email", {
+				to: emailData.to,
+				subject: emailData.subject,
+				tags: emailData.tags,
+				correlationId: metadata?.correlationId,
+				candidateId: metadata?.candidateId,
+				companyId: metadata?.companyId,
+			});
 
-      const result = await this.resend.emails.send({
-        from: emailData.from || this.defaultFromEmail,
-        to: emailData.to,
-        subject: emailData.subject,
-        html: emailData.html,
-        text: emailData.text,
-        tags: emailData.tags,
-        headers: emailData.headers,
-      })
+			const result = await this.resend.emails.send({
+				from: emailData.from || this.defaultFromEmail,
+				to: emailData.to,
+				subject: emailData.subject,
+				html: emailData.html,
+				text: emailData.text,
+				tags: emailData.tags,
+				headers: emailData.headers,
+			});
 
-      if (result.error) {
-        this.logger.error('Email sending failed', result.error, {
-          to: emailData.to,
-          subject: emailData.subject,
-          correlationId: metadata?.correlationId,
-        })
-        throw new Error(`Email sending failed: ${result.error.message}`)
-      }
+			if (result.error) {
+				this.logger.error("Email sending failed", result.error, {
+					to: emailData.to,
+					subject: emailData.subject,
+					correlationId: metadata?.correlationId,
+				});
+				throw new Error(`Email sending failed: ${result.error.message}`);
+			}
 
-      this.logger.info('Email sent successfully', {
-        emailId: result.data?.id,
-        to: emailData.to,
-        subject: emailData.subject,
-        correlationId: metadata?.correlationId,
-        candidateId: metadata?.candidateId,
-        companyId: metadata?.companyId,
-      })
+			this.logger.info("Email sent successfully", {
+				emailId: result.data?.id,
+				to: emailData.to,
+				subject: emailData.subject,
+				correlationId: metadata?.correlationId,
+				candidateId: metadata?.candidateId,
+				companyId: metadata?.companyId,
+			});
 
-      return result.data?.id || 'unknown'
-    } catch (error) {
-      this.logger.error('Unexpected error sending email', error, {
-        to: emailData.to,
-        subject: emailData.subject,
-        correlationId: metadata?.correlationId,
-      })
-      throw error
-    }
-  }
+			return result.data?.id || "unknown";
+		} catch (error) {
+			this.logger.error("Unexpected error sending email", error, {
+				to: emailData.to,
+				subject: emailData.subject,
+				correlationId: metadata?.correlationId,
+			});
+			throw error;
+		}
+	}
 
-  async sendTemplatedEmail(
-    templateId: string,
-    templateData: Record<string, unknown>,
-    to: string,
-    metadata?: {
-      correlationId?: string
-      candidateId?: string
-      companyId?: string
-    }
-  ): Promise<string> {
-    const template = this.templates.get(templateId)
-    if (!template) {
-      throw new Error(`Email template not found: ${templateId}`)
-    }
+	async sendTemplatedEmail(
+		templateId: string,
+		templateData: Record<string, unknown>,
+		to: string,
+		metadata?: {
+			correlationId?: string;
+			candidateId?: string;
+			companyId?: string;
+		},
+	): Promise<string> {
+		const template = this.templates.get(templateId);
+		if (!template) {
+			throw new Error(`Email template not found: ${templateId}`);
+		}
 
-    for (const requiredVar of template.requiredVariables) {
-      if (!templateData[requiredVar]) {
-        throw new Error(`Missing required template variable: ${requiredVar}`)
-      }
-    }
+		for (const requiredVar of template.requiredVariables) {
+			if (!templateData[requiredVar]) {
+				throw new Error(`Missing required template variable: ${requiredVar}`);
+			}
+		}
 
-    const subject = this.renderTemplate(template.subject, templateData)
-    const html = this.renderTemplate(template.htmlTemplate, templateData)
-    const text = template.textTemplate ? this.renderTemplate(template.textTemplate, templateData) : undefined
+		const subject = this.renderTemplate(template.subject, templateData);
+		const html = this.renderTemplate(template.htmlTemplate, templateData);
+		const text = template.textTemplate
+			? this.renderTemplate(template.textTemplate, templateData)
+			: undefined;
 
-    const emailData: EmailData = {
-      to,
-      subject,
-      html,
-      text,
-      tags: [
-        { name: 'template', value: templateId },
-        { name: 'candidate_id', value: metadata?.candidateId || '' },
-        { name: 'company_id', value: metadata?.companyId || '' },
-      ],
-    }
+		const emailData: EmailData = {
+			to,
+			subject,
+			html,
+			text,
+			tags: [
+				{ name: "template", value: templateId },
+				{ name: "candidate_id", value: metadata?.candidateId || "" },
+				{ name: "company_id", value: metadata?.companyId || "" },
+			],
+		};
 
-    return this.sendEmail(emailData, metadata)
-  }
+		return this.sendEmail(emailData, metadata);
+	}
 
-  async sendApplicationReceivedEmail(
-    data: CandidateApplicationEmailData,
-    metadata?: { correlationId?: string }
-  ): Promise<string> {
-    this.logger.info('Sending application received email', {
-      candidateEmail: data.candidateEmail,
-      jobTitle: data.jobTitle,
-      companyName: data.companyName,
-      applicationId: data.applicationId,
-      correlationId: metadata?.correlationId,
-    })
+	async sendApplicationReceivedEmail(
+		data: CandidateApplicationEmailData,
+		metadata?: { correlationId?: string },
+	): Promise<string> {
+		this.logger.info("Sending application received email", {
+			candidateEmail: data.candidateEmail,
+			jobTitle: data.jobTitle,
+			companyName: data.companyName,
+			applicationId: data.applicationId,
+			correlationId: metadata?.correlationId,
+		});
 
-    return this.sendTemplatedEmail(
-      'application-received',
-      {
-        candidateName: data.candidateName,
-        candidateEmail: data.candidateEmail,
-        jobTitle: data.jobTitle,
-        companyName: data.companyName,
-        applicationId: data.applicationId,
-        portalUrl: data.portalUrl,
-        companyLogo: data.companyLogo,
-        contactEmail: data.contactEmail,
-      },
-      data.candidateEmail,
-      {
-        correlationId: metadata?.correlationId,
-        candidateId: data.applicationId,
-        companyId: data.companyName.toLowerCase().replace(/\s+/g, '-'),
-      }
-    )
-  }
+		return this.sendTemplatedEmail(
+			"application-received",
+			{
+				candidateName: data.candidateName,
+				candidateEmail: data.candidateEmail,
+				jobTitle: data.jobTitle,
+				companyName: data.companyName,
+				applicationId: data.applicationId,
+				portalUrl: data.portalUrl,
+				companyLogo: data.companyLogo,
+				contactEmail: data.contactEmail,
+			},
+			data.candidateEmail,
+			{
+				correlationId: metadata?.correlationId,
+				candidateId: data.applicationId,
+				companyId: data.companyName.toLowerCase().replace(/\s+/g, "-"),
+			},
+		);
+	}
 
-  getTemplate(templateId: string): EmailTemplate | undefined {
-    return this.templates.get(templateId)
-  }
+	getTemplate(templateId: string): EmailTemplate | undefined {
+		return this.templates.get(templateId);
+	}
 
-  listTemplates(): EmailTemplate[] {
-    return Array.from(this.templates.values())
-  }
+	listTemplates(): EmailTemplate[] {
+		return Array.from(this.templates.values());
+	}
+
+	async scheduleRejectionEmail(
+		applicationId: string,
+		recipientEmail: string,
+		scheduledFor: Date,
+	): Promise<string> {
+		if (!this.supabase) {
+			throw new Error("Database connection required for email scheduling");
+		}
+
+		this.logger.info("Scheduling rejection email", {
+			applicationId,
+			recipientEmail,
+			scheduledFor: scheduledFor.toISOString(),
+		});
+
+		const { data, error } = await this.supabase
+			.from("scheduled_rejection_emails")
+			.insert({
+				application_id: applicationId,
+				recipient_email: recipientEmail,
+				scheduled_for: scheduledFor.toISOString(),
+				status: "pending",
+			})
+			.select("id")
+			.single();
+
+		if (error) {
+			this.logger.error("Failed to schedule rejection email", {
+				error: error.message,
+				applicationId,
+			});
+			throw new Error(`Failed to schedule rejection email: ${error.message}`);
+		}
+
+		this.logger.info("Rejection email scheduled successfully", {
+			emailId: data.id,
+			applicationId,
+			scheduledFor: scheduledFor.toISOString(),
+		});
+
+		return data.id;
+	}
+
+	async sendScheduledRejectionEmail(emailId: string): Promise<boolean> {
+		if (!this.supabase) {
+			throw new Error("Database connection required for scheduled emails");
+		}
+
+		const { data: emailRecord, error } = await this.supabase
+			.from("scheduled_rejection_emails")
+			.select("*")
+			.eq("id", emailId)
+			.single();
+
+		if (error || !emailRecord) {
+			this.logger.error("Failed to retrieve rejection email record", {
+				emailId,
+				error: error?.message,
+			});
+			return false;
+		}
+
+		if (emailRecord.status !== "pending") {
+			this.logger.warn("Rejection email not in pending status", {
+				emailId,
+				status: emailRecord.status,
+			});
+			return false;
+		}
+
+		try {
+			const { data: applicationData } = await this.supabase
+				.from("job_applications")
+				.select(`
+					id,
+					candidate_profiles(name),
+					job_postings(title, organizations(name))
+				`)
+				.eq("id", emailRecord.application_id)
+				.single();
+
+			const candidateName = (applicationData?.candidate_profiles as any)?.name || "Candidate";
+			const jobTitle = (applicationData?.job_postings as any)?.title || "Position";
+			const companyName = ((applicationData?.job_postings as any)?.organizations as any)?.name || "Company";
+
+			const emailSentId = await this.sendTemplatedEmail(
+				"candidate-rejection",
+				{
+					candidateName,
+					jobTitle,
+					companyName,
+					applicationId: emailRecord.application_id,
+				},
+				emailRecord.recipient_email,
+				{
+					correlationId: emailRecord.id,
+					candidateId: emailRecord.application_id,
+					companyId: companyName.toLowerCase().replace(/\s+/g, "-"),
+				},
+			);
+
+			await this.supabase
+				.from("scheduled_rejection_emails")
+				.update({
+					status: "sent",
+					sent_at: new Date().toISOString(),
+					email_service_id: emailSentId,
+				})
+				.eq("id", emailId);
+
+			this.logger.info("Scheduled rejection email sent successfully", {
+				emailId,
+				resendId: emailSentId,
+				recipientEmail: emailRecord.recipient_email,
+			});
+
+			return true;
+		} catch (error) {
+			this.logger.error("Failed to send scheduled rejection email", {
+				emailId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+
+			await this.supabase
+				.from("scheduled_rejection_emails")
+				.update({
+					status: "failed",
+					error_message: error instanceof Error ? error.message : String(error),
+					retry_count: (emailRecord.retry_count || 0) + 1,
+				})
+				.eq("id", emailId);
+
+			return false;
+		}
+	}
+
+	async processPendingRejectionEmails(limit: number = 50): Promise<number> {
+		if (!this.supabase) {
+			throw new Error("Database connection required for processing emails");
+		}
+
+		this.logger.info("Processing pending rejection emails", { limit });
+
+		const { data: pendingEmails, error } = await this.supabase
+			.from("scheduled_rejection_emails")
+			.select("*")
+			.eq("status", "pending")
+			.lte("scheduled_for", new Date().toISOString())
+			.limit(limit);
+
+		if (error) {
+			this.logger.error("Failed to retrieve pending rejection emails", {
+				error: error.message,
+			});
+			return 0;
+		}
+
+		let processedCount = 0;
+		for (const email of pendingEmails) {
+			const success = await this.sendScheduledRejectionEmail(email.id);
+			if (success) {
+				processedCount++;
+			}
+		}
+
+		this.logger.info("Processed pending rejection emails", {
+			totalPending: pendingEmails.length,
+			successful: processedCount,
+			failed: pendingEmails.length - processedCount,
+		});
+
+		return processedCount;
+	}
+
+	async cancelScheduledRejectionEmail(emailId: string): Promise<boolean> {
+		if (!this.supabase) {
+			throw new Error("Database connection required for cancelling emails");
+		}
+
+		try {
+			const { error } = await this.supabase
+				.from("scheduled_rejection_emails")
+				.update({ status: "cancelled" })
+				.eq("id", emailId)
+				.eq("status", "pending");
+
+			if (error) {
+				this.logger.error("Failed to cancel scheduled rejection email", {
+					emailId,
+					error: error.message,
+				});
+				return false;
+			}
+
+			this.logger.info("Scheduled rejection email cancelled", { emailId });
+			return true;
+		} catch (error) {
+			this.logger.error("Error cancelling scheduled rejection email", {
+				emailId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+			return false;
+		}
+	}
+
+	async sendImmediateApplicationConfirmation(
+		applicationData: CandidateApplicationEmailData,
+	): Promise<string> {
+		this.logger.info("Sending immediate application confirmation", {
+			candidateEmail: applicationData.candidateEmail,
+			jobTitle: applicationData.jobTitle,
+			companyName: applicationData.companyName,
+			applicationId: applicationData.applicationId,
+		});
+
+		return this.sendApplicationReceivedEmail(applicationData);
+	}
+
+	async scheduleAutoRejection(
+		applicationId: string,
+		recipientEmail: string,
+		delayHours: number = 72,
+	): Promise<string> {
+		const scheduledFor = new Date();
+		scheduledFor.setHours(scheduledFor.getHours() + delayHours);
+
+		return this.scheduleRejectionEmail(
+			applicationId,
+			recipientEmail,
+			scheduledFor,
+		);
+	}
 }

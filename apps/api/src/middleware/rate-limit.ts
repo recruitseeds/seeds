@@ -1,5 +1,5 @@
-import { rateLimiter } from "hono-rate-limiter";
 import type { Context, Next } from "hono";
+import { rateLimiter } from "hono-rate-limiter";
 
 const RATE_LIMITS = {
 	free: { requests: 100, windowMs: 60 * 60 * 1000 },
@@ -9,7 +9,7 @@ const RATE_LIMITS = {
 
 export const createRateLimiter = (tier: keyof typeof RATE_LIMITS = "free") => {
 	const config = RATE_LIMITS[tier];
-	
+
 	return rateLimiter({
 		windowMs: config.windowMs,
 		limit: config.requests,
@@ -19,11 +19,13 @@ export const createRateLimiter = (tier: keyof typeof RATE_LIMITS = "free") => {
 			if (apiKeyOwner) {
 				return apiKeyOwner;
 			}
-			
-			return c.req.header("cf-connecting-ip") || 
-				   c.req.header("x-forwarded-for") || 
-				   c.req.header("x-real-ip") || 
-				   "unknown";
+
+			return (
+				c.req.header("cf-connecting-ip") ||
+				c.req.header("x-forwarded-for") ||
+				c.req.header("x-real-ip") ||
+				"unknown"
+			);
 		},
 		handler: (c: Context) => {
 			return c.json(
@@ -43,7 +45,7 @@ export const createRateLimiter = (tier: keyof typeof RATE_LIMITS = "free") => {
 				429,
 				{
 					"Retry-After": Math.ceil(config.windowMs / 1000).toString(),
-				}
+				},
 			);
 		},
 	});
@@ -59,7 +61,7 @@ export const adaptiveRateLimit = () => {
 	return async (c: Context, next: Next) => {
 		const apiKeyMeta = c.get("apiKeyMeta") as { tier?: string } | undefined;
 		const tier = (apiKeyMeta?.tier as keyof typeof RATE_LIMITS) || "free";
-		
+
 		const rateLimiter = createRateLimiter(tier);
 		return rateLimiter(c, next);
 	};

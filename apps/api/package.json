@@ -1,42 +1,48 @@
 {
-  "name": "@seeds/api",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch --clear-screen=false src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run --env-file=.env.test",
-    "test:watch": "vitest --env-file=.env.test",
-    "test:unit": "vitest run tests/unit --env-file=.env.test",
-    "test:integration": "vitest run tests/integration --env-file=.env.test",
-    "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
-  },
-  "dependencies": {
-    "@hono/node-server": "^1.13.7",
-    "@hono/swagger-ui": "^0.4.1",
-    "@hono/zod-openapi": "^0.18.4",
-    "@seeds/supabase": "*",
-    "@supabase/supabase-js": "^2.46.1",
-    "dotenv": "^17.2.1",
-    "fuse.js": "^7.0.0",
-    "hono": "^4.6.10",
-    "hono-rate-limiter": "^0.4.2",
-    "resend": "^4.7.0",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@seeds/tsconfig": "*",
-    "@types/node": "^20",
-    "@types/supertest": "^6.0.2",
-    "@vitest/coverage-v8": "^2.1.8",
-    "@vitest/ui": "^2.1.8",
-    "supertest": "^7.0.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5",
-    "vitest": "^2.1.8"
-  }
+	"name": "@seeds/api",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch --clear-screen=false src/index.ts",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"check": "npm run typecheck && npm run lint",
+		"test": "vitest run --env-file=.env.test",
+		"test:watch": "vitest --env-file=.env.test",
+		"test:unit": "vitest run tests/unit --env-file=.env.test",
+		"test:integration": "vitest run tests/integration --env-file=.env.test",
+		"test:coverage": "vitest run --coverage",
+		"test:ui": "vitest --ui"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.859.0",
+		"@hono/node-server": "^1.13.7",
+		"@hono/swagger-ui": "^0.4.1",
+		"@hono/zod-openapi": "^0.18.4",
+		"@seeds/supabase": "*",
+		"@supabase/supabase-js": "^2.46.1",
+		"dotenv": "^17.2.1",
+		"fuse.js": "^7.0.0",
+		"hono": "^4.6.10",
+		"hono-rate-limiter": "^0.4.2",
+		"resend": "^4.7.0",
+		"uuid": "^11.1.0",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@seeds/tsconfig": "*",
+		"@types/node": "^20",
+		"@types/supertest": "^6.0.2",
+		"@types/uuid": "^10.0.0",
+		"@vitest/coverage-v8": "^2.1.8",
+		"@vitest/ui": "^2.1.8",
+		"supertest": "^7.0.0",
+		"tsx": "^4.19.2",
+		"typescript": "^5",
+		"vitest": "^2.1.8"
+	}
 }

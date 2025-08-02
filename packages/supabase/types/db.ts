@@ -792,31 +792,43 @@ export type Database = {
       job_applications: {
         Row: {
           applied_at: string | null
+          auto_rejection_reason: string | null
           candidate_id: string
           created_at: string | null
           current_step_id: string | null
           id: string
           job_posting_id: string
+          overall_score: number | null
+          rejection_email_scheduled_for: string | null
+          rejection_email_sent: boolean | null
           status: string
           updated_at: string | null
         }
         Insert: {
           applied_at?: string | null
+          auto_rejection_reason?: string | null
           candidate_id: string
           created_at?: string | null
           current_step_id?: string | null
           id?: string
           job_posting_id: string
+          overall_score?: number | null
+          rejection_email_scheduled_for?: string | null
+          rejection_email_sent?: boolean | null
           status?: string
           updated_at?: string | null
         }
         Update: {
           applied_at?: string | null
+          auto_rejection_reason?: string | null
           candidate_id?: string
           created_at?: string | null
           current_step_id?: string | null
           id?: string
           job_posting_id?: string
+          overall_score?: number | null
+          rejection_email_scheduled_for?: string | null
+          rejection_email_sent?: boolean | null
           status?: string
           updated_at?: string | null
         }
@@ -1156,6 +1168,47 @@ export type Database = {
           },
         ]
       }
+      organization_rejection_settings: {
+        Row: {
+          business_days_only: boolean | null
+          created_at: string | null
+          from_email: string | null
+          from_name: string | null
+          organization_id: string
+          rejection_delay_days: number | null
+          rejection_email_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_days_only?: boolean | null
+          created_at?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          organization_id: string
+          rejection_delay_days?: number | null
+          rejection_email_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_days_only?: boolean | null
+          created_at?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          organization_id?: string
+          rejection_delay_days?: number | null
+          rejection_email_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_rejection_settings_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: true
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       organization_users: {
         Row: {
           created_at: string | null
@@ -1313,6 +1366,53 @@ export type Database = {
           },
         ]
       }
+      scheduled_rejection_emails: {
+        Row: {
+          application_id: string
+          created_at: string | null
+          email_service_id: string | null
+          error_message: string | null
+          id: string
+          recipient_email: string
+          retry_count: number | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string | null
+          email_service_id?: string | null
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          retry_count?: number | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string | null
+          email_service_id?: string | null
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          retry_count?: number | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scheduled_rejection_emails_application_id_fkey'
+            columns: ['application_id']
+            isOneToOne: false
+            referencedRelation: 'job_applications'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       template_variables: {
         Row: {
           created_at: string | null
@@ -1356,6 +1456,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_business_days: {
+        Args: { start_date: string; business_days: number }
+        Returns: string
+      }
       cleanup_expired_invitations: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1363,6 +1467,25 @@ export type Database = {
       generate_invitation_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_pending_rejection_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email_id: string
+          application_id: string
+          recipient_email: string
+          candidate_name: string
+          job_title: string
+          company_name: string
+        }[]
+      }
+      mark_rejection_email_failed: {
+        Args: { p_email_id: string; p_error_message: string }
+        Returns: undefined
+      }
+      mark_rejection_email_sent: {
+        Args: { p_email_id: string; p_service_id: string } | { p_email_id: string; p_service_id?: string }
+        Returns: undefined
       }
       process_uploaded_resume: {
         Args: {
@@ -1375,6 +1498,15 @@ export type Database = {
           p_parsed_resume_data: Json
         }
         Returns: undefined
+      }
+      schedule_rejection_email: {
+        Args: {
+          p_application_id: string
+          p_candidate_email: string
+          p_score?: number
+          p_rejection_reason?: string
+        }
+        Returns: string
       }
       set_default_resume_and_add_new_with_parsed_data: {
         Args: {
