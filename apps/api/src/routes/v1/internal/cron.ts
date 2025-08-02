@@ -118,9 +118,10 @@ cronRoutes.openapi(sendRejectionEmailsRoute, async (c: Context): Promise<any> =>
 
   try {
     // Fetch pending rejection emails from Supabase
-    const { data: pendingEmails, error } = await supabase
-      .rpc('get_pending_rejection_emails')
-      .returns<PendingRejectionEmail[]>()
+    const { data, error } = await supabase
+      .rpc('get_pending_rejection_emails' as any)
+    
+    const pendingEmails: PendingRejectionEmail[] = data || []
 
     if (error) {
       logger.error('Failed to fetch pending rejection emails', error)
