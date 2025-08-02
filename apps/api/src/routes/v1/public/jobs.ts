@@ -406,11 +406,7 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			isDefaultResume: true,
 		});
 
-		// Update application with the file ID
-		await supabase
-			.from("job_applications")
-			.update({ resume_file_id: uploadedFile.id })
-			.eq("id", application.applicationId);
+		// File is now associated with candidate through candidate_files table
 
 		logger.info("Job application created, starting resume parsing", {
 			applicationId: application.applicationId,
