@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import type { Context } from 'hono'
 import { ErrorResponseSchema, MetadataSchema, createOpenAPIApp } from '../../../lib/openapi.js'
-import { publicAuth } from '../../../middleware/public-auth.js'
+import { publicAuth, type PublicAuthContext } from '../../../middleware/public-auth.js'
 import { adaptiveRateLimit } from '../../../middleware/rate-limit.js'
 import { businessValidation, validate } from '../../../middleware/validation.js'
 import { type CandidateApplicationEmailData, EmailService } from '../../../services/email.js'
@@ -151,9 +151,38 @@ const validateEmailPermissions = async (c: Context) => {
 
 publicNotificationsRoutes.openapi(
   sendApplicationEmailRoute,
-  validate(SendApplicationEmailRequestSchema),
-  businessValidation(validateEmailPermissions),
-  async (c) => {
+  async (c: Context): Promise<any> => {
+    // Validate request
+    try {
+      const body = await c.req.json()
+      const validatedData = SendApplicationEmailRequestSchema.parse({ body })
+      c.set('validatedData', validatedData)
+      
+      // Business validation
+      const { permissions } = c.get('apiKeyMeta') || { permissions: [] }
+      
+      if (!permissions.includes('notifications:send')) {
+        return c.json({
+          success: false as const,
+          error: {
+            code: 'INSUFFICIENT_PERMISSIONS',
+            message: 'Email sending requires notifications:send permission',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId: c.get('correlationId'),
+        }, 403)
+      }
+    } catch (error) {
+      return c.json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+        },
+        timestamp: new Date().toISOString(),
+        correlationId: c.get('correlationId'),
+      }, 400)
+    }
     const correlationId = c.get('correlationId')
     const logger = new Logger({ correlationId, requestId: c.get('requestId') })
     const { body } = c.get('validatedData')
@@ -201,7 +230,7 @@ publicNotificationsRoutes.openapi(
       })
 
       return c.json({
-        success: true,
+        success: true as const,
         data: {
           emailId,
           candidateEmail: body.candidateEmail,
@@ -227,12 +256,13 @@ publicNotificationsRoutes.openapi(
       if (error instanceof Error && (error.message.includes('Resend') || error.message.includes('Email'))) {
         return c.json(
           {
-            success: false,
+            success: false as const,
             error: {
               code: 'EMAIL_SERVICE_UNAVAILABLE',
               message: 'Email service is temporarily unavailable. Please try again in a few moments.',
               retryAfter: '60s',
             },
+            timestamp: new Date().toISOString(),
             correlationId,
           },
           503
@@ -241,11 +271,12 @@ publicNotificationsRoutes.openapi(
 
       return c.json(
         {
-          success: false,
+          success: false as const,
           error: {
             code: 'INTERNAL_ERROR',
             message: 'An error occurred while sending the email',
           },
+          timestamp: new Date().toISOString(),
           correlationId,
         },
         500

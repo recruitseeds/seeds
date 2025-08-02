@@ -6,15 +6,15 @@ const INTERNAL_TOKEN = process.env.INTERNAL_API_SECRET || 'your-internal-secret'
 async function testRejectionEmailSystem() {
   console.log('🚀 Testing Rejection Email System')
   console.log('==================================')
-  
+
   try {
     console.log('\n1. Testing with dry run first...')
-    
+
     const dryRunResponse = await fetch(`${API_BASE_URL}/api/v1/internal/cron/send-rejection-emails`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Internal ${INTERNAL_TOKEN}`,
+        Authorization: `Internal ${INTERNAL_TOKEN}`,
       },
       body: JSON.stringify({
         timestamp: new Date().toISOString(),
@@ -45,19 +45,18 @@ async function testRejectionEmailSystem() {
 
     console.log('\n2. Scheduling actual email send in 30 seconds...')
     console.log('   (This gives you time to cancel with Ctrl+C if needed)')
-    
+
     let countdown = 30
     const countdownInterval = setInterval(() => {
       process.stdout.write(`\r   Sending emails in ${countdown}s... `)
       countdown--
-      
+
       if (countdown < 0) {
         clearInterval(countdownInterval)
         process.stdout.write('\r   Sending emails now!        \n')
         sendActualEmails()
       }
     }, 1000)
-
   } catch (error) {
     console.error('❌ Test failed:', error.message)
     if (error.message.includes('ECONNREFUSED')) {
@@ -73,12 +72,12 @@ async function testRejectionEmailSystem() {
 async function sendActualEmails() {
   try {
     console.log('\n3. Sending actual rejection emails...')
-    
+
     const response = await fetch(`${API_BASE_URL}/api/v1/internal/cron/send-rejection-emails`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Internal ${INTERNAL_TOKEN}`,
+        Authorization: `Internal ${INTERNAL_TOKEN}`,
       },
       body: JSON.stringify({
         timestamp: new Date().toISOString(),
@@ -99,15 +98,14 @@ async function sendActualEmails() {
     console.log(`   - Failed: ${result.data.failed}`)
     console.log(`   - Batches: ${result.data.batch_count}`)
     console.log(`   - Processing time: ${result.metadata.processingTimeMs}ms`)
-    
+
     if (result.data.failed > 0) {
       console.log('\n⚠️  Some emails failed to send. Check your logs for details.')
     }
-    
+
     if (result.data.sent > 0) {
       console.log('\n📧 Check your email service (Resend) dashboard to confirm delivery.')
     }
-
   } catch (error) {
     console.error('❌ Email sending failed:', error.message)
   }
@@ -115,7 +113,7 @@ async function sendActualEmails() {
 
 async function createTestData() {
   console.log('\n🔧 Creating test rejection email data...')
-  
+
   const testQuery = `
     -- Create a test scheduled rejection email (due now)
     INSERT INTO scheduled_rejection_emails (
@@ -128,7 +126,7 @@ async function createTestData() {
       NOW() - INTERVAL '1 minute'
     ) RETURNING id;
   `
-  
+
   console.log('Run this SQL in your Supabase SQL editor to create test data:')
   console.log('```sql')
   console.log(testQuery.trim())
