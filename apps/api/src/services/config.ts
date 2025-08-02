@@ -1,41 +1,70 @@
-import { Context, Effect, Layer } from 'effect'
-
-export interface ConfigService {
+export interface Config {
   readonly openaiApiKey: string
   readonly supabaseUrl: string
   readonly supabaseAnonKey: string
+  readonly supabaseServiceRoleKey: string
   readonly port: number
   readonly nodeEnv: string
   readonly sentryDsn?: string
   readonly posthogApiKey?: string
   readonly posthogHost?: string
+  readonly unkeyApiKey?: string
+  readonly unkeyAppId?: string
+  readonly resendApiKey?: string
+  readonly defaultFromEmail?: string
+  readonly internalApiSecret?: string
+  readonly jwtSecret?: string
 }
 
-export const ConfigService = Context.GenericTag<ConfigService>('ConfigService')
+export class ConfigService {
+  private static instance: ConfigService
+  private config: Config
 
-const make = Effect.gen(function* () {
-  const openaiApiKey = process.env.OPENAI_API_KEY
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  private constructor() {
+    const openaiApiKey = process.env.OPENAI_API_KEY
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!openaiApiKey) {
-    yield* Effect.fail(new Error('OPENAI_API_KEY environment variable is required'))
+    if (!openaiApiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required')
+    }
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase environment variables are required')
+    }
+
+    if (!supabaseServiceRoleKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required')
+    }
+
+    this.config = {
+      openaiApiKey,
+      supabaseUrl,
+      supabaseAnonKey,
+      supabaseServiceRoleKey,
+      port: process.env.PORT ? Number.parseInt(process.env.PORT) : 3001,
+      nodeEnv: process.env.NODE_ENV || 'development',
+      sentryDsn: process.env.SENTRY_DSN,
+      posthogApiKey: process.env.POSTHOG_API_KEY,
+      posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
+      unkeyApiKey: process.env.UNKEY_API_KEY,
+      unkeyAppId: process.env.UNKEY_APP_ID,
+      resendApiKey: process.env.RESEND_API_KEY,
+      defaultFromEmail: process.env.DEFAULT_FROM_EMAIL,
+      internalApiSecret: process.env.INTERNAL_API_SECRET,
+      jwtSecret: process.env.JWT_SECRET,
+    }
   }
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    yield* Effect.fail(new Error('Supabase environment variables are required'))
+  static getInstance(): ConfigService {
+    if (!ConfigService.instance) {
+      ConfigService.instance = new ConfigService()
+    }
+    return ConfigService.instance
   }
 
-  return {
-    openaiApiKey: openaiApiKey as string,
-    supabaseUrl: supabaseUrl as string,
-    supabaseAnonKey: supabaseAnonKey as string,
-    port: process.env.PORT ? Number.parseInt(process.env.PORT) : 3001,
-    nodeEnv: process.env.NODE_ENV || 'development',
-    sentryDsn: process.env.SENTRY_DSN,
-    posthogApiKey: process.env.POSTHOG_API_KEY,
-    posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
-  } satisfies ConfigService
-})
-
-export const ConfigServiceLive = Layer.effect(ConfigService, make)
+  getConfig(): Config {
+    return this.config
+  }
+}

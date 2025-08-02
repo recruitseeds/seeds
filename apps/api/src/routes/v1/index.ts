@@ -1,7 +1,10 @@
 import { candidatesRoutes } from './candidates.js'
 import { createOpenAPIApp, healthRoute } from '../../lib/openapi.js'
+import { apiKeyAuth } from '../../middleware/api-auth.js'
 
 const v1Routes = createOpenAPIApp()
+
+v1Routes.use('*', apiKeyAuth())
 
 v1Routes.use('*', async (c, next) => {
   await next()
@@ -9,7 +12,6 @@ v1Routes.use('*', async (c, next) => {
   c.header('Supported-Versions', 'v1')
 })
 
-// Health check route with OpenAPI spec
 v1Routes.openapi(healthRoute, (c) => {
   return c.json({
     status: 'ok' as const,

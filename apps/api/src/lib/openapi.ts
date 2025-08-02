@@ -6,6 +6,8 @@ export const createOpenAPIApp = () => {
     Variables: {
       correlationId: string
       requestId: string
+      apiKeyOwner?: string
+      apiKeyMeta?: Record<string, unknown>
     }
   }>()
 }
@@ -40,6 +42,8 @@ export const addSwaggerUI = (
     Variables: {
       correlationId: string
       requestId: string
+      apiKeyOwner?: string
+      apiKeyMeta?: Record<string, unknown>
     }
   }>
 ) => {
@@ -47,12 +51,48 @@ export const addSwaggerUI = (
     openapi: '3.0.0',
     info: {
       version: '1.0.0',
-      title: 'Recruit Seeds API',
-      description: 'AI-powered resume parsing and skill matching API for recruitment platforms',
+      title: 'Seeds API',
+      description: `
+# AI-Powered Recruitment API
+
+The Seeds API provides comprehensive resume parsing and candidate scoring capabilities using advanced AI technology.
+
+## Key Features
+
+- **AI Resume Parsing**: Extract structured data from PDF, DOCX, and text resumes
+- **Intelligent Skill Matching**: Match candidates against job requirements with fuzzy matching
+- **Comprehensive Scoring**: Multi-factor scoring algorithm (skills, experience, education)
+- **Auto-Rejection Logic**: Configurable thresholds for automated candidate filtering
+- **Hiring Recommendations**: AI-generated insights for recruiters
+
+## Authentication
+
+All API endpoints require authentication using API keys. Include your API key in the Authorization header:
+
+\`\`\`
+Authorization: Bearer uk_your_api_key_here
+\`\`\`
+
+## Rate Limits
+
+- **Free Tier**: 100 requests per hour
+- **Pro Tier**: 1,000 requests per hour  
+- **Enterprise**: Custom limits available
+
+## Support
+
+For API support, visit our [documentation](https://docs.recruitseeds.com) or contact support@recruitseeds.com.
+      `,
       contact: {
         name: 'API Support',
-        url: 'https://github.com/seeds/seeds',
+        url: 'https://docs.recruitseeds.com',
+        email: 'support@recruitseeds.com',
       },
+      license: {
+        name: 'Commercial License',
+        url: 'https://recruitseeds.com/license',
+      },
+      termsOfService: 'https://recruitseeds.com/terms',
     },
     servers: [
       {
@@ -67,15 +107,19 @@ export const addSwaggerUI = (
     tags: [
       {
         name: 'Health',
-        description: 'Health check endpoints',
+        description: 'Health check and system status endpoints',
       },
       {
-        name: 'Candidates',
-        description: 'Candidate management and resume processing',
+        name: 'Candidates', 
+        description: 'Resume parsing, skill matching, and candidate scoring',
       },
       {
         name: 'Jobs',
         description: 'Job posting and requirements management',
+      },
+      {
+        name: 'Pipeline',
+        description: 'Hiring pipeline and workflow automation',
       },
     ],
   })

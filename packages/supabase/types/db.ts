@@ -451,6 +451,91 @@ export type Database = {
         }
         Relationships: []
       }
+      candidate_skill_scores: {
+        Row: {
+          ai_model_version: string | null
+          auto_rejected: boolean | null
+          auto_rejection_reason: string | null
+          candidate_id: string
+          correlation_id: string | null
+          created_at: string | null
+          education_score: number
+          experience_score: number
+          file_id: string | null
+          id: string
+          job_posting_id: string
+          missing_required_skills: Json
+          overall_score: number
+          processing_time_ms: number | null
+          recommendations: Json
+          required_skills_score: number
+          skill_matches: Json
+          updated_at: string | null
+        }
+        Insert: {
+          ai_model_version?: string | null
+          auto_rejected?: boolean | null
+          auto_rejection_reason?: string | null
+          candidate_id: string
+          correlation_id?: string | null
+          created_at?: string | null
+          education_score: number
+          experience_score: number
+          file_id?: string | null
+          id?: string
+          job_posting_id: string
+          missing_required_skills?: Json
+          overall_score: number
+          processing_time_ms?: number | null
+          recommendations?: Json
+          required_skills_score: number
+          skill_matches?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          ai_model_version?: string | null
+          auto_rejected?: boolean | null
+          auto_rejection_reason?: string | null
+          candidate_id?: string
+          correlation_id?: string | null
+          created_at?: string | null
+          education_score?: number
+          experience_score?: number
+          file_id?: string | null
+          id?: string
+          job_posting_id?: string
+          missing_required_skills?: Json
+          overall_score?: number
+          processing_time_ms?: number | null
+          recommendations?: Json
+          required_skills_score?: number
+          skill_matches?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'candidate_skill_scores_candidate_id_fkey'
+            columns: ['candidate_id']
+            isOneToOne: false
+            referencedRelation: 'candidate_profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'candidate_skill_scores_file_id_fkey'
+            columns: ['file_id']
+            isOneToOne: false
+            referencedRelation: 'candidate_files'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'candidate_skill_scores_job_posting_id_fkey'
+            columns: ['job_posting_id']
+            isOneToOne: false
+            referencedRelation: 'job_postings'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       candidate_skills: {
         Row: {
           candidate_id: string

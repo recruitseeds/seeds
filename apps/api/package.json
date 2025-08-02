@@ -14,25 +14,16 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^1.0.0",
-    "@effect/platform": "^0.74.0",
-    "@effect/platform-node": "^0.70.0",
-    "@effect/schema": "^0.75.0",
     "@hono/node-server": "^1.13.7",
     "@hono/swagger-ui": "^0.4.1",
     "@hono/zod-openapi": "^0.18.4",
-    "@hono/zod-validator": "^0.4.0",
     "@seeds/supabase": "*",
-    "@sentry/node": "^8.45.0",
-    "@sentry/profiling-node": "^8.45.0",
-    "ai": "^4.0.46",
+    "@supabase/supabase-js": "^2.46.1",
     "dotenv": "^17.2.1",
-    "effect": "^3.9.0",
     "fuse.js": "^7.0.0",
     "hono": "^4.6.10",
-    "mammoth": "^1.9.1",
-    "pdf-parse-new": "^1.4.1",
-    "posthog-node": "^4.4.0",
+    "hono-rate-limiter": "^0.4.2",
+    "resend": "^4.7.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
