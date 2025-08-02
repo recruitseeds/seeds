@@ -1,133 +1,143 @@
-import { createOpenAI } from '@ai-sdk/openai'
-import { generateObject } from 'ai'
-import { Context, Effect, Layer } from 'effect'
-import { z } from 'zod'
-import type { ParsedResumeData } from '../types/resume.js'
 import { ConfigService } from './config.js'
-import { FileParserService } from './file-parser.js'
-import { LoggerService } from './logger.js'
+import { Logger } from './logger.js'
+import { ParsedResumeData } from '../types/resume.js'
 
-export interface AIService {
-  readonly parseResume: (content: string, fileName: string) => Effect.Effect<ParsedResumeData, Error>
+export class AIService {
+  private config
+  private logger: Logger
+
+  constructor(logger: Logger) {
+    this.config = ConfigService.getInstance().getConfig()
+    this.logger = logger
+  }
+
+  async parseResume(fileContent: string, fileName: string): Promise<ParsedResumeData> {
+    const startTime = Date.now()
+    
+    this.logger.info('Starting resume parsing with AI', {
+      fileName,
+      contentLength: fileContent.length,
+    })
+
+    const systemPrompt = `You are an expert resume parser. Extract structured data from the resume text provided.
+
+Return a JSON object with the following structure:
+{
+  "personalInfo": {
+    "name": "Full name",
+    "email": "email@example.com",
+    "phone": "+1-555-0123",
+    "location": "City, State",
+    "linkedinUrl": "https://linkedin.com/in/username",
+    "githubUrl": "https://github.com/username",
+    "portfolioUrl": "https://portfolio.com"
+  },
+  "summary": "Professional summary",
+  "experience": [
+    {
+      "company": "Company Name",
+      "position": "Job Title",
+      "startDate": "2021-03",
+      "endDate": "2024-01",
+      "description": "Job description",
+      "skills": ["React", "TypeScript"],
+      "location": "City, State"
+    }
+  ],
+  "education": [
+    {
+      "institution": "University Name",
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "graduationDate": "2019-05",
+      "gpa": "3.8"
+    }
+  ],
+  "skills": ["React", "TypeScript", "Node.js"],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "Project description",
+      "technologies": ["React", "Node.js"],
+      "url": "https://project.com",
+      "githubUrl": "https://github.com/user/project"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issueDate": "2023-05",
+      "expirationDate": "2026-05",
+      "credentialId": "AWS-ASA-123456"
+    }
+  ],
+  "languages": ["English", "Spanish"]
 }
 
-export const AIService = Context.GenericTag<AIService>('AIService')
+Extract only information that is explicitly mentioned in the resume. If information is not available, omit the field or use null.`
 
-const resumeParsingPrompt = `
-You are an expert resume parser. Extract structured information from the provided resume text.
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.openaiApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Parse this resume:\n\n${fileContent}` }
+          ],
+          temperature: 0.1,
+          max_tokens: 2000,
+        }),
+      })
 
-Focus on:
-1. Personal information (name, contact details, social profiles)
-2. Professional experience with skills mentioned
-3. Education background
-4. Technical skills (be comprehensive)
-5. Projects with technologies used
-6. Certifications
-7. Languages spoken
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`OpenAI API error: ${response.status} ${errorText}`)
+      }
 
-For URLs/links:
-- Look for hidden links in text (e.g., "GitHub" might be a link to their profile)
-- Extract actual URLs when available
-- Infer likely URLs from context (e.g., GitHub username)
+      const result = await response.json() as {
+        choices: Array<{ message: { content: string } }>
+        usage?: { total_tokens: number }
+      }
+      const content = result.choices[0]?.message?.content
 
-For skills:
-- Extract both explicitly mentioned skills and inferred skills from experience
-- Include programming languages, frameworks, tools, methodologies
-- Normalize skill names (e.g., "React.js" -> "React")
+      if (!content) {
+        throw new Error('No content received from OpenAI')
+      }
 
-Be thorough but accurate. If information is unclear or missing, omit rather than guess.
-`
+      const cleanContent = content.replace(/```json\n?/, '').replace(/\n?```$/, '').trim()
+      const parsedData = JSON.parse(cleanContent) as ParsedResumeData
 
-const resumeSchema = z.object({
-  personalInfo: z.object({
-    name: z.string(),
-    email: z.string().optional(),
-    phone: z.string().optional(),
-    location: z.string().optional(),
-    linkedinUrl: z.string().optional(),
-    githubUrl: z.string().optional(),
-    portfolioUrl: z.string().optional(),
-  }),
-  summary: z.string().optional(),
-  experience: z.array(
-    z.object({
-      company: z.string(),
-      position: z.string(),
-      startDate: z.string(),
-      endDate: z.string().optional(),
-      description: z.string(),
-      skills: z.array(z.string()),
-      location: z.string().optional(),
-    })
-  ),
-  education: z.array(
-    z.object({
-      institution: z.string(),
-      degree: z.string(),
-      field: z.string(),
-      graduationDate: z.string().optional(),
-      gpa: z.string().optional(),
-    })
-  ),
-  skills: z.array(z.string()),
-  projects: z.array(
-    z.object({
-      name: z.string(),
-      description: z.string(),
-      technologies: z.array(z.string()),
-      url: z.string().optional(),
-      githubUrl: z.string().optional(),
-    })
-  ),
-  certifications: z.array(
-    z.object({
-      name: z.string(),
-      issuer: z.string(),
-      issueDate: z.string().optional(),
-      expirationDate: z.string().optional(),
-      credentialId: z.string().optional(),
-      url: z.string().optional(),
-    })
-  ),
-  languages: z.array(z.string()),
-})
+      const processingTime = Date.now() - startTime
 
-const make = Effect.gen(function* () {
-  const config = yield* ConfigService
-  const logger = yield* LoggerService
-  const fileParser = yield* FileParserService
+      this.logger.info('Resume parsing completed successfully', {
+        fileName,
+        processingTimeMs: processingTime,
+        skillsCount: parsedData.skills?.length || 0,
+        experienceCount: parsedData.experience?.length || 0,
+        educationCount: parsedData.education?.length || 0,
+        projectsCount: parsedData.projects?.length || 0,
+        certificationsCount: parsedData.certifications?.length || 0,
+        tokensUsed: result.usage?.total_tokens || 0,
+      })
 
-  const client = createOpenAI({
-    apiKey: config.openaiApiKey,
-  })
+      return parsedData
 
-  return {
-    parseResume: (content: string, fileName: string) =>
-      Effect.gen(function* () {
-        yield* logger.info('Starting resume parsing', { fileName })
-
-        const fileBuffer = Buffer.from(content, 'base64')
-        const textContent = yield* fileParser.parseFile(fileBuffer, fileName)
-
-        const result = yield* Effect.tryPromise({
-          try: () =>
-            generateObject({
-              model: client('gpt-4o'),
-              prompt: `${resumeParsingPrompt}\n\nResume content:\n${textContent}`,
-              schema: resumeSchema,
-            }),
-          catch: (error) => new Error(`Failed to parse resume: ${error}`),
-        })
-
-        yield* logger.info('Resume parsing completed', {
-          fileName,
-          skillsFound: result.object.skills.length,
-          experienceCount: result.object.experience.length,
-        })
-
-        return result.object as ParsedResumeData
-      }),
-  } satisfies AIService
-})
-
-export const AIServiceLive = Layer.effect(AIService, make)
+    } catch (error) {
+      const processingTime = Date.now() - startTime
+      
+      this.logger.error('Resume parsing failed', error, {
+        fileName,
+        processingTimeMs: processingTime,
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      })
+      
+      throw error
+    }
+  }
+}

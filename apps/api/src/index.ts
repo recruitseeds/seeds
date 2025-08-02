@@ -1,25 +1,24 @@
-import { NodeRuntime } from '@effect/platform-node'
 import { serve } from '@hono/node-server'
 import 'dotenv/config'
-import { Effect, Layer, pipe } from 'effect'
 import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
+import { logger as honoLogger } from 'hono/logger'
 
 import { addSwaggerUI, createOpenAPIApp } from './lib/openapi.js'
 import { correlationMiddleware } from './middleware/correlation.js'
 import { errorHandler } from './middleware/error-handler.js'
+import { structuredLogging } from './middleware/structured-logging.js'
 import { v1Routes } from './routes/v1/index.js'
-import { ConfigServiceLive } from './services/config.js'
-import { LoggerService, LoggerServiceLive } from './services/logger.js'
-import { PostHogServiceLive } from './services/posthog.js'
-import { SentryServiceLive } from './services/sentry.js'
+import { publicRoutes } from './routes/v1/public/index.js'
+import { internalRoutes } from './routes/v1/internal/index.js'
+import { ConfigService } from './services/config.js'
+import { Logger } from './services/logger.js'
 
 const app = createOpenAPIApp()
 
 app.use('*', errorHandler())
 app.use('*', correlationMiddleware())
+app.use('*', structuredLogging())
 app.use('*', cors())
-app.use('*', logger())
 
 app.get('/health', (c) =>
   c.json({
@@ -30,6 +29,10 @@ app.get('/health', (c) =>
 )
 
 app.route('/api/v1', v1Routes)
+app.route('/api/v1/public', publicRoutes)
+app.route('/api/v1/internal', internalRoutes)
+
+app.route('/test/v1', v1Routes)
 
 addSwaggerUI(app)
 
@@ -48,36 +51,23 @@ app.notFound((c) => {
   )
 })
 
-const port = process.env.PORT ? Number.parseInt(process.env.PORT) : 3001
+const config = ConfigService.getInstance().getConfig()
+const logger = new Logger()
 
-const program = Effect.gen(function* () {
-  const logger = yield* LoggerService
-  yield* logger.info('Starting API server', {
-    port,
-    environment: process.env.NODE_ENV || 'development',
-    apiVersion: 'v1',
-  })
-
-  serve({
-    fetch: app.fetch,
-    port,
-  })
-
-  yield* logger.info('🚀 API server running', {
-    url: `http://localhost:${port}`,
-    healthCheckUrl: `http://localhost:${port}/api/v1/health`,
-    docsUrl: `http://localhost:${port}/docs`,
-    openApiSpecUrl: `http://localhost:${port}/openapi.json`,
-  })
+logger.info('Starting API server', {
+  port: config.port,
+  environment: config.nodeEnv,
+  apiVersion: 'v1',
 })
 
-const MainLayer = Layer.provide(
-  LoggerServiceLive,
-  Layer.mergeAll(
-    ConfigServiceLive,
-    Layer.provide(SentryServiceLive, ConfigServiceLive),
-    Layer.provide(PostHogServiceLive, ConfigServiceLive)
-  )
-)
+serve({
+  fetch: app.fetch,
+  port: config.port,
+})
 
-pipe(program, Effect.provide(MainLayer), NodeRuntime.runMain)
+logger.info('🚀 API server running', {
+  url: `http://localhost:${config.port}`,
+  healthCheckUrl: `http://localhost:${config.port}/api/v1/health`,
+  docsUrl: `http://localhost:${config.port}/docs`,
+  openApiSpecUrl: `http://localhost:${config.port}/openapi.json`,
+})

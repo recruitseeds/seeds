@@ -1,126 +1,116 @@
-import { Context, Effect, Layer } from 'effect'
-import { LoggerService } from './logger.js'
-import type { JobRequirements } from './skill-matcher.js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '../../../../packages/supabase/types/db.js'
+import { ConfigService } from './config.js'
+import { Logger } from './logger.js'
 
-export interface JobRequirementsService {
-  readonly getJobRequirements: (jobId: string) => Effect.Effect<JobRequirements, Error>
-  readonly createJobRequirements: (requirements: Omit<JobRequirements, 'id'>) => Effect.Effect<JobRequirements, Error>
-  readonly updateJobRequirements: (
-    jobId: string,
-    requirements: Partial<JobRequirements>
-  ) => Effect.Effect<JobRequirements, Error>
+export interface JobRequirements {
+  id: string
+  title: string
+  required_skills: string[]
+  nice_to_have_skills: string[]
+  min_experience_years: number
+  education_requirements: string[]
+  experience_requirements: string[]
 }
 
-export const JobRequirementsService = Context.GenericTag<JobRequirementsService>('JobRequirementsService')
+export class JobRequirementsService {
+  private supabase: SupabaseClient<Database>
+  private logger: Logger
 
-const MOCK_JOB_REQUIREMENTS: Record<string, JobRequirements> = {
-  'job-123': {
-    id: 'job-123',
-    title: 'Senior Full Stack Engineer',
-    required_skills: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Git'],
-    nice_to_have_skills: ['AWS', 'Docker', 'GraphQL', 'Kubernetes', 'Next.js'],
-    minimum_experience_years: 5,
-    preferred_education_level: ['bachelor', 'master'],
-    industry: 'Technology',
-    seniority_level: 'senior',
-  },
-  'job-456': {
-    id: 'job-456',
-    title: 'Junior Frontend Developer',
-    required_skills: ['JavaScript', 'React', 'HTML', 'CSS'],
-    nice_to_have_skills: ['TypeScript', 'Vue', 'SASS', 'Webpack'],
-    minimum_experience_years: 1,
-    preferred_education_level: ['associate', 'bachelor'],
-    industry: 'Technology',
-    seniority_level: 'junior',
-  },
-  'job-789': {
-    id: 'job-789',
-    title: 'DevOps Engineer',
-    required_skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'Linux'],
-    nice_to_have_skills: ['Python', 'Ansible', 'Jenkins', 'Monitoring', 'Security'],
-    minimum_experience_years: 3,
-    preferred_education_level: ['bachelor'],
-    industry: 'Technology',
-    seniority_level: 'mid',
-  },
-  'job-default': {
-    id: 'job-default',
-    title: 'Software Engineer',
-    required_skills: ['Programming', 'Problem Solving', 'Git'],
-    nice_to_have_skills: ['JavaScript', 'Python', 'SQL', 'Agile'],
-    minimum_experience_years: 2,
-    preferred_education_level: ['bachelor'],
-    industry: 'Technology',
-    seniority_level: 'mid',
-  },
+  constructor(logger: Logger) {
+    const config = ConfigService.getInstance().getConfig()
+    this.supabase = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey)
+    this.logger = logger
+  }
+
+  async getJobRequirements(jobId: string): Promise<JobRequirements> {
+    try {
+      const { data: jobs, error } = await this.supabase
+        .from('job_postings')
+        .select('id, title, content')
+        .eq('id', jobId)
+
+      if (error) {
+        this.logger.warn('Database query failed, using fallback job requirements', { error: error.message, jobId })
+        return this.getFallbackJobRequirements(jobId)
+      }
+
+      if (!jobs || jobs.length === 0) {
+        this.logger.warn('Job posting not found, using fallback requirements', { jobId })
+        return this.getFallbackJobRequirements(jobId)
+      }
+
+      const job = jobs[0]
+
+      const content = job.content as Record<string, unknown>
+      
+      return {
+        id: job.id,
+        title: job.title,
+        required_skills: this.extractSkillsFromContent(content, 'required_skills') || [
+          'JavaScript', 'TypeScript', 'React', 'Node.js', 'Git'
+        ],
+        nice_to_have_skills: this.extractSkillsFromContent(content, 'nice_to_have_skills') || [
+          'AWS', 'Docker', 'GraphQL', 'MongoDB'
+        ],
+        min_experience_years: this.extractNumberFromContent(content, 'min_experience_years') || 3,
+        education_requirements: this.extractArrayFromContent(content, 'education_requirements') || [
+          'Bachelor\'s degree in Computer Science or related field'
+        ],
+        experience_requirements: this.extractArrayFromContent(content, 'experience_requirements') || [
+          'Experience with modern web frameworks',
+          'Full-stack development experience'
+        ]
+      }
+    } catch (error) {
+      this.logger.error('Failed to get job requirements', error, { jobId })
+      return this.getFallbackJobRequirements(jobId)
+    }
+  }
+
+  private getFallbackJobRequirements(jobId: string): JobRequirements {
+    return {
+      id: jobId,
+      title: 'Software Engineer',
+      required_skills: [
+        'JavaScript', 'TypeScript', 'React', 'Node.js', 'Git', 'SQL'
+      ],
+      nice_to_have_skills: [
+        'AWS', 'Docker', 'GraphQL', 'MongoDB', 'Kubernetes', 'CI/CD'
+      ],
+      min_experience_years: 3,
+      education_requirements: [
+        'Bachelor\'s degree in Computer Science or related field'
+      ],
+      experience_requirements: [
+        'Experience with modern web frameworks',
+        'Full-stack development experience',
+        'Experience with RESTful APIs'
+      ]
+    }
+  }
+
+  private extractSkillsFromContent(content: Record<string, unknown>, key: string): string[] | null {
+    const value = content[key]
+    if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+      return value as string[]
+    }
+    return null
+  }
+
+  private extractNumberFromContent(content: Record<string, unknown>, key: string): number | null {
+    const value = content[key]
+    if (typeof value === 'number') {
+      return value
+    }
+    return null
+  }
+
+  private extractArrayFromContent(content: Record<string, unknown>, key: string): string[] | null {
+    const value = content[key]
+    if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+      return value as string[]
+    }
+    return null
+  }
 }
-
-const make = Effect.gen(function* () {
-  const logger = yield* LoggerService
-
-  return {
-    getJobRequirements: (jobId: string) =>
-      Effect.gen(function* () {
-        yield* logger.debug('Fetching job requirements', { jobId })
-
-        const requirements = MOCK_JOB_REQUIREMENTS[jobId] || MOCK_JOB_REQUIREMENTS['job-default']
-
-        yield* logger.info('Job requirements retrieved', {
-          jobId: requirements.id,
-          title: requirements.title,
-          requiredSkillsCount: requirements.required_skills.length,
-          niceToHaveSkillsCount: requirements.nice_to_have_skills.length,
-          minimumExperience: requirements.minimum_experience_years,
-          seniorityLevel: requirements.seniority_level,
-        })
-
-        return requirements
-      }),
-
-    createJobRequirements: (requirements: Omit<JobRequirements, 'id'>) =>
-      Effect.gen(function* () {
-        const id = `job-${Date.now()}`
-        const newRequirements: JobRequirements = {
-          id,
-          ...requirements,
-        }
-
-        yield* logger.info('Creating job requirements', {
-          jobId: id,
-          title: requirements.title,
-          requiredSkillsCount: requirements.required_skills.length,
-        })
-
-        MOCK_JOB_REQUIREMENTS[id] = newRequirements
-
-        return newRequirements
-      }),
-
-    updateJobRequirements: (jobId: string, updates: Partial<JobRequirements>) =>
-      Effect.gen(function* () {
-        const existing = MOCK_JOB_REQUIREMENTS[jobId]
-
-        if (!existing) {
-          return yield* Effect.fail(new Error(`Job requirements not found for job ID: ${jobId}`))
-        }
-
-        const updated: JobRequirements = {
-          ...existing,
-          ...updates,
-          id: jobId,
-        }
-
-        yield* logger.info('Updating job requirements', {
-          jobId,
-          updatedFields: Object.keys(updates),
-        })
-
-        MOCK_JOB_REQUIREMENTS[jobId] = updated
-
-        return updated
-      }),
-  } satisfies JobRequirementsService
-})
-
-export const JobRequirementsServiceLive = Layer.effect(JobRequirementsService, make)

@@ -63,3 +63,6 @@ __pycache__/
 *.pyd
 
 /api/
+
+# Generated SDKs
+apps/api/generated-sdks/

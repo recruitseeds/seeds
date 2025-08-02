@@ -6,13 +6,13 @@
     "moduleResolution": "node",
     "allowImportingTsExtensions": false,
     "verbatimModuleSyntax": false,
-    "noEmit": false,
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "noEmit": true,
     "types": ["node"],
     "lib": ["ES2022"],
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false
   },
   "include": [
     "src/**/*"
