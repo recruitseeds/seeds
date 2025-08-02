@@ -20,6 +20,13 @@ export interface LogEntry {
 }
 
 export class Logger {
+  static getInstance(): Logger {
+    return new Logger()
+  }
+
+  createChildLogger(context: Partial<LogEntry>): Logger {
+    return new Logger({ ...this.context, ...context })
+  }
   private context: Partial<LogEntry>
 
   constructor(context: Partial<LogEntry> = {}) {
@@ -80,3 +87,6 @@ export class Logger {
     return () => Date.now() - startTime
   }
 }
+
+// Export Logger as LoggerService for backward compatibility
+export const LoggerService = Logger

@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import type { Context } from 'hono'
 import { createOpenAPIApp, ErrorResponseSchema } from '../../../lib/openapi.js'
-import { internalAuth } from '../../../middleware/internal-auth.js'
+import { internalAuth, type InternalAuthContext } from '../../../middleware/internal-auth.js'
 import { validate, businessValidation } from '../../../middleware/validation.js'
 import { Logger } from '../../../services/logger.js'
 import { ConfigService } from '../../../services/config.js'
@@ -115,8 +115,22 @@ const validateAnalyticsPermissions = async (c: Context) => {
 
 internalAnalyticsRoutes.openapi(
   dashboardRoute,
-  businessValidation(validateAnalyticsPermissions),
-  async (c) => {
+  async (c: Context): Promise<any> => {
+    // Validate permissions inline
+    const permissions = c.get('permissions')
+    const role = c.get('role')
+    
+    if (role !== 'admin' && !permissions?.includes('analytics:read') && !permissions?.includes('*')) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'INSUFFICIENT_PERMISSIONS',
+          message: 'analytics:read permission required',
+        },
+        timestamp: new Date().toISOString(),
+        correlationId: c.get('correlationId'),
+      }, 403)
+    }
     const correlationId = c.get('correlationId')
     const logger = new Logger({ correlationId, requestId: c.get('requestId') })
     const userId = c.get('userId')
@@ -175,7 +189,7 @@ internalAnalyticsRoutes.openapi(
       })
 
       return c.json({
-        success: true,
+        success: true as const,
         data: dashboardData,
         metadata: {
           generatedAt: new Date().toISOString(),
@@ -189,11 +203,12 @@ internalAnalyticsRoutes.openapi(
       })
 
       return c.json({
-        success: false,
+        success: false as const,
         error: {
           code: 'ANALYTICS_ERROR',
           message: 'Failed to generate dashboard analytics',
         },
+        timestamp: new Date().toISOString(),
         correlationId,
       }, 500)
     }

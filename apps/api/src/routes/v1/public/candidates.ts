@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import type { Context } from 'hono'
 import { createOpenAPIApp, ErrorResponseSchema, MetadataSchema } from '../../../lib/openapi.js'
-import { publicAuth } from '../../../middleware/public-auth.js'
+import { publicAuth, type PublicAuthContext } from '../../../middleware/public-auth.js'
 import { validate, businessValidation } from '../../../middleware/validation.js'
 import { adaptiveRateLimit } from '../../../middleware/rate-limit.js'
 import { AIService } from '../../../services/ai.js'
@@ -200,9 +200,52 @@ const validateCandidateOwnership = async (c: Context) => {
 
 publicCandidatesRoutes.openapi(
   parseResumeRoute,
-  validate(ParseResumeRequestSchema),
-  businessValidation(validateCandidateOwnership),
-  async (c) => {
+  async (c: Context): Promise<any> => {
+    // Validate request
+    try {
+      const body = await c.req.json()
+      const params = c.req.param()
+      
+      const validatedData = ParseResumeRequestSchema.parse({ body, params })
+      c.set('validatedData', validatedData)
+      
+      // Business validation
+      const { candidateId } = validatedData.body
+      const { companyId } = c.get('apiKeyMeta') || {}
+      
+      if (!candidateId || !companyId) {
+        return c.json({
+          success: false as const,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Missing candidate ID or company ID',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId: c.get('correlationId'),
+        }, 400)
+      }
+
+      if (candidateId !== params.id) {
+        return c.json({
+          success: false as const,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Candidate ID in URL must match candidateId in request body',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId: c.get('correlationId'),
+        }, 400)
+      }
+    } catch (error) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+        },
+        correlationId: c.get('correlationId'),
+      }, 400)
+    }
     const correlationId = c.get('correlationId')
     const logger = new Logger({ correlationId, requestId: c.get('requestId') })
     const { body } = c.get('validatedData')
@@ -265,7 +308,7 @@ publicCandidatesRoutes.openapi(
       })
 
       return c.json({
-        success: true,
+        success: true as const,
         data: {
           parsedData,
           score,
@@ -287,22 +330,24 @@ publicCandidatesRoutes.openapi(
 
       if (error instanceof Error && error.message.includes('OpenAI')) {
         return c.json({
-          success: false,
+          success: false as const,
           error: {
             code: 'AI_SERVICE_UNAVAILABLE',
             message: 'AI service is temporarily unavailable. Please try again in a few moments.',
             retryAfter: '30s',
           },
+          timestamp: new Date().toISOString(),
           correlationId,
         }, 503)
       }
 
       return c.json({
-        success: false,
+        success: false as const,
         error: {
           code: 'INTERNAL_ERROR',
           message: 'An error occurred while processing your request',
         },
+        timestamp: new Date().toISOString(),
         correlationId,
       }, 500)
     }
@@ -442,9 +487,41 @@ const validateScoreAccess = async (c: Context) => {
 
 publicCandidatesRoutes.openapi(
   getScoreRoute,
-  validate(GetScoreRequestSchema),
-  businessValidation(validateScoreAccess),
-  async (c) => {
+  async (c: Context): Promise<any> => {
+    // Validate request
+    try {
+      const params = c.req.param()
+      const query = Object.fromEntries(new URL(c.req.url).searchParams.entries())
+      
+      const validatedData = GetScoreRequestSchema.parse({ params, query })
+      c.set('validatedData', validatedData)
+      
+      // Business validation
+      const { id: candidateId } = validatedData.params
+      const { jobId } = validatedData.query
+      const { companyId, permissions } = c.get('apiKeyMeta') || { permissions: [] }
+      
+      if (validatedData.query.includeDetails === 'true' && !permissions.includes('scores:read:detailed')) {
+        return c.json({
+          success: false as const,
+          error: {
+            code: 'INSUFFICIENT_PERMISSIONS',
+            message: 'Detailed score access requires scores:read:detailed permission',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId: c.get('correlationId'),
+        }, 403)
+      }
+    } catch (error) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+        },
+        correlationId: c.get('correlationId'),
+      }, 400)
+    }
     const correlationId = c.get('correlationId')
     const logger = new Logger({ correlationId, requestId: c.get('requestId') })
     const { params, query } = c.get('validatedData')
@@ -468,11 +545,12 @@ publicCandidatesRoutes.openapi(
         logger.info('Score not found', { candidateId, jobId, companyId })
         
         return c.json({
-          success: false,
+          success: false as const,
           error: {
             code: 'SCORE_NOT_FOUND',
             message: 'No score found for this candidate and job combination',
           },
+          timestamp: new Date().toISOString(),
           correlationId,
         }, 404)
       }
@@ -503,7 +581,7 @@ publicCandidatesRoutes.openapi(
       })
 
       return c.json({
-        success: true,
+        success: true as const,
         data: responseData,
         metadata: {
           correlationId,
@@ -519,11 +597,12 @@ publicCandidatesRoutes.openapi(
       })
 
       return c.json({
-        success: false,
+        success: false as const,
         error: {
           code: 'INTERNAL_ERROR',
           message: 'Failed to retrieve candidate score',
         },
+        timestamp: new Date().toISOString(),
         correlationId,
       }, 500)
     }
