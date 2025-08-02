@@ -1,4 +1,6 @@
 import { candidatesRoutes } from './candidates.js'
+import { internalRoutes } from './internal/index.js'
+import { publicRoutes } from './public/index.js'
 import { createOpenAPIApp, healthRoute } from '../../lib/openapi.js'
 import { apiKeyAuth } from '../../middleware/api-auth.js'
 
@@ -23,5 +25,7 @@ v1Routes.openapi(healthRoute, (c) => {
 })
 
 v1Routes.route('/candidates', candidatesRoutes)
+v1Routes.route('/internal', internalRoutes)
+v1Routes.route('/public', publicRoutes)
 
 export { v1Routes }

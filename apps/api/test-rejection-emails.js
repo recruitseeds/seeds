@@ -164,5 +164,3 @@ if (!INTERNAL_TOKEN || INTERNAL_TOKEN === 'your-internal-secret') {
   console.error('   Set it with: export INTERNAL_API_SECRET=your-actual-secret')
   process.exit(1)
 }
-
-testRejectionEmailSystem()
