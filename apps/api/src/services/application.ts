@@ -139,8 +139,11 @@ export class ApplicationService {
 			this.logger.error("Failed to create candidate profile", {
 				candidateData,
 				error: error.message,
+				errorCode: error.code,
+				errorDetails: error.details,
+				errorHint: error.hint,
 			});
-			throw new Error("Failed to create candidate profile");
+			throw new Error(`Failed to create candidate profile: ${error.message}`);
 		}
 
 		this.logger.info("Created new candidate profile", {
