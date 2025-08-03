@@ -158,13 +158,13 @@ export class SkillMatcherService {
 			recommendations.push("💼 Strong relevant experience");
 		}
 
-		if (resumeData.certifications.length > 0) {
+		if (resumeData.certifications && resumeData.certifications.length > 0) {
 			recommendations.push(
 				`🏆 Has ${resumeData.certifications.length} professional certification(s)`,
 			);
 		}
 
-		if (resumeData.projects.length >= 3) {
+		if (resumeData.projects && resumeData.projects.length >= 3) {
 			recommendations.push("🚀 Strong project portfolio");
 		}
 
@@ -198,7 +198,7 @@ export class SkillMatcherService {
 		resumeData: ParsedResumeData,
 		jobRequirements: JobRequirements,
 	): number {
-		if (resumeData.experience.length === 0) {
+		if (!resumeData.experience || resumeData.experience.length === 0) {
 			return 0;
 		}
 
@@ -229,7 +229,7 @@ export class SkillMatcherService {
 		resumeData: ParsedResumeData,
 		jobRequirements: JobRequirements,
 	): number {
-		if (resumeData.education.length === 0) {
+		if (!resumeData.education || resumeData.education.length === 0) {
 			return 50;
 		}
 
