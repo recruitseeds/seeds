@@ -139,7 +139,9 @@ cronRoutes.openapi(
 					.lte("scheduled_for", new Date().toISOString());
 
 				if (error) {
-					logger.error("Failed to fetch pending rejection emails", { error: error.message });
+					logger.error("Failed to fetch pending rejection emails", {
+						error: error.message,
+					});
 					return c.json(
 						{
 							success: false as const,
@@ -174,7 +176,8 @@ cronRoutes.openapi(
 				});
 			}
 
-			const processedCount = await emailService.processPendingRejectionEmails(BATCH_SIZE);
+			const processedCount =
+				await emailService.processPendingRejectionEmails(BATCH_SIZE);
 
 			const processingTimeMs = Date.now() - startTime;
 

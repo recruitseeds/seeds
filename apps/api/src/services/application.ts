@@ -115,30 +115,35 @@ export class ApplicationService {
 				candidateId: existingApplication.candidate_id,
 				candidateEmail: candidateData.email,
 			});
-			
+
 			// Update the candidate profile with any new information
-			await this.updateCandidateIfNeeded(existingApplication.candidate_id, candidateData);
+			await this.updateCandidateIfNeeded(
+				existingApplication.candidate_id,
+				candidateData,
+			);
 			return existingApplication.candidate_id;
 		}
 
 		// Check if there's an existing auth user with this email
 		// Use service role to bypass RLS
 		const { data: authUser } = await this.supabase.auth.admin.listUsers();
-		const existingUser = authUser?.users?.find(u => u.email === candidateData.email);
-		
+		const existingUser = authUser?.users?.find(
+			(u) => u.email === candidateData.email,
+		);
+
 		if (existingUser) {
 			this.logger.info("Found existing auth user for email", {
 				userId: existingUser.id,
 				email: candidateData.email,
 			});
-			
+
 			// Check if they have a candidate profile
 			const { data: existingProfile } = await this.supabase
 				.from("candidate_profiles")
 				.select("id")
 				.eq("id", existingUser.id)
 				.single();
-				
+
 			if (existingProfile) {
 				this.logger.info("Using existing candidate profile", {
 					candidateId: existingProfile.id,
@@ -147,9 +152,12 @@ export class ApplicationService {
 				await this.updateCandidateIfNeeded(existingProfile.id, candidateData);
 				return existingProfile.id;
 			}
-			
+
 			// Create profile for existing auth user
-			return await this.createCandidateProfileForUser(existingUser.id, candidateData);
+			return await this.createCandidateProfileForUser(
+				existingUser.id,
+				candidateData,
+			);
 		}
 
 		// For external API applications without auth users, we need to create an anonymous auth user first
@@ -158,25 +166,31 @@ export class ApplicationService {
 		});
 
 		// Create anonymous auth user
-		const { data: newAuthUser, error: authError } = await this.supabase.auth.admin.createUser({
-			email: candidateData.email,
-			email_confirm: true,
-			user_metadata: {
-				full_name: candidateData.name,
-				phone: candidateData.phone,
-				source: 'api_application',
-			}
-		});
+		const { data: newAuthUser, error: authError } =
+			await this.supabase.auth.admin.createUser({
+				email: candidateData.email,
+				email_confirm: true,
+				user_metadata: {
+					full_name: candidateData.name,
+					phone: candidateData.phone,
+					source: "api_application",
+				},
+			});
 
 		if (authError || !newAuthUser?.user) {
 			this.logger.error("Failed to create auth user for candidate", {
 				email: candidateData.email,
 				error: authError?.message,
 			});
-			throw new Error(`Failed to create candidate account: ${authError?.message || 'Unknown error'}`);
+			throw new Error(
+				`Failed to create candidate account: ${authError?.message || "Unknown error"}`,
+			);
 		}
 
-		return await this.createCandidateProfileForUser(newAuthUser.user.id, candidateData);
+		return await this.createCandidateProfileForUser(
+			newAuthUser.user.id,
+			candidateData,
+		);
 	}
 
 	private async createCandidateProfileForUser(
@@ -186,13 +200,14 @@ export class ApplicationService {
 		const [firstName, ...lastNameParts] = candidateData.name.split(" ");
 		const lastName = lastNameParts.join(" ");
 
-		const newCandidate: Database["public"]["Tables"]["candidate_profiles"]["Insert"] = {
-			id: userId, // Use the auth user ID as the candidate profile ID
-			first_name: firstName,
-			last_name: lastName || null,
-			phone_number: candidateData.phone || null,
-			is_onboarded: false,
-		};
+		const newCandidate: Database["public"]["Tables"]["candidate_profiles"]["Insert"] =
+			{
+				id: userId, // Use the auth user ID as the candidate profile ID
+				first_name: firstName,
+				last_name: lastName || null,
+				phone_number: candidateData.phone || null,
+				is_onboarded: false,
+			};
 
 		const { error } = await this.supabase
 			.from("candidate_profiles")
@@ -217,7 +232,7 @@ export class ApplicationService {
 
 		return userId;
 	}
-	
+
 	private async updateCandidateIfNeeded(
 		candidateId: string,
 		candidateData: { name: string; email: string; phone?: string },
@@ -254,8 +269,6 @@ export class ApplicationService {
 			}
 		}
 	}
-
-
 
 	private async createJobApplication(
 		jobPostingId: string,

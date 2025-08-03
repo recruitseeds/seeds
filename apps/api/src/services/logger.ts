@@ -58,7 +58,14 @@ export class Logger {
 			...(metadata && { metadata }),
 		};
 
-		console.log(JSON.stringify(entry));
+		// In production, this should be sent to a logging service like Sentry or Datadog
+		if (process.env.NODE_ENV === "production") {
+			// TODO: Send to external logging service
+			// For now, use console.log but this should be replaced in production
+			console.log(JSON.stringify(entry));
+		} else {
+			console.log(JSON.stringify(entry));
+		}
 	}
 
 	info(message: string, metadata?: Record<string, unknown>): void {

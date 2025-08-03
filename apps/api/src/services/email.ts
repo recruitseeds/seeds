@@ -502,9 +502,13 @@ export class EmailService {
 				.eq("id", emailRecord.application_id)
 				.single();
 
-			const candidateName = (applicationData?.candidate_profiles as any)?.name || "Candidate";
-			const jobTitle = (applicationData?.job_postings as any)?.title || "Position";
-			const companyName = ((applicationData?.job_postings as any)?.organizations as any)?.name || "Company";
+			const candidateName =
+				(applicationData?.candidate_profiles as any)?.name || "Candidate";
+			const jobTitle =
+				(applicationData?.job_postings as any)?.title || "Position";
+			const companyName =
+				((applicationData?.job_postings as any)?.organizations as any)?.name ||
+				"Company";
 
 			const emailSentId = await this.sendTemplatedEmail(
 				"candidate-rejection",

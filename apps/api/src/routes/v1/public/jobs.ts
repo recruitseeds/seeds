@@ -278,6 +278,22 @@ Submit a job application with candidate information and resume. This endpoint:
 	],
 });
 
+interface JobApplicationResponse {
+	success: true;
+	data: {
+		applicationId: string;
+		candidateId: string;
+		status: "under_review" | "auto_rejected";
+		nextSteps: string;
+		score?: number;
+	};
+	metadata: {
+		processingTimeMs: number;
+		correlationId: string;
+		timestamp: string;
+	};
+}
+
 publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 	const startTime = Date.now();
 	const correlationId = c.get("correlationId") || crypto.randomUUID();
@@ -334,6 +350,35 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			config.supabaseServiceRoleKey,
 		);
 
+		// Check for duplicate application
+		const { data: existingApplication } = await supabase
+			.from("job_applications")
+			.select("id")
+			.eq("candidate_email", candidateData.email)
+			.eq("job_posting_id", jobId)
+			.limit(1);
+
+		if (existingApplication && existingApplication.length > 0) {
+			logger.info("Duplicate application prevented", {
+				candidateEmail: candidateData.email,
+				jobId,
+				existingApplicationId: existingApplication[0].id,
+			});
+
+			return c.json(
+				{
+					success: false as const,
+					error: {
+						code: "DUPLICATE_APPLICATION",
+						message: "You have already applied to this job position.",
+					},
+					timestamp: new Date().toISOString(),
+					correlationId,
+				},
+				422, // Unprocessable Entity
+			);
+		}
+
 		const fileUploadService = new FileUploadService(supabase, logger);
 		const applicationService = new ApplicationService(supabase, logger);
 		const emailService = new EmailService(logger, supabase);
@@ -388,6 +433,49 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			);
 		}
 
+		// Basic file content validation
+		const validateFileContent = (buffer: Buffer, mimeType: string): boolean => {
+			const signatures: Record<string, number[]> = {
+				"application/pdf": [0x25, 0x50, 0x44, 0x46], // %PDF
+				"text/plain": [], // Text files can start with any character
+			};
+
+			const expectedSignature = signatures[mimeType];
+			if (expectedSignature && expectedSignature.length > 0) {
+				const fileSignature = Array.from(
+					buffer.subarray(0, expectedSignature.length),
+				);
+				return (
+					JSON.stringify(fileSignature) === JSON.stringify(expectedSignature)
+				);
+			}
+
+			// For text files or unknown types, perform basic validation
+			return buffer.length > 0;
+		};
+
+		if (!validateFileContent(fileContent, resumeFile.mimeType)) {
+			logger.warn("File content validation failed", {
+				mimeType: resumeFile.mimeType,
+				fileName: resumeFile.fileName,
+				fileSize: fileContent.length,
+			});
+
+			return c.json(
+				{
+					success: false as const,
+					error: {
+						code: "INVALID_FILE_CONTENT",
+						message:
+							"File content does not match the specified MIME type or is corrupted.",
+					},
+					timestamp: new Date().toISOString(),
+					correlationId,
+				},
+				422,
+			);
+		}
+
 		// Create candidate first to get valid candidate ID
 		const application = await applicationService.createApplication({
 			jobPostingId: jobId,
@@ -414,12 +502,23 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			resumeFileId: uploadedFile.id,
 		});
 
-		let parsedResumeData = null;
-		let candidateScore: {
+		interface CandidateScore {
 			overallScore: number;
 			requiredSkillsScore: number;
-			[key: string]: any;
-		} | null = null;
+			experienceScore: number;
+			educationScore: number;
+			skillMatches: Array<{
+				skill: string;
+				found: boolean;
+				confidence: number;
+				context?: string;
+			}>;
+			missingRequiredSkills: string[];
+			recommendations: string[];
+		}
+
+		let parsedResumeData: unknown = null;
+		let candidateScore: CandidateScore | null = null;
 		let enhancedStatus = application.status;
 
 		try {
@@ -434,6 +533,9 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			const baseUrl = c.req.header("host")
 				? `${c.req.header("x-forwarded-proto") || "http"}://${c.req.header("host")}`
 				: "http://localhost:3001";
+
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
 			const parseResponse = await fetch(
 				`${baseUrl}/api/v1/candidates/${application.candidateId}/parse-resume`,
@@ -450,18 +552,17 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 						fileContent: resumeText,
 						fileName: resumeFile.fileName,
 					}),
+					signal: controller.signal,
 				},
 			);
+
+			clearTimeout(timeoutId);
 
 			if (parseResponse.ok) {
 				const parseResult = (await parseResponse.json()) as {
 					data: {
-						parsedData: any;
-						score: {
-							overallScore: number;
-							requiredSkillsScore: number;
-							[key: string]: any;
-						};
+						parsedData: unknown;
+						score: CandidateScore;
 						shouldAutoReject: boolean;
 					};
 					metadata?: {
@@ -491,11 +592,20 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 				});
 			}
 		} catch (parseError) {
-			logger.warn("Resume parsing error, continuing with application", {
-				candidateId: application.candidateId,
-				error:
-					parseError instanceof Error ? parseError.message : String(parseError),
-			});
+			if (parseError instanceof Error && parseError.name === "AbortError") {
+				logger.warn("Resume parsing timeout, continuing with application", {
+					candidateId: application.candidateId,
+					timeout: "30 seconds",
+				});
+			} else {
+				logger.warn("Resume parsing error, continuing with application", {
+					candidateId: application.candidateId,
+					error:
+						parseError instanceof Error
+							? parseError.message
+							: String(parseError),
+				});
+			}
 		}
 
 		logger.info("Job application processed successfully", {
@@ -513,7 +623,12 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 				.single();
 
 			const jobTitle = jobData?.title || "Position";
-			const companyName = (jobData?.organizations as any)?.name || "Company";
+			interface OrganizationWithName {
+				name: string;
+			}
+
+			const companyName =
+				(jobData?.organizations as OrganizationWithName)?.name || "Company";
 
 			logger.info("Scheduling application emails", {
 				candidateId: application.candidateId,
@@ -535,9 +650,9 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 				// Update application status in database
 				const { error: updateError } = await supabase
 					.from("job_applications")
-					.update({ 
+					.update({
 						status: "auto_rejected",
-						updated_at: new Date().toISOString()
+						updated_at: new Date().toISOString(),
 					})
 					.eq("id", application.applicationId);
 
@@ -582,11 +697,12 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 		} catch (emailError) {
 			logger.warn("Email scheduling failed, continuing with application", {
 				applicationId: application.applicationId,
-				error: emailError instanceof Error ? emailError.message : String(emailError),
+				error:
+					emailError instanceof Error ? emailError.message : String(emailError),
 			});
 		}
 
-		const responseData: any = {
+		const responseData: JobApplicationResponse["data"] = {
 			applicationId: application.applicationId,
 			candidateId: application.candidateId,
 			status: enhancedStatus,

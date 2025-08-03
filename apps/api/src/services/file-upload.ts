@@ -185,7 +185,9 @@ export class FileUploadService {
 				errorHint: error?.hint,
 				insertedData: fileRecord,
 			});
-			throw new Error(`Failed to save file metadata: ${error?.message || "Unknown database error"}`);
+			throw new Error(
+				`Failed to save file metadata: ${error?.message || "Unknown database error"}`,
+			);
 		}
 
 		return {
