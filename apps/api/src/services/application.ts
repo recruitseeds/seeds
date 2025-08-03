@@ -102,7 +102,6 @@ export class ApplicationService {
 		email: string;
 		phone?: string;
 	}): Promise<string> {
-		// First, try to find an existing candidate by checking previous applications with this email
 		const { data: existingApplication } = await this.supabase
 			.from("job_applications")
 			.select("candidate_id")
@@ -116,7 +115,6 @@ export class ApplicationService {
 				candidateEmail: candidateData.email,
 			});
 
-			// Update the candidate profile with any new information
 			await this.updateCandidateIfNeeded(
 				existingApplication.candidate_id,
 				candidateData,
@@ -124,8 +122,6 @@ export class ApplicationService {
 			return existingApplication.candidate_id;
 		}
 
-		// Check if there's an existing auth user with this email
-		// Use service role to bypass RLS
 		const { data: authUser } = await this.supabase.auth.admin.listUsers();
 		const existingUser = authUser?.users?.find(
 			(u) => u.email === candidateData.email,
@@ -137,7 +133,6 @@ export class ApplicationService {
 				email: candidateData.email,
 			});
 
-			// Check if they have a candidate profile
 			const { data: existingProfile } = await this.supabase
 				.from("candidate_profiles")
 				.select("id")
@@ -153,19 +148,16 @@ export class ApplicationService {
 				return existingProfile.id;
 			}
 
-			// Create profile for existing auth user
 			return await this.createCandidateProfileForUser(
 				existingUser.id,
 				candidateData,
 			);
 		}
 
-		// For external API applications without auth users, we need to create an anonymous auth user first
 		this.logger.info("Creating anonymous auth user for external application", {
 			candidateEmail: candidateData.email,
 		});
 
-		// Create anonymous auth user
 		const { data: newAuthUser, error: authError } =
 			await this.supabase.auth.admin.createUser({
 				email: candidateData.email,
@@ -202,7 +194,7 @@ export class ApplicationService {
 
 		const newCandidate: Database["public"]["Tables"]["candidate_profiles"]["Insert"] =
 			{
-				id: userId, // Use the auth user ID as the candidate profile ID
+				id: userId,
 				first_name: firstName,
 				last_name: lastName || null,
 				phone_number: candidateData.phone || null,
@@ -265,7 +257,6 @@ export class ApplicationService {
 					candidateId,
 					error: error.message,
 				});
-				// Don't throw - continue with existing profile
 			}
 		}
 	}

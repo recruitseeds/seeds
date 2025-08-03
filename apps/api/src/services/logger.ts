@@ -58,10 +58,7 @@ export class Logger {
 			...(metadata && { metadata }),
 		};
 
-		// In production, this should be sent to a logging service like Sentry or Datadog
 		if (process.env.NODE_ENV === "production") {
-			// TODO: Send to external logging service
-			// For now, use console.log but this should be replaced in production
 			console.log(JSON.stringify(entry));
 		} else {
 			console.log(JSON.stringify(entry));
@@ -108,5 +105,4 @@ export class Logger {
 	}
 }
 
-// Export Logger as LoggerService for backward compatibility
 export const LoggerService = Logger;

@@ -105,7 +105,7 @@ export class FileUploadService {
 			);
 		}
 
-		const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+		const maxSizeBytes = 5 * 1024 * 1024;
 		if (request.sizeBytes > maxSizeBytes) {
 			throw new Error(
 				`File size ${request.sizeBytes} bytes exceeds maximum allowed size of ${maxSizeBytes} bytes`,

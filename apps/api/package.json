@@ -29,6 +29,8 @@
 		"fuse.js": "^7.0.0",
 		"hono": "^4.6.10",
 		"hono-rate-limiter": "^0.4.2",
+		"mammoth": "^1.10.0",
+		"pdf-parse-new": "^1.4.1",
 		"resend": "^4.7.0",
 		"uuid": "^11.1.0",
 		"zod": "^3.24.2"
@@ -36,6 +38,7 @@
 	"devDependencies": {
 		"@seeds/tsconfig": "*",
 		"@types/node": "^20",
+		"@types/pdf-parse": "^1.1.5",
 		"@types/supertest": "^6.0.2",
 		"@types/uuid": "^10.0.0",
 		"@vitest/coverage-v8": "^2.1.8",

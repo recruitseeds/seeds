@@ -1,0 +1,32 @@
+{
+  "name": "jobs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seeds/supabase": "*",
+    "@seeds/tailwind": "*",
+    "@seeds/ui": "*",
+    "lucide-react": "^0.476.0",
+    "next": "15.2.0-canary.74",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@seeds/tsconfig": "*",
+    "@biomejs/biome": "^2.1.2",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

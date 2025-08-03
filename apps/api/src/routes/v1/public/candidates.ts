@@ -260,7 +260,6 @@ const validateCandidateOwnership = async (c: Context) => {
 publicCandidatesRoutes.openapi(
 	parseResumeRoute,
 	async (c: Context): Promise<any> => {
-		// Validate request
 		try {
 			const body = await c.req.json();
 			const params = c.req.param();
@@ -594,7 +593,6 @@ const validateScoreAccess = async (c: Context) => {
 publicCandidatesRoutes.openapi(
 	getScoreRoute,
 	async (c: Context): Promise<any> => {
-		// Validate request
 		try {
 			const params = c.req.param();
 			const query = Object.fromEntries(

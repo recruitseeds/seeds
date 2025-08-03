@@ -14,7 +14,6 @@ import { LoggerService } from "../../../services/logger.js";
 
 const cronRoutes = createOpenAPIApp();
 
-// cronRoutes.use('*', structuredLogging) // Commented out due to middleware conflicts
 cronRoutes.use("*", internalAuth());
 
 const sendRejectionEmailsRoute = createRoute({

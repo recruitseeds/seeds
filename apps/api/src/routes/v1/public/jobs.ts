@@ -350,7 +350,6 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			config.supabaseServiceRoleKey,
 		);
 
-		// Check for duplicate application
 		const { data: existingApplication } = await supabase
 			.from("job_applications")
 			.select("id")
@@ -433,11 +432,10 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			);
 		}
 
-		// Basic file content validation
 		const validateFileContent = (buffer: Buffer, mimeType: string): boolean => {
 			const signatures: Record<string, number[]> = {
-				"application/pdf": [0x25, 0x50, 0x44, 0x46], // %PDF
-				"text/plain": [], // Text files can start with any character
+				"application/pdf": [0x25, 0x50, 0x44, 0x46],
+				"text/plain": [],
 			};
 
 			const expectedSignature = signatures[mimeType];
@@ -450,7 +448,6 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 				);
 			}
 
-			// For text files or unknown types, perform basic validation
 			return buffer.length > 0;
 		};
 
@@ -476,14 +473,12 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			);
 		}
 
-		// Create candidate first to get valid candidate ID
 		const application = await applicationService.createApplication({
 			jobPostingId: jobId,
 			candidateData,
-			resumeFileId: "", // Will be updated after file upload
+			resumeFileId: "",
 		});
 
-		// Upload file with the real candidate ID
 		const uploadedFile = await fileUploadService.uploadResume({
 			candidateId: application.candidateId,
 			fileName: resumeFile.fileName,
@@ -494,7 +489,6 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			isDefaultResume: true,
 		});
 
-		// File is now associated with candidate through candidate_files table
 
 		logger.info("Job application created, starting resume parsing", {
 			applicationId: application.applicationId,
@@ -535,7 +529,7 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 				: "http://localhost:3001";
 
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+			const timeoutId = setTimeout(() => controller.abort(), 30000);
 
 			const parseResponse = await fetch(
 				`${baseUrl}/api/v1/candidates/${application.candidateId}/parse-resume`,
@@ -647,7 +641,6 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			});
 
 			if (enhancedStatus === "auto_rejected") {
-				// Update application status in database
 				const { error: updateError } = await supabase
 					.from("job_applications")
 					.update({

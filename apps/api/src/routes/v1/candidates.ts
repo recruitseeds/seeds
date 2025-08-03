@@ -434,6 +434,7 @@ candidatesRoutes.openapi(parseResumeRoute, async (c) => {
 		const parsedData = await aiService.parseResume(
 			body.fileContent,
 			body.fileName,
+			[],
 		);
 
 		const parseTime = getTimer();
