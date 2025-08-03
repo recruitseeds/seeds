@@ -1,97 +1,55 @@
-import { Search, MapPin, Building2 } from "lucide-react";
+// 'use client'
 
+// import { Button } from '@seeds/ui/button'
+// import { useState } from 'react'
+// import { Footer } from '../components/footer'
+// import { Header } from '../components/header'
+// import { HeroSection } from '../components/hero-section'
+// import { JobsSection } from '../components/jobs-section'
+
+// export default function HomePage() {
+//   const [showAuthModal, setShowAuthModal] = useState(false)
+
+//   const handleAuthRequired = () => {
+//     setShowAuthModal(true)
+//   }
+
+//   return (
+//     <div className='min-h-screen bg-background flex flex-col'>
+//       <Header onAuthRequired={handleAuthRequired} />
+//       <main className='flex-1'>
+//         <HeroSection />
+//         <JobsSection onAuthRequired={handleAuthRequired} />
+//       </main>
+//       <Footer />
+
+//       {/* TODO: Add auth modal component */}
+//       {showAuthModal && (
+//         <div
+//           className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'
+//           onClick={() => setShowAuthModal(false)}>
+//           <div className='bg-background p-8 rounded-lg max-w-md w-full mx-4' onClick={(e) => e.stopPropagation()}>
+//             <h2 className='text-2xl font-bold mb-4'>Sign in to continue</h2>
+//             <p className='text-muted-foreground mb-6'>Create an account or sign in to save jobs and apply.</p>
+//             <div className='space-y-3'>
+//               <Button className='w-full px-4 py-2 bg-brand hover:bg-brand-hover text-brand-foreground rounded-lg font-medium transition-colors'>
+//                 Create Account
+//               </Button>
+//               <Button className='w-full px-4 py-2 border border-border hover:bg-muted rounded-lg font-medium transition-colors'>
+//                 Sign In
+//               </Button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   )
+// }
+import { Button } from '@seeds/ui/button'
 export default function HomePage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <div className="text-center py-12">
-        <h1 className="text-4xl font-bold tracking-tight lg:text-6xl mb-6">
-          Find Your Next
-          <span className="text-blue-600"> Opportunity</span>
-        </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Discover amazing career opportunities with top companies. 
-          Apply with confidence using our AI-powered matching system.
-        </p>
-        
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto flex gap-2 p-2 border rounded-lg bg-white shadow-sm">
-          <div className="flex-1 flex items-center gap-2 px-3">
-            <Search className="h-4 w-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Job title, company, or keywords"
-              className="w-full bg-transparent outline-none placeholder:text-gray-500"
-            />
-          </div>
-          <div className="flex items-center gap-2 px-3 border-l">
-            <MapPin className="h-4 w-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Location"
-              className="w-32 bg-transparent outline-none placeholder:text-gray-500"
-            />
-          </div>
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-            Search
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12">
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">500+</div>
-          <div className="text-gray-600">Active Jobs</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">100+</div>
-          <div className="text-gray-600">Companies</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">95%</div>
-          <div className="text-gray-600">Match Accuracy</div>
-        </div>
-      </div>
-
-      {/* Quick Links */}
-      <div className="py-8">
-        <h2 className="text-2xl font-semibold mb-6">Browse by Company</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            "TechCorp",
-            "StartupXYZ", 
-            "InnovateCo",
-            "DataDriven",
-            "CloudFirst",
-            "AIWorks",
-            "DevTools",
-            "ScaleUp"
-          ].map((company) => (
-            <div key={company} className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-blue-600" />
-                </div>
-                <span className="font-medium">{company}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="text-center py-12">
-        <div className="max-w-md mx-auto">
-          <h3 className="text-xl font-semibold mb-4">Ready to get started?</h3>
-          <p className="text-gray-600 mb-6">
-            Join thousands of candidates finding their dream jobs
-          </p>
-          <button className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Browse All Jobs
-          </button>
-        </div>
-      </div>
+    <div>
+      <Button>Click me</Button>
     </div>
-  );
+  )
 }

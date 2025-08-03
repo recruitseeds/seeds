@@ -1,10 +1,10 @@
-// import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import '@seeds/tailwind/globals.css'
 import { Toaster } from '@/components/ui/toaster'
-import type { Metadata } from 'next'
-import { Providers } from './providers'
+import { getAllFontsClassName, getFontByName } from '@/lib/font-loader'
 import { getUserFont } from '@/lib/get-user-font'
-import { getFontByName, getAllFontsClassName } from '@/lib/font-loader'
+import type { Metadata } from 'next'
+// import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import '../styles/globals.css'
+import { Providers } from './providers'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
