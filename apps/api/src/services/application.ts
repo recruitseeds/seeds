@@ -102,14 +102,68 @@ export class ApplicationService {
 		email: string;
 		phone?: string;
 	}): Promise<string> {
-		// For external API applications, always create new candidate profiles
-		// since we can't reliably find existing ones without email in candidate_profiles
-		// Email will be stored in the application context or associated separately
-		this.logger.info("Creating new candidate profile for external application", {
+		// First, try to find an existing candidate by checking previous applications with this email
+		const { data: existingApplication } = await this.supabase
+			.from("job_applications")
+			.select("candidate_id")
+			.eq("candidate_email", candidateData.email)
+			.limit(1)
+			.single();
+
+		if (existingApplication?.candidate_id) {
+			this.logger.info("Found existing candidate from previous application", {
+				candidateId: existingApplication.candidate_id,
+				candidateEmail: candidateData.email,
+			});
+			
+			// Update the candidate profile with any new information
+			await this.updateCandidateIfNeeded(existingApplication.candidate_id, candidateData);
+			return existingApplication.candidate_id;
+		}
+
+		// If no existing application found, create a new candidate
+		this.logger.info("Creating new candidate profile for application", {
 			candidateEmail: candidateData.email,
 		});
 
 		return await this.createNewCandidate(candidateData);
+	}
+	
+	private async updateCandidateIfNeeded(
+		candidateId: string,
+		candidateData: { name: string; email: string; phone?: string },
+	): Promise<void> {
+		const [firstName, ...lastNameParts] = candidateData.name.split(" ");
+		const lastName = lastNameParts.join(" ");
+
+		const updates: Partial<
+			Database["public"]["Tables"]["candidate_profiles"]["Update"]
+		> = {};
+
+		if (firstName) {
+			updates.first_name = firstName;
+		}
+		if (lastName) {
+			updates.last_name = lastName;
+		}
+		if (candidateData.phone) {
+			updates.phone_number = candidateData.phone;
+		}
+
+		if (Object.keys(updates).length > 0) {
+			const { error } = await this.supabase
+				.from("candidate_profiles")
+				.update(updates)
+				.eq("id", candidateId);
+
+			if (error) {
+				this.logger.warn("Failed to update candidate profile", {
+					candidateId,
+					error: error.message,
+				});
+				// Don't throw - continue with existing profile
+			}
+		}
 	}
 
 
