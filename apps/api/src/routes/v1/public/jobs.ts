@@ -462,6 +462,7 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 							requiredSkillsScore: number;
 							[key: string]: any;
 						};
+						shouldAutoReject: boolean;
 					};
 					metadata?: {
 						processingTimeMs?: number;
@@ -470,7 +471,7 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 				parsedResumeData = parseResult.data.parsedData;
 				candidateScore = parseResult.data.score;
 
-				if (candidateScore.overallScore < 30) {
+				if (parseResult.data.shouldAutoReject) {
 					enhancedStatus = "auto_rejected";
 				}
 
@@ -478,6 +479,7 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 					candidateId: application.candidateId,
 					overallScore: candidateScore.overallScore,
 					requiredSkillsScore: candidateScore.requiredSkillsScore,
+					shouldAutoReject: parseResult.data.shouldAutoReject,
 					processingTime: parseResult.metadata?.processingTimeMs,
 					finalStatus: enhancedStatus,
 				});
@@ -530,6 +532,26 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			});
 
 			if (enhancedStatus === "auto_rejected") {
+				// Update application status in database
+				const { error: updateError } = await supabase
+					.from("job_applications")
+					.update({ 
+						status: "auto_rejected",
+						updated_at: new Date().toISOString()
+					})
+					.eq("id", application.applicationId);
+
+				if (updateError) {
+					logger.warn("Failed to update application status to auto_rejected", {
+						applicationId: application.applicationId,
+						error: updateError.message,
+					});
+				} else {
+					logger.info("Updated application status to auto_rejected", {
+						applicationId: application.applicationId,
+					});
+				}
+
 				logger.info("Sending immediate auto-rejection email for testing", {
 					applicationId: application.applicationId,
 					candidateEmail: candidateData.email,

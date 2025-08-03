@@ -543,6 +543,7 @@ candidatesRoutes.openapi(parseResumeRoute, async (c) => {
 				data: {
 					parsedData,
 					score,
+					shouldAutoReject,
 				},
 				metadata: {
 					processingTimeMs: totalTime,
