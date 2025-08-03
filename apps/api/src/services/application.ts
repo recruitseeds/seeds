@@ -47,6 +47,7 @@ export class ApplicationService {
 		const applicationId = await this.createJobApplication(
 			request.jobPostingId,
 			candidateId,
+			request.candidateData.email,
 			request.resumeFileId,
 		);
 
@@ -153,6 +154,7 @@ export class ApplicationService {
 	private async createJobApplication(
 		jobPostingId: string,
 		candidateId: string,
+		candidateEmail: string,
 		resumeFileId: string,
 	): Promise<string> {
 		const applicationId = uuidv4();
@@ -162,6 +164,7 @@ export class ApplicationService {
 				id: applicationId,
 				job_posting_id: jobPostingId,
 				candidate_id: candidateId,
+				candidate_email: candidateEmail,
 				status: "active",
 				applied_at: new Date().toISOString(),
 			};

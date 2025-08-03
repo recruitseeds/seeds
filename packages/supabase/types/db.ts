@@ -793,6 +793,7 @@ export type Database = {
         Row: {
           applied_at: string | null
           auto_rejection_reason: string | null
+          candidate_email: string | null
           candidate_id: string
           created_at: string | null
           current_step_id: string | null
@@ -807,6 +808,7 @@ export type Database = {
         Insert: {
           applied_at?: string | null
           auto_rejection_reason?: string | null
+          candidate_email?: string | null
           candidate_id: string
           created_at?: string | null
           current_step_id?: string | null
@@ -821,6 +823,7 @@ export type Database = {
         Update: {
           applied_at?: string | null
           auto_rejection_reason?: string | null
+          candidate_email?: string | null
           candidate_id?: string
           created_at?: string | null
           current_step_id?: string | null
