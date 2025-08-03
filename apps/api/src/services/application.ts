@@ -283,10 +283,14 @@ export class ApplicationService {
 			this.logger.error("Failed to create job application", {
 				jobPostingId,
 				candidateId,
+				candidateEmail,
 				resumeFileId,
 				error: error.message,
+				errorCode: error.code,
+				errorDetails: error.details,
+				errorHint: error.hint,
 			});
-			throw new Error("Failed to create job application");
+			throw new Error(`Failed to create job application: ${error.message}`);
 		}
 
 		return applicationId;
