@@ -2,7 +2,8 @@
 
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@seeds/ui'
+import { Button } from '@seeds/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@seeds/ui/dropdown-menu'
 
 export function ThemeToggle() {
   const { setTheme } = useTheme()

@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@seeds/ui/button'
 import { useState } from 'react'
 
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
@@ -28,18 +29,17 @@ export function JobFilters() {
     setSelectedSalary([])
   }
 
-  const hasFilters = selectedTypes.length > 0 || selectedLevels.length > 0 || selectedRemote.length > 0 || selectedSalary.length > 0
+  const hasFilters =
+    selectedTypes.length > 0 || selectedLevels.length > 0 || selectedRemote.length > 0 || selectedSalary.length > 0
 
   return (
     <div className='bg-card rounded-lg border border-border p-6'>
       <div className='flex items-center justify-between mb-6'>
         <h3 className='font-semibold text-lg'>Filters</h3>
         {hasFilters && (
-          <button
-            onClick={clearAll}
-            className='text-sm text-muted-foreground hover:text-foreground transition-colors'>
+          <Button onClick={clearAll} className='text-sm text-muted-foreground hover:text-foreground transition-colors'>
             Clear all
-          </button>
+          </Button>
         )}
       </div>
 

@@ -4,7 +4,21 @@
   "private": true,
   "main": "./index.tsx",
   "types": "./index.tsx",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "*.tsx",
+    "lib/**"
+  ],
+  "exports": {
+    "./styles.css": "./dist/styles.css",
+    "./*": "./*.tsx"
+  },
   "scripts": {
+    "build": "tailwindcss -i ./styles.css -o ./dist/styles.css",
+    "dev": "tailwindcss -i ./styles.css -o ./dist/styles.css --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -15,6 +29,7 @@
     "@radix-ui/react-dismissable-layer": "^1.1.10",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-label": "^2.1.6",
+    "@radix-ui/react-navigation-menu": "^1.2.13",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-progress": "^1.1.6",
     "@radix-ui/react-radio-group": "^1.2.3",
@@ -49,10 +64,12 @@
   },
   "devDependencies": {
     "@seeds/tsconfig": "*",
+    "@tailwindcss/cli": "^4.1.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "tailwindcss": "^4",
     "typescript": "^5"
   },
   "peerDependencies": {

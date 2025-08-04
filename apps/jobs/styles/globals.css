@@ -1,2 +1,4 @@
 @import 'tailwindcss';
+@source "../**/*.{js,jsx,ts,tsx}";
+@source "../../packages/ui/**/*.{js,jsx,ts,tsx}";
 @import '@seeds/tailwind/globals.css';

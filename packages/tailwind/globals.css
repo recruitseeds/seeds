@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
@@ -18,8 +18,8 @@
 
   --primary: oklch(20.5% 0 0);
   --primary-foreground: oklch(98.5% 0.0011 164.7);
-  --primary-hover: oklch(30.3% 0 0);
-  --primary-active: oklch(30.3% 0 0 / 0.9);
+  --primary-hover: oklch(20.5% 0 0 / 0.88);
+  --primary-active: oklch(20.5% 0 0 / 0.9);
 
   --secondary: oklch(94.6% 0.0043 164.7);
   --secondary-foreground: oklch(0.205 0 0);
@@ -88,9 +88,8 @@
   --sidebar-ring: oklch(87.4% 0.007 164.7);
 
   --shadow-button-primary:
-    0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08),
-    0px 0px 0px 1px rgb(0 0 0 / 0.06), inset 0px 1px 0px #fff,
-    inset 0px 0px 2px 1px #fff, inset 0px 1px 2px rgb(0 0 0 / 0.06),
+    0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08), 0px 0px 0px 1px rgb(0 0 0 / 0.06),
+    inset 0px 1px 0px #fff, inset 0px 0px 2px 1px #fff, inset 0px 1px 2px rgb(0 0 0 / 0.06),
     inset 0px -4px 8px -4px rgb(0 0 0 / 0.06);
 
   --tt-color-highlight-gray: oklch(92% 0 0);
@@ -115,8 +114,8 @@
 
   --primary: oklch(94.7% 0.003 157);
   --primary-foreground: oklch(18% 0.0038 157);
-  --primary-hover: oklch(76.6% 0.0045 157);
-  --primary-active: oklch(76.6% 0.0045 157 /0.9);
+  --primary-hover: oklch(94.7% 0.003 157 / 0.88);
+  --primary-active: oklch(94.7% 0.003 157 / 0.9);
 
   --brand: oklch(65.2% 0.1101 196.3);
   --brand-foreground: #ffffff;
@@ -182,9 +181,8 @@
   --sidebar-ring: oklch(0.439 0 0);
 
   --shadow-button-primary:
-    0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08),
-    0px 0px 0px 1px rgb(0 0 0 / 0.06), inset 0px 1px 0px #fff,
-    inset 0px 0px 2px 1px #fff, inset 0px 1px 2px rgb(0 0 0 / 0.06),
+    0px 1px 1px -1px rgb(0 0 0 / 0.08), 0px 2px 2px -1px rgb(0 0 0 / 0.08), 0px 0px 0px 1px rgb(0 0 0 / 0.06),
+    inset 0px 1px 0px #fff, inset 0px 0px 2px 1px #fff, inset 0px 1px 2px rgb(0 0 0 / 0.06),
     inset 0px -4px 8px -4px rgb(0 0 0 / 0.06);
 
   --tt-color-highlight-gray: oklch(35% 0 0);
@@ -290,43 +288,39 @@
   @apply mx-auto;
 }
 
-.prose :where(h1):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+.prose :where(h1):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground;
 }
 
-.prose :where(h2):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+.prose :where(h2):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground/90 mt-0;
 }
 
-.prose :where(h3):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+.prose :where(h3):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground/90 mt-0;
 }
 
-.prose :where(h4):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+.prose :where(h4):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground/90 mt-0;
 }
 
-.prose
-  :where(ul > li):not(
-    :where([class~="not-prose"], [class~="not-prose"] *)
-  )::marker {
+.prose :where(ul > li):not(:where([class~='not-prose'], [class~='not-prose'] *))::marker {
   @apply text-muted-foreground;
 }
 
-.prose :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+.prose :where(a):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-brand;
 }
 
-.prose
-  :where(strong):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+.prose :where(strong):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply text-foreground;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   @apply appearance-none h-4 w-4 rounded-full bg-brand cursor-pointer;
 }
 
-input[type="range"]::-moz-range-thumb {
+input[type='range']::-moz-range-thumb {
   @apply appearance-none h-4 w-4 rounded-full bg-brand cursor-pointer border-none;
 }
 
