@@ -1,22 +1,8 @@
-'use client'
-
-import { Badge } from '@seeds/ui/badge'
-import { Button } from '@seeds/ui/button'
-import {
-  Briefcase,
-  Building2,
-  CheckCircle,
-  ChevronLeft,
-  Clock,
-  Coffee,
-  DollarSign,
-  GraduationCap,
-  Heart,
-  Home,
-  Shield,
-} from 'lucide-react'
+import { CheckCircle, ChevronLeft, Coffee, DollarSign, GraduationCap, Heart, Home, Shield } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { Header } from '../../../components/header'
+import { ApplicationForm } from './application-form'
+import { ApplyButtons } from './apply-buttons'
 
 interface JobPageProps {
   params: Promise<{
@@ -81,242 +67,148 @@ function formatSalary(min: number, max: number): string {
   return `${format(min)} - ${format(max)}`
 }
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Posted today'
-  if (diffDays === 1) return 'Posted yesterday'
-  if (diffDays < 7) return `Posted ${diffDays} days ago`
-  if (diffDays < 30) return `Posted ${Math.floor(diffDays / 7)} weeks ago`
-  return `Posted ${Math.floor(diffDays / 30)} months ago`
-}
-
-export default function JobPage({ params }: JobPageProps) {
-  const [isSaved, setIsSaved] = useState(false)
-  const [showShareMenu, setShowShareMenu] = useState(false)
-
-  const handleApply = () => {}
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${jobData.title} at ${jobData.company}`,
-          text: `Check out this job opportunity: ${jobData.title}`,
-          url: window.location.href,
-        })
-      } catch (error) {
-        console.log('Share failed:', error)
-      }
-    } else {
-      setShowShareMenu(!showShareMenu)
-    }
-  }
+export default async function JobPage({ params }: JobPageProps) {
+  const { orgSlug, jobId } = await params
 
   return (
     <div className='min-h-screen bg-background'>
-      <div className='container mx-auto px-4 py-4 lg:py-6'>
+      <Header />
+
+      <div className='container mx-auto px-4 py-4'>
         <Link
-          href='/jobs'
-          className='inline-flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm lg:text-base'>
-          <ChevronLeft className='mr-1 lg:mr-2 h-4 w-4' />
-          Back to all jobs
+          href={`/${orgSlug}`}
+          className='inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors'>
+          <ChevronLeft className='h-4 w-4' />
+          <span>Back to all jobs</span>
         </Link>
       </div>
 
-      <div className='container mx-auto px-4 pb-12 lg:pb-20'>
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12'>
-          <div className='lg:hidden mb-8'>
-            <p className='text-muted-foreground text-sm mb-3'>
-              {jobData.department}, {jobData.employmentType} ({jobData.location})
-            </p>
-            <h1 className='text-3xl sm:text-4xl font-bold mb-6 leading-tight'>{jobData.title}</h1>
-
-            <div className='flex gap-3'>
-              <Button variant='default' size='default' onClick={handleApply}>
-                Apply
-              </Button>
-              <Button variant='outline' size='default'>
-                Refer someone
-              </Button>
-            </div>
-          </div>
-
-          <div className='hidden lg:block lg:col-span-4'>
-            <div className='sticky top-8 space-y-6'>
-              <div>
-                <p className='text-muted-foreground text-sm mb-2'>
-                  {jobData.department} · {jobData.employmentType} ({jobData.location})
-                </p>
-                <h1 className='text-3xl font-bold mb-4'>{jobData.title}</h1>
-                <p className='text-lg text-muted-foreground'>{jobData.company}</p>
-              </div>
-
-              <div className='flex flex-col sm:flex-row gap-3 mt-6'>
-                <Button variant='default' size='lg' className='flex-1' onClick={handleApply}>
-                  Apply
-                </Button>
-                <Button variant='outline' size='lg' className='flex-1'>
-                  Refer someone
-                </Button>
-              </div>
-
-              <div className='space-y-3 pt-6 border-t mt-6'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Location</span>
-                  <span className='font-medium'>{jobData.location}</span>
+      <div className='container mx-auto px-4 pb-8'>
+        <div className='job-layout-container'>
+          <aside className='job-layout-sidebar'>
+            <div className='job-layout-sidebar-inner'>
+              <div className='p-6 space-y-6'>
+                <div>
+                  <p className='text-muted-foreground text-sm mb-2'>
+                    {jobData.department} · {jobData.employmentType} ({jobData.location})
+                  </p>
+                  <h1 className='text-2xl font-bold mb-4'>{jobData.title}</h1>
+                  <p className='text-lg text-muted-foreground'>{jobData.company}</p>
                 </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Salary Range</span>
-                  <span className='font-medium'>{formatSalary(jobData.salaryMin, jobData.salaryMax)}</span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Experience</span>
-                  <span className='font-medium'>{jobData.experienceLevel}</span>
-                </div>
+
+                <ApplyButtons />
+
+                {/* Job details temporarily commented out */}
+                {/* <div className='space-y-3 pt-6 border-t'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-muted-foreground text-sm'>Location</span>
+                    <span className='font-medium text-sm'>{jobData.location}</span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-muted-foreground text-sm'>Salary Range</span>
+                    <span className='font-medium text-sm'>{formatSalary(jobData.salaryMin, jobData.salaryMax)}</span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-muted-foreground text-sm'>Experience</span>
+                    <span className='font-medium text-sm'>{jobData.experienceLevel}</span>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-muted-foreground text-sm'>Work Type</span>
+                    <span className='font-medium text-sm'>{jobData.remote}</span>
+                  </div>
+                </div> */}
+
+                {/* <div className='pt-6 border-t'>
+                  <h3 className='font-semibold mb-3 text-sm'>Required Skills</h3>
+                  <div className='flex flex-wrap gap-2'>
+                    {jobData.skills.map((skill, index) => (
+                      <Badge key={index} variant='secondary' className='text-xs'>
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div> */}
               </div>
             </div>
-          </div>
+          </aside>
 
-          <div className='lg:col-span-8'>
-            <div className='lg:hidden mb-8 space-y-2 text-sm'>
-              <div className='flex items-center gap-2 text-muted-foreground'>
-                <DollarSign className='h-4 w-4' />
-                {formatSalary(jobData.salaryMin, jobData.salaryMax)}
-              </div>
-              <div className='flex items-center gap-2 text-muted-foreground'>
-                <Briefcase className='h-4 w-4' />
-                {jobData.experienceLevel}
-              </div>
-              <div className='flex items-center gap-2 text-muted-foreground'>
-                <Clock className='h-4 w-4' />
-                {formatDate(jobData.postedDate)}
-              </div>
-            </div>
-
-            <div className='prose prose-gray dark:prose-invert max-w-none'>
-              <section className='mb-8 lg:mb-10'>
-                <h2 className='text-xl lg:text-2xl font-semibold mb-3 lg:mb-4 flex items-center gap-2'>
-                  <Building2 className='h-5 w-5 hidden lg:inline' />
-                  About {jobData.company}
-                </h2>
-                <p className='text-muted-foreground leading-relaxed text-base'>{jobData.companyDescription}</p>
+          <main className='job-layout-main'>
+            <div className='prose prose-neutral dark:prose-invert max-w-none'>
+              <section className='mb-8'>
+                <h2 className='text-xl font-semibold mb-4'>About {jobData.company}</h2>
+                <p className='text-muted-foreground'>{jobData.companyDescription}</p>
               </section>
 
-              <section className='mb-8 lg:mb-10'>
-                <h2 className='text-xl lg:text-2xl font-semibold mb-3 lg:mb-4'>About the Role</h2>
-                <p className='text-muted-foreground leading-relaxed text-base'>{jobData.roleDescription}</p>
+              <section className='mb-8'>
+                <h2 className='text-xl font-semibold mb-4'>Role Overview</h2>
+                <p className='text-muted-foreground'>{jobData.roleDescription}</p>
               </section>
 
-              <section className='mb-8 lg:mb-10'>
-                <h2 className='text-xl lg:text-2xl font-semibold mb-3 lg:mb-4'>What You'll Do</h2>
-                <ul className='space-y-2 lg:space-y-3'>
-                  {jobData.responsibilities.map((item, i) => (
-                    <li key={`resp-${i}`} className='flex items-start gap-2 lg:gap-3'>
-                      <CheckCircle className='h-4 w-4 lg:h-5 lg:w-5 text-green-500 mt-0.5 flex-shrink-0' />
-                      <span className='text-muted-foreground text-sm lg:text-base'>{item}</span>
+              <section className='mb-8'>
+                <h2 className='text-xl font-semibold mb-4'>What you'll do</h2>
+                <ul className='space-y-3'>
+                  {jobData.responsibilities.map((item, index) => (
+                    <li key={index} className='flex gap-3'>
+                      <CheckCircle className='h-5 w-5 text-primary mt-0.5 shrink-0' />
+                      <span className='text-muted-foreground'>{item}</span>
                     </li>
                   ))}
                 </ul>
               </section>
 
-              <section className='mb-8 lg:mb-10'>
-                <h2 className='text-xl lg:text-2xl font-semibold mb-3 lg:mb-4'>What We're Looking For</h2>
-                <ul className='space-y-2 lg:space-y-3'>
-                  {jobData.requirements.map((item, i) => (
-                    <li key={`req-${i}`} className='flex items-start gap-2 lg:gap-3'>
-                      <div className='h-1.5 w-1.5 rounded-full bg-primary mt-1.5 lg:mt-2 flex-shrink-0' />
-                      <span className='text-muted-foreground text-sm lg:text-base'>{item}</span>
+              <section className='mb-8'>
+                <h2 className='text-xl font-semibold mb-4'>What we're looking for</h2>
+                <ul className='space-y-3'>
+                  {jobData.requirements.map((item, index) => (
+                    <li key={index} className='flex gap-3'>
+                      <CheckCircle className='h-5 w-5 text-primary mt-0.5 shrink-0' />
+                      <span className='text-muted-foreground'>{item}</span>
                     </li>
                   ))}
                 </ul>
               </section>
 
-              <section className='mb-8 lg:mb-10'>
-                <h2 className='text-xl lg:text-2xl font-semibold mb-3 lg:mb-4'>Nice to Have</h2>
-                <ul className='space-y-2 lg:space-y-3'>
-                  {jobData.niceToHave.map((item, i) => (
-                    <li key={`nice-${i}`} className='flex items-start gap-2 lg:gap-3'>
-                      <div className='h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 lg:mt-2 flex-shrink-0' />
-                      <span className='text-muted-foreground text-sm lg:text-base'>{item}</span>
+              <section className='mb-8'>
+                <h2 className='text-xl font-semibold mb-4'>Nice to have</h2>
+                <ul className='space-y-3'>
+                  {jobData.niceToHave.map((item, index) => (
+                    <li key={index} className='flex gap-3'>
+                      <div className='h-5 w-5 rounded-full border-2 border-muted-foreground/30 mt-0.5 shrink-0' />
+                      <span className='text-muted-foreground'>{item}</span>
                     </li>
                   ))}
                 </ul>
               </section>
 
-              <section className='mb-8 lg:mb-10'>
-                <h2 className='text-xl lg:text-2xl font-semibold mb-4 lg:mb-6'>Benefits & Perks</h2>
-                <div className='space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0'>
-                  {jobData.benefits.map((benefit, i) => (
-                    <div key={`benefit-${i}`} className='flex gap-3 lg:gap-4 lg:p-4 lg:rounded-lg lg:border lg:bg-card'>
-                      <div className='flex-shrink-0'>
-                        <div className='w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-primary/10 flex items-center justify-center'>
-                          <benefit.icon className='h-4 w-4 lg:h-5 lg:w-5 text-primary' />
+              <section className='mb-8'>
+                <h2 className='text-xl font-semibold mb-4'>Benefits & Perks</h2>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  {jobData.benefits.map((benefit, index) => {
+                    const Icon = benefit.icon
+                    return (
+                      <div key={index} className='flex gap-3 p-4 rounded-lg border bg-card'>
+                        <Icon className='h-5 w-5 text-primary mt-0.5 shrink-0' />
+                        <div>
+                          <div className='font-medium mb-1'>{benefit.title}</div>
+                          <div className='text-sm text-muted-foreground'>{benefit.description}</div>
                         </div>
                       </div>
-                      <div>
-                        <p className='font-medium text-sm lg:text-base lg:mb-1'>{benefit.title}</p>
-                        <p className='text-xs lg:text-sm text-muted-foreground'>{benefit.description}</p>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </section>
 
-              <section className='hidden lg:block mt-12 p-8 bg-muted/50 rounded-xl border'>
-                <h3 className='text-xl font-semibold mb-3'>Ready to Apply?</h3>
-                <p className='text-muted-foreground mb-6'>
-                  Join our team and help us build the future of technology. We can't wait to hear from you!
-                </p>
-                <div className='flex flex-col sm:flex-row gap-3'>
-                  <Button variant='default' size='lg' onClick={handleApply}>
-                    Apply Now
-                  </Button>
-                  <Button variant='outline' size='lg'>
-                    Refer Someone
-                  </Button>
-                </div>
-              </section>
-
-              <section className='lg:hidden pt-8 border-t mt-8'>
-                <h3 className='text-lg font-semibold mb-2'>Ready to Apply?</h3>
-                <p className='text-muted-foreground text-sm mb-4'>Join our team and help build the future.</p>
-                <Button variant='default' className='w-full' onClick={handleApply}>
-                  Apply Now
-                </Button>
-              </section>
-
-              <section className='mt-12'>
-                <h3 className='text-xl font-semibold mb-4'>Similar Opportunities</h3>
-                <div className='space-y-3'>
-                  <div className='p-4 border rounded-lg hover:border-primary/30 transition-colors cursor-pointer'>
-                    <div className='flex justify-between items-start'>
-                      <div>
-                        <h4 className='font-medium mb-1'>Frontend Engineer</h4>
-                        <p className='text-sm text-muted-foreground'>Engineering · Full-time · Remote</p>
-                      </div>
-                      <Badge variant='secondary' className='text-xs'>
-                        New
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className='p-4 border rounded-lg hover:border-primary/30 transition-colors cursor-pointer'>
-                    <div className='flex justify-between items-start'>
-                      <div>
-                        <h4 className='font-medium mb-1'>Full Stack Developer</h4>
-                        <p className='text-sm text-muted-foreground'>Engineering · Full-time · Hybrid</p>
-                      </div>
-                      <Badge variant='secondary' className='text-xs'>
-                        2 days ago
-                      </Badge>
-                    </div>
-                  </div>
+              <section id='apply' className='mt-16 scroll-mt-24'>
+                <div className='border rounded-lg p-8'>
+                  <h2 className='text-2xl font-semibold mb-2'>Apply for this position</h2>
+                  <p className='text-muted-foreground mb-8'>
+                    Fill out the form below and we'll get back to you as soon as possible.
+                  </p>
+                  <ApplicationForm />
                 </div>
               </section>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </div>

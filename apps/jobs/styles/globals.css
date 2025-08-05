@@ -2,3 +2,43 @@
 @source "../**/*.{js,jsx,ts,tsx}";
 @source "../../packages/ui/**/*.{js,jsx,ts,tsx}";
 @import '@seeds/tailwind/globals.css';
+
+/* Job Page Layout - Update this in apps/jobs/styles/globals.css */
+.job-layout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.job-layout-sidebar {
+  width: 100%;
+}
+
+.job-layout-sidebar-inner {
+  position: static;
+}
+
+.job-layout-main {
+  flex: 1;
+  max-width: 56rem;
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .job-layout-container {
+    display: flex;
+    flex-direction: row !important;
+    gap: 2rem;
+  }
+
+  .job-layout-sidebar {
+    width: 320px !important;
+    flex-shrink: 0;
+  }
+
+  .job-layout-sidebar-inner {
+    position: sticky !important;
+    /* Adjusted top value to account for header height (typically 64px) + extra spacing */
+    top: 5rem !important; /* Changed from 2rem to 5rem */
+  }
+}

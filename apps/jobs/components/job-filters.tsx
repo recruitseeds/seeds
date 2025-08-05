@@ -1,18 +1,28 @@
 'use client'
 
 import { Button } from '@seeds/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@seeds/ui/collapsible'
+import { Checkbox } from '@seeds/ui/checkbox'
+import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
 const experienceLevels = ['Entry Level', 'Junior', 'Mid-Level', 'Senior', 'Lead']
 const remoteOptions = ['Remote', 'Hybrid', 'On-site']
-const salaryRanges = ['$0 - $50k', '$50k - $100k', '$100k - $150k', '$150k+']
+const departments = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'Operations']
 
 export function JobFilters() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [selectedLevels, setSelectedLevels] = useState<string[]>([])
   const [selectedRemote, setSelectedRemote] = useState<string[]>([])
-  const [selectedSalary, setSelectedSalary] = useState<string[]>([])
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([])
+
+  const [openSections, setOpenSections] = useState({
+    location: false,
+    department: false,
+    type: false,
+    experience: false,
+  })
 
   const toggleFilter = (filter: string, category: string[], setCategory: (val: string[]) => void) => {
     if (category.includes(filter)) {
@@ -26,96 +36,123 @@ export function JobFilters() {
     setSelectedTypes([])
     setSelectedLevels([])
     setSelectedRemote([])
-    setSelectedSalary([])
+    setSelectedDepartments([])
   }
 
   const hasFilters =
-    selectedTypes.length > 0 || selectedLevels.length > 0 || selectedRemote.length > 0 || selectedSalary.length > 0
+    selectedTypes.length > 0 || selectedLevels.length > 0 || selectedRemote.length > 0 || selectedDepartments.length > 0
 
   return (
-    <div className='bg-card rounded-lg border border-border p-6'>
-      <div className='flex items-center justify-between mb-6'>
-        <h3 className='font-semibold text-lg'>Filters</h3>
-        {hasFilters && (
-          <Button onClick={clearAll} className='text-sm text-muted-foreground hover:text-foreground transition-colors'>
-            Clear all
+    <div className='space-y-1'>
+      {hasFilters && (
+        <div className='mb-4'>
+          <Button
+            onClick={clearAll}
+            variant='ghost'
+            size='sm'
+            className='text-xs text-muted-foreground hover:text-foreground'>
+            Clear all filters
           </Button>
-        )}
-      </div>
-
-      <div className='space-y-6'>
-        {/* Job Type */}
-        <div>
-          <h4 className='font-medium mb-3'>Job Type</h4>
-          <div className='space-y-2'>
-            {jobTypes.map((type) => (
-              <label key={type} className='flex items-center cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={selectedTypes.includes(type)}
-                  onChange={() => toggleFilter(type, selectedTypes, setSelectedTypes)}
-                  className='mr-2 h-4 w-4 rounded border-border text-brand focus:ring-brand'
-                />
-                <span className='text-sm'>{type}</span>
-              </label>
-            ))}
-          </div>
         </div>
+      )}
 
-        {/* Experience Level */}
-        <div>
-          <h4 className='font-medium mb-3'>Experience Level</h4>
-          <div className='space-y-2'>
-            {experienceLevels.map((level) => (
-              <label key={level} className='flex items-center cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={selectedLevels.includes(level)}
-                  onChange={() => toggleFilter(level, selectedLevels, setSelectedLevels)}
-                  className='mr-2 h-4 w-4 rounded border-border text-brand focus:ring-brand'
-                />
-                <span className='text-sm'>{level}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Work Location */}
-        <div>
-          <h4 className='font-medium mb-3'>Work Location</h4>
-          <div className='space-y-2'>
+      <Collapsible
+        open={openSections.location}
+        onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, location: open }))}>
+        <CollapsibleTrigger className='flex items-center justify-between w-full py-3 text-sm font-medium hover:text-foreground transition-colors group'>
+          <span>Location</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections.location ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className='pb-4'>
+          <div className='space-y-2 pt-2'>
             {remoteOptions.map((option) => (
-              <label key={option} className='flex items-center cursor-pointer'>
-                <input
-                  type='checkbox'
+              <label key={option} className='flex items-center cursor-pointer hover:text-foreground transition-colors'>
+                <Checkbox
                   checked={selectedRemote.includes(option)}
-                  onChange={() => toggleFilter(option, selectedRemote, setSelectedRemote)}
-                  className='mr-2 h-4 w-4 rounded border-border text-brand focus:ring-brand'
+                  onCheckedChange={() => toggleFilter(option, selectedRemote, setSelectedRemote)}
+                  className='mr-3'
                 />
                 <span className='text-sm'>{option}</span>
               </label>
             ))}
           </div>
-        </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-        {/* Salary Range */}
-        <div>
-          <h4 className='font-medium mb-3'>Salary Range</h4>
-          <div className='space-y-2'>
-            {salaryRanges.map((range) => (
-              <label key={range} className='flex items-center cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={selectedSalary.includes(range)}
-                  onChange={() => toggleFilter(range, selectedSalary, setSelectedSalary)}
-                  className='mr-2 h-4 w-4 rounded border-border text-brand focus:ring-brand'
+      <div className='border-t border-border' />
+
+      <Collapsible
+        open={openSections.department}
+        onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, department: open }))}>
+        <CollapsibleTrigger className='flex items-center justify-between w-full py-3 text-sm font-medium hover:text-foreground transition-colors group'>
+          <span>Department</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections.department ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className='pb-4'>
+          <div className='space-y-2 pt-2'>
+            {departments.map((dept) => (
+              <label key={dept} className='flex items-center cursor-pointer hover:text-foreground transition-colors'>
+                <Checkbox
+                  checked={selectedDepartments.includes(dept)}
+                  onCheckedChange={() => toggleFilter(dept, selectedDepartments, setSelectedDepartments)}
+                  className='mr-3'
                 />
-                <span className='text-sm'>{range}</span>
+                <span className='text-sm'>{dept}</span>
               </label>
             ))}
           </div>
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <div className='border-t border-border' />
+
+      <Collapsible
+        open={openSections.type}
+        onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, type: open }))}>
+        <CollapsibleTrigger className='flex items-center justify-between w-full py-3 text-sm font-medium hover:text-foreground transition-colors group'>
+          <span>Job Type</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections.type ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className='pb-4'>
+          <div className='space-y-2 pt-2'>
+            {jobTypes.map((type) => (
+              <label key={type} className='flex items-center cursor-pointer hover:text-foreground transition-colors'>
+                <Checkbox
+                  checked={selectedTypes.includes(type)}
+                  onCheckedChange={() => toggleFilter(type, selectedTypes, setSelectedTypes)}
+                  className='mr-3'
+                />
+                <span className='text-sm'>{type}</span>
+              </label>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <div className='border-t border-border' />
+
+      <Collapsible
+        open={openSections.experience}
+        onOpenChange={(open) => setOpenSections((prev) => ({ ...prev, experience: open }))}>
+        <CollapsibleTrigger className='flex items-center justify-between w-full py-3 text-sm font-medium hover:text-foreground transition-colors group'>
+          <span>Experience Level</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections.experience ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className='pb-4'>
+          <div className='space-y-2 pt-2'>
+            {experienceLevels.map((level) => (
+              <label key={level} className='flex items-center cursor-pointer hover:text-foreground transition-colors'>
+                <Checkbox
+                  checked={selectedLevels.includes(level)}
+                  onCheckedChange={() => toggleFilter(level, selectedLevels, setSelectedLevels)}
+                  className='mr-3'
+                />
+                <span className='text-sm'>{level}</span>
+              </label>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   )
 }
