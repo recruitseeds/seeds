@@ -313,8 +313,8 @@ testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
 	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
 
 	try {
-		const query = c.req.valid("query");
-		const { page, limit } = query;
+		const page = parseInt(c.req.query('page') || '1', 10);
+		const limit = parseInt(c.req.query('limit') || '20', 10);
 		const offset = (page - 1) * limit;
 
 		logger.info("Fetching job listings (test endpoint)", { page, limit, offset });
@@ -454,8 +454,8 @@ testJobsRoutes.openapi(getJobTestRoute, async (c: Context): Promise<any> => {
 	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
 
 	try {
-		const params = c.req.valid("param");
-		const { jobId } = params;
+		const params = c.req.param();
+		const jobId = params.jobId;
 
 		logger.info("Fetching job details (test endpoint)", { jobId });
 

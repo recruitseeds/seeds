@@ -122,7 +122,11 @@ const parseResumeTestRoute = createRoute({
 			candidateId: z.string().uuid().describe("Candidate unique identifier from job application"),
 		}),
 		body: {
-			content: ParseResumeRequestSchema,
+			content: {
+				"application/json": {
+					schema: ParseResumeRequestSchema,
+				},
+			},
 			description: "Job posting ID to evaluate candidate skills against job requirements",
 		},
 	},
