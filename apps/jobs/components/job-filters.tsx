@@ -1,8 +1,8 @@
 'use client'
 
 import { Button } from '@seeds/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@seeds/ui/collapsible'
 import { Checkbox } from '@seeds/ui/checkbox'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@seeds/ui/collapsible'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
@@ -48,7 +48,7 @@ export function JobFilters() {
         <div className='mb-4'>
           <Button
             onClick={clearAll}
-            variant='ghost'
+            variant='outline'
             size='sm'
             className='text-xs text-muted-foreground hover:text-foreground'>
             Clear all filters

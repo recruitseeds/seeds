@@ -114,7 +114,6 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
             </span>
           </div>
 
-          {/* Tags */}
           <div className='flex flex-wrap gap-2'>
             <Badge variant='secondary' className='text-xs'>
               {job.type}
@@ -123,7 +122,7 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
               {job.remote}
             </Badge>
             {job.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant='outline' className='text-xs'>
+              <Badge key={tag} variant='secondary' className='text-xs'>
                 {tag}
               </Badge>
             ))}

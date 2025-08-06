@@ -2,11 +2,11 @@
 
 import type React from 'react'
 
-import { Button } from '../ui/button'
-import { Progress } from '../ui/progress'
-import { cn } from '../ui/lib/utils'
 import { AlertCircle, FileText, Upload, X } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { Button } from '../ui/button'
+import { cn } from '../ui/lib/utils'
+import { Progress } from '../ui/progress'
 
 interface ResumeUploaderProps {
   onUpload: (file: File) => void
@@ -14,11 +14,7 @@ interface ResumeUploaderProps {
   onCancel: () => void
 }
 
-export function ResumeUploader({
-  onUpload,
-  isExtracting,
-  onCancel,
-}: ResumeUploaderProps) {
+export function ResumeUploader({ onUpload, isExtracting, onCancel }: ResumeUploaderProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState<boolean>(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -90,9 +86,7 @@ export function ResumeUploader({
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return (
-      Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-    )
+    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
   }
 
   return (
@@ -101,26 +95,29 @@ export function ResumeUploader({
         <div
           className={cn(
             'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
-            isDragging
-              ? 'border-primary bg-primary/5'
-              : 'border-muted-foreground/25 hover:border-primary/50'
+            isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}>
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              fileInputRef.current?.click()
+            }
+          }}
+          tabIndex={0}
+          role='button'
+          aria-label='Upload resume file'>
           <div className='flex flex-col items-center justify-center space-y-4'>
             <div className='rounded-full bg-primary/10 p-3'>
               <FileText className='h-8 w-8 text-primary' />
             </div>
             <div>
               <h4 className='text-lg font-medium mb-1'>Upload your resume</h4>
-              <p className='text-sm text-muted-foreground mb-2'>
-                Drag and drop your file here or click to browse
-              </p>
-              <p className='text-xs text-muted-foreground'>
-                Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)
-              </p>
+              <p className='text-sm text-muted-foreground mb-2'>Drag and drop your file here or click to browse</p>
+              <p className='text-xs text-muted-foreground'>Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)</p>
             </div>
             <Button variant='outline' size='sm' className='mt-2'>
               <Upload className='h-4 w-4 mr-2' /> Select File
@@ -145,9 +142,7 @@ export function ResumeUploader({
                   </div>
                   <div>
                     <p className='font-medium'>{file?.name}</p>
-                    <p className='text-xs text-muted-foreground'>
-                      {formatFileSize(file?.size || 0)}
-                    </p>
+                    <p className='text-xs text-muted-foreground'>{formatFileSize(file?.size || 0)}</p>
                   </div>
                 </div>
                 <Button variant='ghost' size='sm' onClick={onCancel}>
@@ -166,8 +161,7 @@ export function ResumeUploader({
               <div className='bg-muted p-3 rounded text-sm'>
                 <p className='flex items-center'>
                   <AlertCircle className='h-4 w-4 mr-2 text-muted-foreground' />
-                  Please don&apos;t close this window while we extract your
-                  information
+                  Please don&apos;t close this window while we extract your information
                 </p>
               </div>
             </div>
@@ -179,9 +173,7 @@ export function ResumeUploader({
                 </div>
                 <div>
                   <p className='font-medium'>{file?.name}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {formatFileSize(file?.size || 0)}
-                  </p>
+                  <p className='text-xs text-muted-foreground'>{formatFileSize(file?.size || 0)}</p>
                 </div>
               </div>
               <Button variant='ghost' size='sm' onClick={handleRemoveFile}>

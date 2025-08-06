@@ -7,6 +7,7 @@ import { addSwaggerUI, createOpenAPIApp } from "./lib/openapi.js";
 import { correlationMiddleware } from "./middleware/correlation.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { structuredLogging } from "./middleware/structured-logging.js";
+import { testRoutes } from "./routes/test/index.js";
 import { v1Routes } from "./routes/v1/index.js";
 import { internalRoutes } from "./routes/v1/internal/index.js";
 import { publicRoutes } from "./routes/v1/public/index.js";
@@ -32,7 +33,8 @@ app.route("/api/v1", v1Routes);
 app.route("/api/v1/public", publicRoutes);
 app.route("/api/v1/internal", internalRoutes);
 
-app.route("/test/v1", v1Routes);
+// Test routes without authentication for e2e testing
+app.route("/test/v1", testRoutes);
 
 addSwaggerUI(app);
 

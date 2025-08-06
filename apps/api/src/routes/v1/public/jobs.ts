@@ -775,4 +775,937 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 	}
 });
 
+const JobPostingSchema = z
+	.object({
+		id: z
+			.string()
+			.uuid()
+			.describe("Unique job posting identifier")
+			.openapi({
+				example: "123e4567-e89b-12d3-a456-426614174000",
+				description: "UUID identifier for the job posting",
+			}),
+		title: z
+			.string()
+			.describe("Job title")
+			.openapi({
+				example: "Senior Frontend Developer",
+				description: "The title of the job position",
+			}),
+		department: z
+			.string()
+			.nullable()
+			.describe("Department or team")
+			.openapi({
+				example: "Engineering",
+				description: "The department this position belongs to",
+			}),
+		job_type: z
+			.string()
+			.describe("Employment type")
+			.openapi({
+				example: "full-time",
+				description: "Type of employment (full-time, part-time, contract, etc.)",
+			}),
+		experience_level: z
+			.string()
+			.nullable()
+			.describe("Required experience level")
+			.openapi({
+				example: "senior",
+				description: "Experience level required for the position",
+			}),
+		salary_min: z
+			.number()
+			.nullable()
+			.describe("Minimum salary in USD")
+			.openapi({
+				example: 120000,
+				description: "Minimum salary range in USD",
+			}),
+		salary_max: z
+			.number()
+			.nullable()
+			.describe("Maximum salary in USD")
+			.openapi({
+				example: 180000,
+				description: "Maximum salary range in USD",
+			}),
+		salary_type: z
+			.string()
+			.nullable()
+			.describe("Salary type")
+			.openapi({
+				example: "yearly",
+				description: "Salary payment frequency (yearly, monthly, hourly)",
+			}),
+		status: z
+			.string()
+			.describe("Job posting status")
+			.openapi({
+				example: "published",
+				description: "Current status of the job posting",
+			}),
+		published_at: z
+			.string()
+			.nullable()
+			.describe("Publication timestamp")
+			.openapi({
+				example: "2024-01-15T10:00:00.000Z",
+				description: "ISO 8601 timestamp when the job was published",
+			}),
+		created_at: z
+			.string()
+			.nullable()
+			.describe("Creation timestamp")
+			.openapi({
+				example: "2024-01-15T09:00:00.000Z",
+				description: "ISO 8601 timestamp when the job was created",
+			}),
+		organization: z
+			.object({
+				id: z.string().uuid().describe("Organization ID"),
+				name: z.string().describe("Organization name"),
+				domain: z.string().nullable().describe("Organization domain"),
+				logo_url: z.string().nullable().describe("Organization logo URL"),
+			})
+			.describe("Organization details"),
+	})
+	.describe("Job posting summary information");
+
+const JobPostingDetailSchema = JobPostingSchema.extend({
+	content: z
+		.any()
+		.describe("Job description content from TipTap editor")
+		.openapi({
+			example: {
+				type: "doc",
+				content: [
+					{
+						type: "paragraph",
+						content: [{ type: "text", text: "We are looking for..." }],
+					},
+				],
+			},
+			description: "Rich text content in TipTap/ProseMirror JSON format",
+		}),
+});
+
+const JobListingResponseSchema = z
+	.object({
+		success: z.literal(true).describe("Indicates successful response"),
+		data: z
+			.array(JobPostingSchema)
+			.describe("Array of job posting summaries"),
+		pagination: z
+			.object({
+				page: z.number().int().min(1).describe("Current page number"),
+				limit: z.number().int().min(1).max(100).describe("Items per page"),
+				total: z.number().int().min(0).describe("Total number of jobs"),
+				totalPages: z.number().int().min(0).describe("Total number of pages"),
+				hasNext: z.boolean().describe("Whether there are more pages"),
+				hasPrev: z.boolean().describe("Whether there are previous pages"),
+			})
+			.describe("Pagination information"),
+		metadata: MetadataSchema,
+	})
+	.describe("Job listings response with pagination");
+
+const JobDetailResponseSchema = z
+	.object({
+		success: z.literal(true).describe("Indicates successful response"),
+		data: JobPostingDetailSchema,
+		metadata: MetadataSchema,
+	})
+	.describe("Individual job posting details response");
+
+const CompanyJobsResponseSchema = z
+	.object({
+		success: z.literal(true).describe("Indicates successful response"),
+		data: z
+			.object({
+				organization: z
+					.object({
+						id: z.string().uuid().describe("Organization ID"),
+						name: z.string().describe("Organization name"),
+						domain: z.string().nullable().describe("Organization domain"),
+						logo_url: z.string().nullable().describe("Organization logo URL"),
+					})
+					.describe("Organization information"),
+				jobs: z
+					.array(JobPostingSchema)
+					.describe("Array of job postings for this organization"),
+			})
+			.describe("Company information and job listings"),
+		pagination: z
+			.object({
+				page: z.number().int().min(1).describe("Current page number"),
+				limit: z.number().int().min(1).max(100).describe("Items per page"),
+				total: z.number().int().min(0).describe("Total number of jobs"),
+				totalPages: z.number().int().min(0).describe("Total number of pages"),
+				hasNext: z.boolean().describe("Whether there are more pages"),
+				hasPrev: z.boolean().describe("Whether there are previous pages"),
+			})
+			.describe("Pagination information"),
+		metadata: MetadataSchema,
+	})
+	.describe("Company job listings response");
+
+const listJobsRoute = createRoute({
+	method: "get",
+	path: "/",
+	tags: ["Job Listings"],
+	summary: "List all published job postings",
+	description: `
+Retrieve a paginated list of all published job postings across all organizations.
+
+**Features:**
+- Returns only published and active job postings
+- Includes basic job information and organization details
+- Supports pagination with configurable page size
+- Optimized query performance with database indexes
+- Results sorted by publication date (newest first)
+
+**Use Cases:**
+- Global job discovery and browsing
+- Job board homepage listings
+- Search engine optimization and sitemaps
+- Integration with external job aggregators
+
+**Rate Limiting:**
+- Free tier: 1,000 requests/hour
+- Pro tier: 10,000 requests/hour
+- Enterprise: Custom limits available
+	`,
+	request: {
+		query: z.object({
+			page: z
+				.string()
+				.regex(/^\d+$/)
+				.transform(Number)
+				.refine((val) => val >= 1, "Page must be >= 1")
+				.default("1")
+				.describe("Page number for pagination")
+				.openapi({
+					example: "1",
+					description: "Page number starting from 1",
+				}),
+			limit: z
+				.string()
+				.regex(/^\d+$/)
+				.transform(Number)
+				.refine((val) => val >= 1 && val <= 100, "Limit must be 1-100")
+				.default("20")
+				.describe("Number of jobs per page")
+				.openapi({
+					example: "20",
+					description: "Items per page (1-100)",
+				}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: JobListingResponseSchema,
+				},
+			},
+			description: "Successfully retrieved job listings",
+		},
+		400: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Invalid pagination parameters",
+		},
+		500: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Internal server error",
+		},
+	},
+	security: [
+		{
+			ApiKeyAuth: [],
+		},
+	],
+});
+
+const getJobRoute = createRoute({
+	method: "get",
+	path: "/{jobId}",
+	tags: ["Job Listings"],
+	summary: "Get detailed job posting information",
+	description: `
+Retrieve comprehensive details for a specific job posting including full content.
+
+**Features:**
+- Complete job description with TipTap editor content
+- Organization information and branding
+- Salary ranges and employment details
+- Publication and creation timestamps
+- Optimized single query performance
+
+**Content Format:**
+- Job descriptions are stored as TipTap/ProseMirror JSON
+- Rich text formatting preserved
+- Structured content for consistent rendering
+- Support for various content blocks and formatting
+
+**Use Cases:**
+- Individual job posting pages
+- Application flow initialization
+- SEO-optimized job detail views
+- Candidate experience optimization
+
+**Performance:**
+- Single database query with joins
+- Cached organization data
+- Response time < 100ms average
+	`,
+	request: {
+		params: z.object({
+			jobId: z
+				.string()
+				.uuid()
+				.describe("Unique job posting identifier")
+				.openapi({
+					example: "123e4567-e89b-12d3-a456-426614174000",
+					description: "UUID of the job posting to retrieve",
+				}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: JobDetailResponseSchema,
+				},
+			},
+			description: "Successfully retrieved job details",
+		},
+		404: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Job posting not found or not published",
+		},
+		500: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Internal server error",
+		},
+	},
+	security: [
+		{
+			ApiKeyAuth: [],
+		},
+	],
+});
+
+const getCompanyJobsRoute = createRoute({
+	method: "get",
+	path: "/company/{orgSlug}",
+	tags: ["Job Listings"],
+	summary: "List job postings for a specific organization",
+	description: `
+Retrieve job postings for a specific organization using their unique slug identifier.
+
+**Features:**
+- Organization-specific job listings
+- Company branding and profile information
+- Paginated results with efficient queries
+- Only published and active positions
+- Optimized for company career pages
+
+**Organization Identification:**
+- Uses human-readable slug instead of UUID
+- Slug format: lowercase, hyphen-separated
+- Example: "acme-corp" for "Acme Corporation"
+- SEO-friendly URLs for company pages
+
+**Use Cases:**
+- Company-specific career pages
+- Branded job board experiences
+- Organization profile integration
+- Candidate-facing company portals
+
+**Performance:**
+- Single query with organization lookup
+- Indexed slug field for fast resolution
+- Response caching for popular companies
+	`,
+	request: {
+		params: z.object({
+			orgSlug: z
+				.string()
+				.min(1)
+				.max(50)
+				.regex(/^[a-z0-9-]+$/)
+				.describe("Organization slug identifier")
+				.openapi({
+					example: "acme-corp",
+					description:
+						"URL-friendly organization identifier (lowercase, hyphens allowed)",
+				}),
+		}),
+		query: z.object({
+			page: z
+				.string()
+				.regex(/^\d+$/)
+				.transform(Number)
+				.refine((val) => val >= 1, "Page must be >= 1")
+				.default("1")
+				.describe("Page number for pagination")
+				.openapi({
+					example: "1",
+					description: "Page number starting from 1",
+				}),
+			limit: z
+				.string()
+				.regex(/^\d+$/)
+				.transform(Number)
+				.refine((val) => val >= 1 && val <= 100, "Limit must be 1-100")
+				.default("20")
+				.describe("Number of jobs per page")
+				.openapi({
+					example: "20",
+					description: "Items per page (1-100)",
+				}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: CompanyJobsResponseSchema,
+				},
+			},
+			description: "Successfully retrieved company job listings",
+		},
+		400: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Invalid pagination parameters or organization slug",
+		},
+		404: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Organization not found or has no published jobs",
+		},
+		500: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Internal server error",
+		},
+	},
+	security: [
+		{
+			ApiKeyAuth: [],
+		},
+	],
+});
+
+publicJobsRoutes.openapi(listJobsRoute, async (c: Context): Promise<any> => {
+	const startTime = Date.now();
+	const correlationId = c.get("correlationId") || crypto.randomUUID();
+	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+
+	try {
+		const query = c.req.valid("query");
+		const { page, limit } = query;
+		const offset = (page - 1) * limit;
+
+		logger.info("Fetching job listings", { page, limit, offset });
+
+		const config = ConfigService.getInstance().getConfig();
+		const supabase = createClient<Database>(
+			config.supabaseUrl,
+			config.supabaseServiceRoleKey,
+		);
+
+		const countQuery = supabase
+			.from("job_postings")
+			.select("id", { count: "exact", head: true })
+			.eq("status", "published")
+			.not("published_at", "is", null);
+
+		const dataQuery = supabase
+			.from("job_postings")
+			.select(`
+				id,
+				title,
+				department,
+				job_type,
+				experience_level,
+				salary_min,
+				salary_max,
+				salary_type,
+				status,
+				published_at,
+				created_at,
+				organizations!inner (
+					id,
+					name,
+					domain,
+					logo_url
+				)
+			`)
+			.eq("status", "published")
+			.not("published_at", "is", null)
+			.order("published_at", { ascending: false })
+			.range(offset, offset + limit - 1);
+
+		const [countResult, dataResult] = await Promise.all([
+			countQuery,
+			dataQuery,
+		]);
+
+		if (countResult.error) {
+			logger.error("Failed to fetch job count", {
+				error: countResult.error.message,
+				code: countResult.error.code,
+			});
+			throw new Error("Failed to fetch job listings");
+		}
+
+		if (dataResult.error) {
+			logger.error("Failed to fetch job data", {
+				error: dataResult.error.message,
+				code: dataResult.error.code,
+			});
+			throw new Error("Failed to fetch job listings");
+		}
+
+		const total = countResult.count || 0;
+		const totalPages = Math.ceil(total / limit);
+
+		const jobs = dataResult.data.map((job) => ({
+			id: job.id,
+			title: job.title,
+			department: job.department,
+			job_type: job.job_type,
+			experience_level: job.experience_level,
+			salary_min: job.salary_min,
+			salary_max: job.salary_max,
+			salary_type: job.salary_type,
+			status: job.status,
+			published_at: job.published_at,
+			created_at: job.created_at,
+			organization: {
+				id: job.organizations.id,
+				name: job.organizations.name,
+				domain: job.organizations.domain,
+				logo_url: job.organizations.logo_url,
+			},
+		}));
+
+		logger.info("Successfully fetched job listings", {
+			jobCount: jobs.length,
+			totalJobs: total,
+			page,
+			totalPages,
+			processingTimeMs: Date.now() - startTime,
+		});
+
+		return c.json({
+			success: true as const,
+			data: jobs,
+			pagination: {
+				page,
+				limit,
+				total,
+				totalPages,
+				hasNext: page < totalPages,
+				hasPrev: page > 1,
+			},
+			metadata: {
+				processingTimeMs: Date.now() - startTime,
+				correlationId,
+				timestamp: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		logger.error("Failed to fetch job listings", {
+			error: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined,
+		});
+
+		return c.json(
+			{
+				success: false as const,
+				error: {
+					code: "FETCH_ERROR",
+					message:
+						"An error occurred while fetching job listings. Please try again.",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId,
+			},
+			500,
+		);
+	}
+});
+
+publicJobsRoutes.openapi(getJobRoute, async (c: Context): Promise<any> => {
+	const startTime = Date.now();
+	const correlationId = c.get("correlationId") || crypto.randomUUID();
+	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+
+	try {
+		const params = c.req.valid("param");
+		const { jobId } = params;
+
+		logger.info("Fetching job details", { jobId });
+
+		const config = ConfigService.getInstance().getConfig();
+		const supabase = createClient<Database>(
+			config.supabaseUrl,
+			config.supabaseServiceRoleKey,
+		);
+
+		const { data, error } = await supabase
+			.from("job_postings")
+			.select(`
+				id,
+				title,
+				content,
+				department,
+				job_type,
+				experience_level,
+				salary_min,
+				salary_max,
+				salary_type,
+				status,
+				published_at,
+				created_at,
+				organizations!inner (
+					id,
+					name,
+					domain,
+					logo_url
+				)
+			`)
+			.eq("id", jobId)
+			.eq("status", "published")
+			.not("published_at", "is", null)
+			.single();
+
+		if (error) {
+			if (error.code === "PGRST116") {
+				logger.warn("Job not found or not published", {
+					jobId,
+					error: error.message,
+				});
+				return c.json(
+					{
+						success: false as const,
+						error: {
+							code: "JOB_NOT_FOUND",
+							message: "Job posting not found or not currently available.",
+						},
+						timestamp: new Date().toISOString(),
+						correlationId,
+					},
+					404,
+				);
+			}
+
+			logger.error("Failed to fetch job details", {
+				jobId,
+				error: error.message,
+				code: error.code,
+			});
+			throw new Error("Failed to fetch job details");
+		}
+
+		const job = {
+			id: data.id,
+			title: data.title,
+			content: data.content,
+			department: data.department,
+			job_type: data.job_type,
+			experience_level: data.experience_level,
+			salary_min: data.salary_min,
+			salary_max: data.salary_max,
+			salary_type: data.salary_type,
+			status: data.status,
+			published_at: data.published_at,
+			created_at: data.created_at,
+			organization: {
+				id: data.organizations.id,
+				name: data.organizations.name,
+				domain: data.organizations.domain,
+				logo_url: data.organizations.logo_url,
+			},
+		};
+
+		logger.info("Successfully fetched job details", {
+			jobId,
+			jobTitle: job.title,
+			organizationName: job.organization.name,
+			processingTimeMs: Date.now() - startTime,
+		});
+
+		return c.json({
+			success: true as const,
+			data: job,
+			metadata: {
+				processingTimeMs: Date.now() - startTime,
+				correlationId,
+				timestamp: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		logger.error("Failed to fetch job details", {
+			error: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined,
+		});
+
+		return c.json(
+			{
+				success: false as const,
+				error: {
+					code: "FETCH_ERROR",
+					message:
+						"An error occurred while fetching job details. Please try again.",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId,
+			},
+			500,
+		);
+	}
+});
+
+publicJobsRoutes.openapi(getCompanyJobsRoute, async (c: Context): Promise<any> => {
+	const startTime = Date.now();
+	const correlationId = c.get("correlationId") || crypto.randomUUID();
+	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+
+	try {
+		const params = c.req.valid("param");
+		const query = c.req.valid("query");
+		const { orgSlug } = params;
+		const { page, limit } = query;
+		const offset = (page - 1) * limit;
+
+		logger.info("Fetching company jobs", { orgSlug, page, limit, offset });
+
+		const config = ConfigService.getInstance().getConfig();
+		const supabase = createClient<Database>(
+			config.supabaseUrl,
+			config.supabaseServiceRoleKey,
+		);
+
+		const orgQuery = supabase
+			.from("organizations")
+			.select("id, name, domain, logo_url")
+			.eq("domain", orgSlug)
+			.single();
+
+		const orgResult = await orgQuery;
+
+		if (orgResult.error) {
+			if (orgResult.error.code === "PGRST116") {
+				logger.warn("Organization not found", {
+					orgSlug,
+					error: orgResult.error.message,
+				});
+				return c.json(
+					{
+						success: false as const,
+						error: {
+							code: "ORGANIZATION_NOT_FOUND",
+							message: "Organization not found.",
+						},
+						timestamp: new Date().toISOString(),
+						correlationId,
+					},
+					404,
+				);
+			}
+
+			logger.error("Failed to fetch organization", {
+				orgSlug,
+				error: orgResult.error.message,
+				code: orgResult.error.code,
+			});
+			throw new Error("Failed to fetch organization");
+		}
+
+		const organization = orgResult.data;
+
+		const countQuery = supabase
+			.from("job_postings")
+			.select("id", { count: "exact", head: true })
+			.eq("organization_id", organization.id)
+			.eq("status", "published")
+			.not("published_at", "is", null);
+
+		const dataQuery = supabase
+			.from("job_postings")
+			.select(`
+				id,
+				title,
+				department,
+				job_type,
+				experience_level,
+				salary_min,
+				salary_max,
+				salary_type,
+				status,
+				published_at,
+				created_at
+			`)
+			.eq("organization_id", organization.id)
+			.eq("status", "published")
+			.not("published_at", "is", null)
+			.order("published_at", { ascending: false })
+			.range(offset, offset + limit - 1);
+
+		const [countResult, dataResult] = await Promise.all([
+			countQuery,
+			dataQuery,
+		]);
+
+		if (countResult.error) {
+			logger.error("Failed to fetch job count for organization", {
+				orgSlug,
+				organizationId: organization.id,
+				error: countResult.error.message,
+				code: countResult.error.code,
+			});
+			throw new Error("Failed to fetch company jobs");
+		}
+
+		if (dataResult.error) {
+			logger.error("Failed to fetch job data for organization", {
+				orgSlug,
+				organizationId: organization.id,
+				error: dataResult.error.message,
+				code: dataResult.error.code,
+			});
+			throw new Error("Failed to fetch company jobs");
+		}
+
+		const total = countResult.count || 0;
+		const totalPages = Math.ceil(total / limit);
+
+		if (total === 0) {
+			logger.info("No published jobs found for organization", {
+				orgSlug,
+				organizationId: organization.id,
+				organizationName: organization.name,
+			});
+			return c.json(
+				{
+					success: false as const,
+					error: {
+						code: "NO_JOBS_FOUND",
+						message: "No published job postings found for this organization.",
+					},
+					timestamp: new Date().toISOString(),
+					correlationId,
+				},
+				404,
+			);
+		}
+
+		const jobs = dataResult.data.map((job) => ({
+			id: job.id,
+			title: job.title,
+			department: job.department,
+			job_type: job.job_type,
+			experience_level: job.experience_level,
+			salary_min: job.salary_min,
+			salary_max: job.salary_max,
+			salary_type: job.salary_type,
+			status: job.status,
+			published_at: job.published_at,
+			created_at: job.created_at,
+			organization: {
+				id: organization.id,
+				name: organization.name,
+				domain: organization.domain,
+				logo_url: organization.logo_url,
+			},
+		}));
+
+		logger.info("Successfully fetched company jobs", {
+			orgSlug,
+			organizationName: organization.name,
+			jobCount: jobs.length,
+			totalJobs: total,
+			page,
+			totalPages,
+			processingTimeMs: Date.now() - startTime,
+		});
+
+		return c.json({
+			success: true as const,
+			data: {
+				organization: {
+					id: organization.id,
+					name: organization.name,
+					domain: organization.domain,
+					logo_url: organization.logo_url,
+				},
+				jobs,
+			},
+			pagination: {
+				page,
+				limit,
+				total,
+				totalPages,
+				hasNext: page < totalPages,
+				hasPrev: page > 1,
+			},
+			metadata: {
+				processingTimeMs: Date.now() - startTime,
+				correlationId,
+				timestamp: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		logger.error("Failed to fetch company jobs", {
+			error: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined,
+		});
+
+		return c.json(
+			{
+				success: false as const,
+				error: {
+					code: "FETCH_ERROR",
+					message:
+						"An error occurred while fetching company jobs. Please try again.",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId,
+			},
+			500,
+		);
+	}
+});
+
 export { publicJobsRoutes };
