@@ -2,11 +2,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
 import type React from 'react'
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className='flex min-h-svh flex-col items-center justify-center p-6 md:p-10'>
       <div className='w-full max-w-sm md:max-w-3xl'>
@@ -26,8 +22,7 @@ export default function AuthLayout({
             </CardContent>
           </Card>
           <div className='text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary'>
-            By clicking continue, you agree to our{' '}
-            <a href='#'>Terms of Service</a> and <a href='#'>Privacy Policy</a>.
+            By clicking continue, you agree to our <a href='#'>Terms of Service</a> and <a href='#'>Privacy Policy</a>.
           </div>
         </div>
       </div>

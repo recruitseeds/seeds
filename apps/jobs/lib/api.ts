@@ -109,7 +109,14 @@ class JobsApiError extends Error {
   }
 }
 
-async function makeApiRequest<T>(endpoint: string): Promise<T> {
+async function makeApiRequest<T>(
+  endpoint: string, 
+  options?: {
+    method?: string
+    body?: string
+    headers?: Record<string, string>
+  }
+): Promise<T> {
   const baseEndpoint = USE_TEST_ENDPOINTS 
     ? `/test/v1/public/jobs${endpoint}`
     : `/api/v1/public/jobs${endpoint}`
@@ -118,6 +125,7 @@ async function makeApiRequest<T>(endpoint: string): Promise<T> {
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...options?.headers,
   }
   
   // Only add authorization for production endpoints
@@ -131,6 +139,7 @@ async function makeApiRequest<T>(endpoint: string): Promise<T> {
       url,
       endpoint,
       baseEndpoint,
+      method: options?.method || 'GET',
       USE_TEST_ENDPOINTS,
       hasAuth: !USE_TEST_ENDPOINTS && !!API_KEY,
     })
@@ -138,7 +147,9 @@ async function makeApiRequest<T>(endpoint: string): Promise<T> {
   
   try {
     const response = await fetch(url, {
+      method: options?.method || 'GET',
       headers,
+      body: options?.body,
       cache: 'no-store',
     })
 
@@ -175,8 +186,26 @@ async function makeApiRequest<T>(endpoint: string): Promise<T> {
   }
 }
 
-export async function getAllJobs(page = 1, limit = 20): Promise<JobListingResponse> {
-  return makeApiRequest<JobListingResponse>(`?page=${page}&limit=${limit}`)
+export async function getAllJobs(
+  page = 1, 
+  limit = 20, 
+  filters: Record<string, any> = {}
+): Promise<JobListingResponse> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  })
+  
+  // Add filters to query params
+  if (filters.query) params.set('q', filters.query)
+  if (filters.location) params.set('location', filters.location)
+  if (filters.jobType) params.set('job_type', filters.jobType)
+  if (filters.remote) params.set('remote', filters.remote)
+  if (filters.salary) params.set('salary', filters.salary)
+  if (filters.experience) params.set('experience', filters.experience)
+  if (filters.department) params.set('department', filters.department)
+  
+  return makeApiRequest<JobListingResponse>(`?${params.toString()}`)
 }
 
 export async function getJobById(jobId: string): Promise<JobDetailResponse> {
@@ -189,6 +218,121 @@ export async function getCompanyJobs(
   limit = 20
 ): Promise<CompanyJobsResponse> {
   return makeApiRequest<CompanyJobsResponse>(`/company/${orgSlug}?page=${page}&limit=${limit}`)
+}
+
+// Application check types
+interface ApplicationCheckResponse {
+  success: true
+  data: {
+    hasApplied: boolean
+    applicationId?: string
+    appliedAt?: string
+  }
+  metadata: {
+    processingTimeMs: number
+    correlationId: string
+    timestamp: string
+  }
+}
+
+// Job application types
+interface ApplicationRequest {
+  candidateData: {
+    name: string
+    email: string
+    phone?: string
+  }
+  resumeFile: {
+    fileName: string
+    content: string
+    mimeType: string
+    tags?: string[]
+  }
+}
+
+interface ApplicationResponse {
+  success: true
+  data: {
+    applicationId: string
+    candidateId: string
+    status: 'under_review' | 'auto_rejected'
+    nextSteps: string
+    score?: number
+  }
+  metadata: {
+    processingTimeMs: number
+    correlationId: string
+    timestamp: string
+  }
+}
+
+// Check if user has already applied to a job
+export async function checkExistingApplication(
+  jobId: string,
+  email: string
+): Promise<ApplicationCheckResponse> {
+  const params = new URLSearchParams({ email })
+  return makeApiRequest<ApplicationCheckResponse>(`/${jobId}/check-application?${params.toString()}`)
+}
+
+// Submit job application
+export async function submitJobApplication(
+  jobId: string,
+  applicationData: ApplicationRequest
+): Promise<ApplicationResponse> {
+  return makeApiRequest<ApplicationResponse>(`/${jobId}/apply`, {
+    method: 'POST',
+    body: JSON.stringify(applicationData),
+  })
+}
+
+// Saved jobs types and functions
+interface SavedJobResponse {
+  success: true
+  data: {
+    id: string
+    jobId: string
+    candidateId: string
+    savedAt: string
+  }
+  metadata: {
+    processingTimeMs: number
+    correlationId: string
+    timestamp: string
+  }
+}
+
+// Save a job (requires authentication)
+export async function saveJob(jobId: string): Promise<SavedJobResponse> {
+  return makeApiRequest<SavedJobResponse>(`/saved-jobs`, {
+    method: 'POST',
+    body: JSON.stringify({ jobId }),
+  })
+}
+
+// Unsave a job
+export async function unsaveJob(jobId: string): Promise<{ success: true }> {
+  return makeApiRequest<{ success: true }>(`/saved-jobs/${jobId}`, {
+    method: 'DELETE',
+  })
+}
+
+// Check if job is saved
+export async function checkSavedJob(jobId: string): Promise<{ success: true; data: { isSaved: boolean } }> {
+  return makeApiRequest<{ success: true; data: { isSaved: boolean } }>(`/saved-jobs/${jobId}/check`)
+}
+
+// Export types for use in other files
+export type {
+  JobPosting,
+  JobPostingDetail,
+  JobListingResponse,
+  JobDetailResponse,
+  CompanyJobsResponse,
+  ApplicationCheckResponse,
+  ApplicationRequest,
+  ApplicationResponse,
+  SavedJobResponse,
 }
 
 export function formatSalary(
@@ -310,66 +454,6 @@ export function fileToBase64(file: File): Promise<string> {
   })
 }
 
-// Job application submission
-export async function submitJobApplication(
-  jobId: string,
-  application: ApplicationRequest
-): Promise<ApplicationResponse> {
-  const baseEndpoint = USE_TEST_ENDPOINTS 
-    ? `/test/v1/public/jobs/${jobId}/apply`
-    : `/api/v1/public/jobs/${jobId}/apply`
-    
-  const url = `${API_BASE_URL}${baseEndpoint}`
-  
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  }
-  
-  // Only add authorization for production endpoints
-  if (!USE_TEST_ENDPOINTS && API_KEY) {
-    headers['Authorization'] = `Bearer ${API_KEY}`
-  }
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(application),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      const errorData = data as ApiErrorResponse
-      throw new JobsApiError(
-        errorData.error?.code || 'UNKNOWN_ERROR',
-        errorData.error?.message || 'An unknown error occurred',
-        response.status
-      )
-    }
-
-    return data as ApplicationResponse
-  } catch (error) {
-    if (error instanceof JobsApiError) {
-      throw error
-    }
-
-    if (error instanceof Error && error.name === 'TypeError') {
-      throw new JobsApiError(
-        'NETWORK_ERROR',
-        'Failed to connect to the API. Please check your internet connection.',
-        0
-      )
-    }
-
-    throw new JobsApiError(
-      'SUBMIT_ERROR',
-      'An error occurred while submitting your application. Please try again.',
-      500
-    )
-  }
-}
-
 // Resume Parsing Types
 interface ResumeParseRequest {
   jobId: string
@@ -442,6 +526,7 @@ interface ResumeParseResponse {
     timestamp: string
   }
 }
+
 
 export async function parseResumeAndScore(
   candidateId: string,

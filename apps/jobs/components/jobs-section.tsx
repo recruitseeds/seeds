@@ -3,6 +3,7 @@
 import { Button } from '@seeds/ui/button'
 import { Checkbox } from '@seeds/ui/checkbox'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@seeds/ui/collapsible'
+import { Input } from '@seeds/ui/input'
 import {
   Pagination,
   PaginationContent,
@@ -11,10 +12,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@seeds/ui/pagination'
-import { ChevronDown } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { ChevronDown, Search } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import { formatSalary, getTimeAgo, type JobPosting } from '../lib/api'
+import { useJobSearch } from '../lib/queries'
 import { JobCard } from './job-card'
-import { getAllJobs, formatSalary, getTimeAgo, type JobPosting } from '../lib/api'
 
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
 const experienceLevels = ['Entry Level', 'Junior', 'Mid-Level', 'Senior', 'Lead']
@@ -176,8 +179,8 @@ function JobFilters({
 
 interface JobsSectionProps {
   onAuthRequired?: () => void
-  initialJobs: JobPosting[]
-  initialPagination: {
+  initialJobs?: JobPosting[]
+  initialPagination?: {
     page: number
     limit: number
     total: number
@@ -185,46 +188,134 @@ interface JobsSectionProps {
     hasNext: boolean
     hasPrev: boolean
   }
+  searchQuery?: string
+  location?: string
+  initialFilters?: Record<string, any>
 }
 
-export function JobsSection({ onAuthRequired, initialJobs, initialPagination }: JobsSectionProps) {
-  const [currentPage, setCurrentPage] = useState(initialPagination.page)
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
-  const [selectedLevels, setSelectedLevels] = useState<string[]>([])
-  const [selectedRemote, setSelectedRemote] = useState<string[]>([])
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([])
-  const [jobs, setJobs] = useState<JobPosting[]>(initialJobs)
-  const [loading, setLoading] = useState(false) // No initial loading since we have server-side data
-  const [error, setError] = useState<string | null>(null)
-  const [pagination, setPagination] = useState(initialPagination)
+export function JobsSection({
+  onAuthRequired,
+  initialJobs = [],
+  initialPagination,
+  searchQuery = '',
+  location = '',
+  initialFilters = {},
+}: JobsSectionProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  // No useEffect needed! Data is fetched server-side and passed as props
-  
-  // Handle pagination - only fetch when user clicks pagination buttons
-  const handlePageChange = async (newPage: number) => {
-    if (newPage === currentPage) return
-    
-    try {
-      setLoading(true)
-      setError(null)
-      const response = await getAllJobs(newPage, 20)
-      setJobs(response.data)
-      setPagination(response.pagination)
-      setCurrentPage(newPage)
-    } catch (err) {
-      setError('Failed to load jobs. Please try again.')
-      console.error('Error fetching jobs:', err)
-    } finally {
-      setLoading(false)
-    }
+  // Get current search parameters
+  const currentQuery = searchParams.get('q') || searchQuery
+  const currentLocation = searchParams.get('location') || location
+  const currentPage = parseInt(searchParams.get('page') || '1', 10)
+
+  // Filter state
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    initialFilters.jobType ? initialFilters.jobType.split(',') : []
+  )
+  const [selectedLevels, setSelectedLevels] = useState<string[]>(
+    initialFilters.experience ? initialFilters.experience.split(',') : []
+  )
+  const [selectedRemote, setSelectedRemote] = useState<string[]>(
+    initialFilters.remote ? initialFilters.remote.split(',') : []
+  )
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>(
+    initialFilters.department ? initialFilters.department.split(',') : []
+  )
+
+  // Local search state
+  const [searchInput, setSearchInput] = useState(currentQuery)
+  const [locationInput, setLocationInput] = useState(currentLocation)
+
+  // Build current filters
+  const currentFilters = {
+    query: currentQuery,
+    location: currentLocation,
+    jobType: selectedTypes.length ? selectedTypes.join(',') : undefined,
+    remote: selectedRemote.length ? selectedRemote.join(',') : undefined,
+    department: selectedDepartments.length ? selectedDepartments.join(',') : undefined,
+    experience: selectedLevels.length ? selectedLevels.join(',') : undefined,
   }
 
-  const clearAll = () => {
+  // Use React Query for data fetching - with initial data to prevent flicker
+  const { data, error, isLoading, isFetching } = useJobSearch(currentPage, 20, currentFilters, {
+    initialData: initialJobs.length > 0 ? {
+      success: true,
+      data: initialJobs,
+      pagination: initialPagination || {
+        page: 1,
+        limit: 20,
+        total: initialJobs.length,
+        totalPages: Math.ceil(initialJobs.length / 20),
+        hasNext: false,
+        hasPrev: false,
+      }
+    } : undefined
+  })
+
+  // Update URL with search parameters
+  const updateURL = useCallback(
+    (params: Record<string, string | number | undefined>) => {
+      const newParams = new URLSearchParams(searchParams.toString())
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value && value !== '') {
+          newParams.set(key, value.toString())
+        } else {
+          newParams.delete(key)
+        }
+      })
+
+      // Reset to page 1 when filters change (except when page is being set)
+      if (!params.page) {
+        newParams.delete('page')
+      }
+
+      router.push(`/browse?${newParams.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
+  )
+
+  // Handle search form submission
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      updateURL({
+        q: searchInput,
+        location: locationInput,
+      })
+    },
+    [searchInput, locationInput, updateURL]
+  )
+
+  // Handle filter changes
+  useEffect(() => {
+    updateURL({
+      q: currentQuery,
+      location: currentLocation,
+      job_type: selectedTypes.length ? selectedTypes.join(',') : undefined,
+      remote: selectedRemote.length ? selectedRemote.join(',') : undefined,
+      department: selectedDepartments.length ? selectedDepartments.join(',') : undefined,
+      experience: selectedLevels.length ? selectedLevels.join(',') : undefined,
+      page: currentPage === 1 ? undefined : currentPage,
+    })
+  }, [selectedTypes, selectedLevels, selectedRemote, selectedDepartments])
+
+  // Handle page changes
+  const handlePageChange = useCallback(
+    (page: number) => {
+      updateURL({ page: page === 1 ? undefined : page })
+    },
+    [updateURL]
+  )
+
+  // Clear all filters
+  const clearAll = useCallback(() => {
     setSelectedTypes([])
     setSelectedLevels([])
     setSelectedRemote([])
     setSelectedDepartments([])
-  }
+  }, [])
 
   const hasFilters =
     selectedTypes.length > 0 || selectedLevels.length > 0 || selectedRemote.length > 0 || selectedDepartments.length > 0
@@ -242,19 +333,52 @@ export function JobsSection({ onAuthRequired, initialJobs, initialPagination }: 
     hasFilters,
   }
 
-  const transformJobForCard = (job: JobPosting) => ({
-    id: job.id,
-    title: job.title,
-    company: job.organization.name,
-    location: 'Remote/Hybrid',
-    type: job.job_type,
-    salary: formatSalary(job.salary_min, job.salary_max, job.salary_type),
-    remote: 'Hybrid',
-    posted: job.published_at ? getTimeAgo(job.published_at) : 'recently',
-    tags: [job.job_type, job.department, job.experience_level].filter(Boolean) as string[],
-  })
+  const formatJobType = (jobType: string): string => {
+    return jobType
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
 
-  if (loading) {
+  const formatText = (text: string): string => {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
+  }
+
+  const transformJobForCard = (job: JobPosting) => {
+    const formattedType = formatJobType(job.job_type)
+    const formattedDepartment = job.department ? formatText(job.department) : null
+    const formattedExperience = job.experience_level ? formatText(job.experience_level) : null
+
+    const uniqueTags = Array.from(
+      new Set([formattedType, formattedDepartment, formattedExperience].filter(Boolean))
+    ) as string[]
+
+    return {
+      id: job.id,
+      title: job.title,
+      company: job.organization.name,
+      location: 'Remote/Hybrid',
+      type: formattedType,
+      salary: formatSalary(job.salary_min, job.salary_max, job.salary_type),
+      remote: 'Hybrid',
+      posted: job.published_at ? getTimeAgo(job.published_at) : 'recently',
+      tags: uniqueTags,
+    }
+  }
+
+  // Get the actual data from React Query
+  const jobs = data?.data || initialJobs
+  const pagination = data?.pagination ||
+    initialPagination || {
+      page: 1,
+      limit: 20,
+      total: 0,
+      totalPages: 0,
+      hasNext: false,
+      hasPrev: false,
+    }
+
+  if (isLoading && !data) {
     return (
       <section className='pb-8'>
         <div className='container mx-auto px-4'>
@@ -295,9 +419,42 @@ export function JobsSection({ onAuthRequired, initialJobs, initialPagination }: 
   return (
     <section className='pb-8'>
       <div className='container mx-auto px-4'>
+        {/* Search Form */}
         <div className='mb-8'>
-          <h2 className='text-2xl sm:text-3xl font-bold mb-2'>Latest Opportunities</h2>
-          <p className='text-muted-foreground'>{pagination.total} jobs found</p>
+          <form onSubmit={handleSearch} className='flex gap-4 mb-6'>
+            <div className='flex-1'>
+              <Input
+                type='text'
+                placeholder='Search jobs by title, skills, or company...'
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className='w-full'
+              />
+            </div>
+            <div className='flex-1'>
+              <Input
+                type='text'
+                placeholder='Location'
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                className='w-full'
+              />
+            </div>
+            <Button type='submit' className='flex items-center gap-2'>
+              <Search className='h-4 w-4' />
+              Search
+            </Button>
+          </form>
+        </div>
+
+        <div className='mb-8'>
+          <h2 className='text-2xl sm:text-3xl font-bold mb-2'>
+            {currentQuery ? `Search Results for "${currentQuery}"` : 'Latest Opportunities'}
+          </h2>
+          <p className='text-muted-foreground'>
+            {pagination.total} {pagination.total === 1 ? 'job' : 'jobs'} found
+            {isFetching && ' • Updating...'}
+          </p>
         </div>
 
         <div className='job-filters-mobile-toggle w-full mb-6'>
@@ -319,56 +476,58 @@ export function JobsSection({ onAuthRequired, initialJobs, initialPagination }: 
               ))}
             </div>
 
-            <div className='mt-8'>
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href='#'
-                      onClick={(e) => {
-                        e.preventDefault()
-                        if (pagination.hasPrev) handlePageChange(currentPage - 1)
-                      }}
-                      className={!pagination.hasPrev ? 'pointer-events-none opacity-50' : ''}
-                    />
-                  </PaginationItem>
+            {pagination.total > 10 && (
+              <div className='mt-8'>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href='#'
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (pagination.hasPrev) handlePageChange(currentPage - 1)
+                        }}
+                        className={!pagination.hasPrev ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
 
-                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                    let pageNum = i + 1
-                    if (pagination.totalPages > 5 && currentPage > 3) {
-                      pageNum = currentPage - 2 + i
-                      if (pageNum > pagination.totalPages) {
-                        pageNum = pagination.totalPages - 4 + i
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      let pageNum = i + 1
+                      if (pagination.totalPages > 5 && currentPage > 3) {
+                        pageNum = currentPage - 2 + i
+                        if (pageNum > pagination.totalPages) {
+                          pageNum = pagination.totalPages - 4 + i
+                        }
                       }
-                    }
-                    return (
-                      <PaginationItem key={pageNum}>
-                        <PaginationLink
-                          href='#'
-                          onClick={(e) => {
-                            e.preventDefault()
-                            handlePageChange(pageNum)
-                          }}
-                          isActive={currentPage === pageNum}>
-                          {pageNum}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  })}
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            href='#'
+                            onClick={(e) => {
+                              e.preventDefault()
+                              handlePageChange(pageNum)
+                            }}
+                            isActive={currentPage === pageNum}>
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    })}
 
-                  <PaginationItem>
-                    <PaginationNext
-                      href='#'
-                      onClick={(e) => {
-                        e.preventDefault()
-                        if (pagination.hasNext) handlePageChange(currentPage + 1)
-                      }}
-                      className={!pagination.hasNext ? 'pointer-events-none opacity-50' : ''}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+                    <PaginationItem>
+                      <PaginationNext
+                        href='#'
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (pagination.hasNext) handlePageChange(currentPage + 1)
+                        }}
+                        className={!pagination.hasNext ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         </div>
       </div>

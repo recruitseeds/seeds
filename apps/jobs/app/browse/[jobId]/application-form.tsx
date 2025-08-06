@@ -7,21 +7,26 @@ import { Textarea } from '@seeds/ui/textarea'
 import { Alert, AlertTitle, AlertDescription } from '@seeds/ui/alert'
 import { Check, Upload, AlertTriangle, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
-import { checkAuthentication, fileToBase64, submitJobApplication, parseResumeAndScore, checkExistingApplication, type ApplicationRequest, type JobsApiError, type ResumeParseResponse } from '../../../lib/api'
+import { fileToBase64, submitJobApplication, parseResumeAndScore, checkExistingApplication, type ApplicationRequest, type JobsApiError, type ResumeParseResponse } from '../../../lib/api'
 import { AuthModal } from '../../../components/auth-modal'
+import { useAuth } from '../../../components/auth-provider'
 
 interface ApplicationFormProps {
   jobId: string
   orgSlug: string
+  serverApplicationCheck?: {
+    hasApplied: boolean
+    applicationId: string | null
+  }
 }
 
-export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
+export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: ApplicationFormProps) {
+  const { isAuthenticated, user, session } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [currentUser, setCurrentUser] = useState<any>(null)
   const [applicationResult, setApplicationResult] = useState<{
     applicationId: string
     candidateId: string
@@ -32,9 +37,6 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
   const [resumeParseResult, setResumeParseResult] = useState<ResumeParseResponse | null>(null)
   const [isParsingResume, setIsParsingResume] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
-  const [hasAlreadyApplied, setHasAlreadyApplied] = useState(false)
-  const [checkingApplication, setCheckingApplication] = useState(false)
-  const [existingApplicationId, setExistingApplicationId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -59,8 +61,7 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
     }
 
     try {
-      const authCheck = checkAuthentication()
-      if (!authCheck.isAuthenticated && !currentUser) {
+      if (!isAuthenticated) {
         localStorage.setItem('pendingApplication', JSON.stringify({
           jobId,
           orgSlug,
@@ -213,24 +214,7 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
     }
   }
 
-  const checkExistingApplicationDebounced = async (email: string) => {
-    if (!email || !email.includes('@')) return
-    
-    setCheckingApplication(true)
-    setHasAlreadyApplied(false)
-    setExistingApplicationId(null)
-    
-    try {
-      const result = await checkExistingApplication(jobId, email)
-      setHasAlreadyApplied(result.hasApplied)
-      setExistingApplicationId(result.applicationId || null)
-    } catch (err) {
-      // Silently fail - don't prevent form submission on check errors
-      console.warn('Failed to check existing application:', err)
-    } finally {
-      setCheckingApplication(false)
-    }
-  }
+  // This function is no longer needed - React Query handles the checking
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -240,31 +224,58 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
       [name]: value,
     }))
     
-    // Check for existing applications when email is entered
-    if (name === 'email' && value.includes('@')) {
-      // Debounce the check to avoid too many API calls
-      const timeoutId = setTimeout(() => {
-        checkExistingApplicationDebounced(value)
-      }, 1000)
-      
-      return () => clearTimeout(timeoutId)
+    // No need to manually check applications - React Query handles it
+  }
+
+  // Pre-fill form with user data when authenticated (no useEffect needed)
+  if (isAuthenticated && user) {
+    const metadata = user.user_metadata || {}
+    if (!formData.firstName && metadata.first_name) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: metadata.first_name || '',
+        lastName: metadata.last_name || '',
+        email: user.email || '',
+      }))
     }
   }
 
-  const handleAuthSuccess = (user: any) => {
-    console.log('Authentication successful:', user)
-    setCurrentUser(user)
+  const handleAuthSuccess = (authUser: any) => {
+    console.log('Authentication successful:', authUser)
     setShowAuthModal(false)
-    
-    if (user.firstName || user.lastName || user.email) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: user.firstName || prev.firstName,
-        lastName: user.lastName || prev.lastName,
-        email: user.email || prev.email,
-      }))
-    }
-    
+  }
+
+  // Use server-side application check if available, otherwise client-side
+  const hasAlreadyApplied = serverApplicationCheck?.hasApplied || false
+  const existingApplicationId = serverApplicationCheck?.applicationId || null
+
+  // Show existing application status if user has already applied
+  if (hasAlreadyApplied && !isSubmitting) {
+    return (
+      <div className='text-center py-12 space-y-6'>
+        <div className='inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-blue-100'>
+          <Check className='h-8 w-8 text-blue-600' />
+        </div>
+        
+        <div className='space-y-4'>
+          <h3 className='text-2xl font-semibold'>Already Applied</h3>
+          
+          <div className='max-w-md mx-auto space-y-3'>
+            <p className='text-muted-foreground'>
+              You have already submitted an application for this position.
+            </p>
+            {existingApplicationId && (
+              <p className='text-sm text-muted-foreground'>
+                Application ID: {existingApplicationId}
+              </p>
+            )}
+            <p className='text-sm text-muted-foreground'>
+              The company will review your information and reach out to you if you're a good fit.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (isSubmitted && applicationResult) {

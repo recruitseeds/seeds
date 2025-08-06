@@ -46,7 +46,7 @@ export function JobNavigation({ onAuthRequired }: JobNavigationProps) {
           <NavigationMenuItem>
             <NavigationMenuTrigger className={buttonVariants({ variant: 'ghost' })}>About</NavigationMenuTrigger>
             <NavigationMenuContent className='!rounded-xl'>
-              <ul className='grid w-[250px] gap-2'>
+              <ul className='grid w-[250px] md:w-[400px] lg:w-[500px] gap-2'>
                 <li>
                   <NavigationMenuLink asChild>
                     <Link

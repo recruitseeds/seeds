@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@seeds/ui/tabs'
 import { Alert, AlertDescription } from '@seeds/ui/alert'
 import { ExternalLink, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from './auth-provider'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -30,6 +31,7 @@ interface SignupForm {
 }
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess, mode = 'login' }: AuthModalProps) {
+  const { signIn, signUp } = useAuth()
   const [currentTab, setCurrentTab] = useState(mode)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,18 +57,14 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, mode = 'login' }: Au
     setIsLoading(true)
 
     try {
-      console.log('Login attempt:', loginForm)
+      const { error } = await signIn(loginForm.email, loginForm.password)
       
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const mockUser = {
-        id: 'user-123',
-        email: loginForm.email,
-        firstName: 'John',
-        lastName: 'Doe',
+      if (error) {
+        throw error
       }
       
-      onAuthSuccess(mockUser)
+      // Auth successful - the AuthProvider will update the user state
+      onAuthSuccess({ email: loginForm.email })
       onClose()
       
     } catch (err) {
@@ -91,18 +89,18 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, mode = 'login' }: Au
         throw new Error('Password must be at least 8 characters long')
       }
 
-      console.log('Signup attempt:', signupForm)
+      const { error } = await signUp(signupForm.email, signupForm.password, {
+        first_name: signupForm.firstName,
+        last_name: signupForm.lastName,
+        role: 'candidate', // Default to candidate role for job applicants
+      })
       
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      const mockUser = {
-        id: 'user-456',
-        email: signupForm.email,
-        firstName: signupForm.firstName,
-        lastName: signupForm.lastName,
+      if (error) {
+        throw error
       }
       
-      onAuthSuccess(mockUser)
+      // Auth successful - the AuthProvider will update the user state
+      onAuthSuccess({ email: signupForm.email })
       onClose()
       
     } catch (err) {

@@ -223,6 +223,70 @@ for e2e testing purposes.
 	},
 });
 
+const checkApplicationTestRoute = createRoute({
+	method: "get",
+	path: "/{jobId}/check-application",
+	tags: ["Test - Job Applications"],
+	summary: "[TEST] Check if user has already applied to job (no auth)",
+	description: `
+TEST ENDPOINT - No authentication required.
+
+Check if a candidate has already applied to a specific job posting based on their email address.
+This endpoint returns whether the candidate has submitted an application and optionally 
+the application ID.
+	`,
+	request: {
+		params: z.object({
+			jobId: z.string().uuid().describe("Unique identifier for the job posting"),
+		}),
+		query: z.object({
+			email: z.string().email().describe("Email address to check for existing applications"),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						success: z.literal(true),
+						data: z.object({
+							hasApplied: z.boolean().describe("Whether the candidate has already applied"),
+							applicationId: z.string().uuid().optional().describe("Application ID if exists"),
+							appliedAt: z.string().optional().describe("When the application was submitted"),
+						}),
+						metadata: MetadataSchema,
+					}),
+				},
+			},
+			description: "Successfully checked application status",
+		},
+		400: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Invalid request parameters",
+		},
+		404: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Job posting not found",
+		},
+		500: {
+			content: {
+				"application/json": {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: "Internal server error",
+		},
+	},
+});
+
 const applyToJobTestRoute = createRoute({
 	method: "post",
 	path: "/{jobId}/apply",
@@ -579,6 +643,102 @@ testJobsRoutes.openapi(getJobTestRoute, async (c: Context): Promise<any> => {
 	}
 });
 
+testJobsRoutes.openapi(checkApplicationTestRoute, async (c: Context): Promise<any> => {
+	const startTime = Date.now();
+	const correlationId = c.get("correlationId") || crypto.randomUUID();
+	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+
+	try {
+		const params = c.req.param();
+		const jobId = params.jobId;
+		const email = c.req.query('email');
+
+		if (!email) {
+			return c.json(
+				{
+					success: false as const,
+					error: {
+						code: "VALIDATION_ERROR",
+						message: "Email parameter is required",
+					},
+					timestamp: new Date().toISOString(),
+					correlationId,
+				},
+				400,
+			);
+		}
+
+		logger.info("Checking for existing application (test endpoint)", {
+			jobId,
+			email: email.substring(0, 3) + "*****", // Partially hide email in logs
+		});
+
+		const config = ConfigService.getInstance().getConfig();
+		const supabase = createClient<Database>(
+			config.supabaseUrl,
+			config.supabaseServiceRoleKey,
+		);
+
+		// Check if application exists
+		const { data: existingApplication, error } = await supabase
+			.from("job_applications")
+			.select("id, applied_at")
+			.eq("job_posting_id", jobId)
+			.eq("candidate_email", email)
+			.single();
+
+		if (error && error.code !== "PGRST116") { // PGRST116 means no rows found
+			logger.error("Database error checking application (test endpoint)", {
+				jobId,
+				error: error.message,
+				code: error.code,
+			});
+			throw new Error("Failed to check application status");
+		}
+
+		const hasApplied = !!existingApplication;
+
+		logger.info("Application check completed (test endpoint)", {
+			jobId,
+			hasApplied,
+			applicationId: existingApplication?.id,
+			processingTimeMs: Date.now() - startTime,
+		});
+
+		return c.json({
+			success: true as const,
+			data: {
+				hasApplied,
+				applicationId: existingApplication?.id,
+				appliedAt: existingApplication?.applied_at,
+			},
+			metadata: {
+				processingTimeMs: Date.now() - startTime,
+				correlationId,
+				timestamp: new Date().toISOString(),
+			},
+		});
+	} catch (error) {
+		logger.error("Failed to check application (test endpoint)", {
+			error: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined,
+		});
+
+		return c.json(
+			{
+				success: false as const,
+				error: {
+					code: "CHECK_ERROR",
+					message: "An error occurred while checking application status. Please try again.",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId,
+			},
+			500,
+		);
+	}
+});
+
 // Job application handler (copied from main jobs.ts with same logic)
 testJobsRoutes.openapi(applyToJobTestRoute, async (c: Context): Promise<any> => {
 	const startTime = Date.now();
@@ -762,23 +922,71 @@ testJobsRoutes.openapi(applyToJobTestRoute, async (c: Context): Promise<any> => 
 			);
 		}
 
-		// Create application
-		const application = await applicationService.createApplication({
-			jobPostingId: jobId,
-			candidateData,
-			resumeFileId: "",
-		});
-
-		// Upload resume file
-		const uploadedFile = await fileUploadService.uploadResume({
-			candidateId: application.candidateId,
-			fileName: resumeFile.fileName,
-			fileContent,
-			mimeType: resumeFile.mimeType,
-			sizeBytes: fileContent.length,
-			tags: resumeFile.tags,
-			isDefaultResume: true,
-		});
+		// Use a transaction-like approach: create application first, then file
+		// If file upload fails, we rollback the application
+		let application;
+		let uploadedFile;
+		
+		try {
+			// Step 1: Create application 
+			application = await applicationService.createApplication({
+				jobPostingId: jobId,
+				candidateData,
+				resumeFileId: "", // Will be updated after file upload
+			});
+			
+			// Step 2: Upload file (most likely to fail)
+			uploadedFile = await fileUploadService.uploadResume({
+				candidateId: application.candidateId,
+				fileName: resumeFile.fileName,
+				fileContent,
+				mimeType: resumeFile.mimeType,
+				sizeBytes: fileContent.length,
+				tags: resumeFile.tags,
+				isDefaultResume: true,
+			});
+			
+			// Step 3: Update application with file ID
+			const { error: updateError } = await supabase
+				.from("job_applications")
+				.update({ 
+					resume_file_id: uploadedFile.id,
+					updated_at: new Date().toISOString()
+				})
+				.eq("id", application.applicationId);
+				
+			if (updateError) {
+				logger.error("Failed to update application with file ID", {
+					applicationId: application.applicationId,
+					fileId: uploadedFile.id,
+					error: updateError.message,
+				});
+				// This is not critical - the application and file both exist
+			}
+			
+		} catch (error) {
+			// If file upload fails, clean up the application
+			if (application && !uploadedFile) {
+				try {
+					// Delete the application record
+					await supabase
+						.from("job_applications")
+						.delete()
+						.eq("id", application.applicationId);
+					
+					logger.info("Cleaned up orphaned application after file upload failure", {
+						applicationId: application.applicationId,
+						candidateId: application.candidateId,
+					});
+				} catch (cleanupError) {
+					logger.error("Failed to cleanup orphaned application", {
+						applicationId: application.applicationId,
+						error: cleanupError instanceof Error ? cleanupError.message : "Unknown error",
+					});
+				}
+			}
+			throw error; // Re-throw the original error
+		}
 
 		logger.info("Job application created, starting resume parsing (test endpoint)", {
 			applicationId: application.applicationId,

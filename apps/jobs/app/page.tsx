@@ -11,7 +11,6 @@ export default async function HomePage() {
     jobsData = await getJobsServerSide(1, 20)
   } catch (error) {
     console.error('Failed to fetch jobs server-side:', error)
-    // Provide fallback data so the page still renders
     jobsData = createFallbackJobsResponse(error instanceof Error ? error : new Error('Unknown error'))
   }
 

@@ -68,3 +68,6 @@ __pycache__/
 
 # Generated SDKs
 apps/api/generated-sdks/
+
+# Development reference docs (keep local only)
+REACT_QUERY_GUIDE.md

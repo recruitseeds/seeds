@@ -2,9 +2,10 @@
 
 import { Badge } from '@seeds/ui/badge'
 import { Button } from '@seeds/ui/button'
-import { Bookmark, Clock, DollarSign, MapPin } from 'lucide-react'
+import { Bookmark, Clock, MapPin } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useSavedJobCheck, useToggleSaveJob } from '../lib/queries'
+import { useAuth } from './auth-provider'
 
 interface Job {
   id: string
@@ -33,30 +34,31 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onAuthRequired }: JobCardProps) {
-  const [isSaved, setIsSaved] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const { data: savedJobData } = useSavedJobCheck(job.id, {
+    enabled: isAuthenticated, // Only enable when user is authenticated
+  })
+  const toggleSaveJob = useToggleSaveJob()
+  
+  const isSaved = savedJobData?.data?.isSaved ?? false
 
-  const handleSave = (e: React.MouseEvent) => {
+  const handleSave = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (onAuthRequired) {
+    if (!isAuthenticated && onAuthRequired) {
+      // Show auth dialog if user is not authenticated
       onAuthRequired()
-    } else {
-      setIsSaved(!isSaved)
-    }
-  }
-
-  const handleApply = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (onAuthRequired) {
-      onAuthRequired()
-    } else {
-      const companySlug = job.companySlug || job.company.toLowerCase().replace(/\s+/g, '-')
-      window.location.href = `/${companySlug}/${job.id}`
+    } else if (isAuthenticated) {
+      // Toggle save state with optimistic update
+      try {
+        await toggleSaveJob.mutateAsync(job.id)
+      } catch (error) {
+        console.error('Failed to toggle save job:', error)
+      }
     }
   }
 
   const handleCardClick = () => {
-    const companySlug = job.companySlug || job.company.toLowerCase().replace(/\s+/g, '-')
-    window.location.href = `/${companySlug}/${job.id}`
+    window.location.href = `/browse/${job.id}`
   }
 
   const getCompanyInitials = (name: string): string => {
@@ -108,10 +110,7 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
               <Clock className='w-3.5 h-3.5' />
               {job.posted}
             </span>
-            <span className='flex items-center gap-1'>
-              <DollarSign className='w-3.5 h-3.5' />
-              {job.salary}
-            </span>
+            <span className='flex items-center gap-1'>{job.salary}</span>
           </div>
 
           <div className='flex flex-wrap gap-2'>
@@ -131,12 +130,18 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
 
         {/* Actions */}
         <div className='flex items-center gap-2'>
-          <Button variant='ghost' size='icon' onClick={handleSave} className='h-8 w-8'>
-            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+          <Button 
+            variant='ghost' 
+            size='icon' 
+            onClick={handleSave} 
+            className='h-8 w-8'
+            disabled={toggleSaveJob.isPending}
+          >
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current text-primary' : ''} ${toggleSaveJob.isPending ? 'opacity-50' : ''}`} />
           </Button>
 
           <Button asChild variant='outline' size='sm'>
-            <Link href={`/jobs/${job.id}`}>View</Link>
+            <Link href={`/browse/${job.id}`}>View</Link>
           </Button>
         </div>
       </div>

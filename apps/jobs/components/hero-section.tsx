@@ -20,6 +20,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 const quickTags = ['React', 'Python', 'Remote OK', 'Startup', 'AI/ML', 'Design']
 
 const quickFilters = [
@@ -39,12 +40,24 @@ const topCompanies = [
 ]
 
 export function HeroSection() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [location, setLocation] = useState('')
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
 
   const handleSearch = () => {
-    console.log('Searching for:', searchQuery, 'in', location, 'with filters:', selectedFilters)
+    const params = new URLSearchParams()
+    if (searchQuery) params.set('q', searchQuery)
+    if (location) params.set('location', location)
+    
+    // Add filters to query params
+    Object.entries(selectedFilters).forEach(([key, value]) => {
+      if (value) {
+        params.set(key.toLowerCase().replace(' ', '_'), value)
+      }
+    })
+    
+    router.push(`/browse?${params.toString()}`)
   }
 
   const handleFilterSelect = (category: string, value: string) => {
@@ -196,7 +209,11 @@ export function HeroSection() {
                 ))}
               </div>
 
-              <Button variant='default' className='w-full'>
+              <Button 
+                variant='default' 
+                className='w-full'
+                onClick={handleSearch}
+              >
                 Apply filters
               </Button>
             </div>

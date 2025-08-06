@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand, S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import type { Database } from "@seeds/supabase/types/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from "uuid";
@@ -223,5 +223,133 @@ export class FileUploadService {
 			});
 			throw new Error("Failed to set default resume");
 		}
+	}
+
+	async deleteFile(fileId: string): Promise<void> {
+		this.logger.info("Starting file deletion", { fileId });
+
+		// First, get the file record to get storage path
+		const { data: fileRecord, error: fetchError } = await this.supabase
+			.from("candidate_files")
+			.select("storage_path, file_name")
+			.eq("id", fileId)
+			.single();
+
+		if (fetchError || !fileRecord) {
+			this.logger.error("File record not found for deletion", {
+				fileId,
+				error: fetchError?.message,
+			});
+			throw new Error("File not found");
+		}
+
+		// Delete from Cloudflare R2
+		try {
+			await this.s3Client.send(
+				new DeleteObjectCommand({
+					Bucket: this.bucketName,
+					Key: fileRecord.storage_path,
+				})
+			);
+			
+			this.logger.info("File deleted from R2 storage", {
+				fileId,
+				storagePath: fileRecord.storage_path,
+			});
+		} catch (error) {
+			this.logger.error("Failed to delete file from R2", {
+				fileId,
+				storagePath: fileRecord.storage_path,
+				error: error instanceof Error ? error.message : "Unknown error",
+			});
+			// Continue with database deletion even if R2 deletion fails
+		}
+
+		// Delete from database
+		const { error: deleteError } = await this.supabase
+			.from("candidate_files")
+			.delete()
+			.eq("id", fileId);
+
+		if (deleteError) {
+			this.logger.error("Failed to delete file record from database", {
+				fileId,
+				error: deleteError.message,
+			});
+			throw new Error(`Failed to delete file record: ${deleteError.message}`);
+		}
+
+		this.logger.info("File deletion completed successfully", { fileId });
+	}
+
+	async deleteFilesByCandidate(candidateId: string): Promise<number> {
+		this.logger.info("Starting bulk file deletion for candidate", { candidateId });
+
+		// Get all files for the candidate
+		const { data: fileRecords, error: fetchError } = await this.supabase
+			.from("candidate_files")
+			.select("id, storage_path, file_name")
+			.eq("candidate_id", candidateId);
+
+		if (fetchError) {
+			this.logger.error("Failed to fetch files for candidate", {
+				candidateId,
+				error: fetchError.message,
+			});
+			throw new Error(`Failed to fetch candidate files: ${fetchError.message}`);
+		}
+
+		if (!fileRecords || fileRecords.length === 0) {
+			this.logger.info("No files found for candidate", { candidateId });
+			return 0;
+		}
+
+		let deletedCount = 0;
+		const errors: string[] = [];
+
+		// Delete each file from R2
+		for (const file of fileRecords) {
+			try {
+				await this.s3Client.send(
+					new DeleteObjectCommand({
+						Bucket: this.bucketName,
+						Key: file.storage_path,
+					})
+				);
+				deletedCount++;
+			} catch (error) {
+				const errorMsg = `Failed to delete ${file.file_name} from R2: ${error instanceof Error ? error.message : "Unknown error"}`;
+				errors.push(errorMsg);
+				this.logger.error("R2 deletion failed for file", {
+					fileId: file.id,
+					storagePath: file.storage_path,
+					error: errorMsg,
+				});
+			}
+		}
+
+		// Delete all file records from database in one operation
+		const { error: bulkDeleteError } = await this.supabase
+			.from("candidate_files")
+			.delete()
+			.eq("candidate_id", candidateId);
+
+		if (bulkDeleteError) {
+			this.logger.error("Failed to bulk delete file records from database", {
+				candidateId,
+				error: bulkDeleteError.message,
+			});
+			throw new Error(`Failed to delete file records: ${bulkDeleteError.message}`);
+		}
+
+		this.logger.info("Bulk file deletion completed", {
+			candidateId,
+			totalFiles: fileRecords.length,
+			r2DeletedCount: deletedCount,
+			errorCount: errors.length,
+			errors: errors.length > 0 ? errors : undefined,
+		});
+
+		return fileRecords.length;
 	}
 }
