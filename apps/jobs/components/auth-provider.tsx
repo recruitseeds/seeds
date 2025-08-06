@@ -9,26 +9,41 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+interface AuthProviderProps {
+  children: React.ReactNode
+  initialSession?: Session | null
+  initialUser?: User | null
+  serverSideAuth?: boolean
+}
+
+export function AuthProvider({ children, initialSession = null, initialUser = null, serverSideAuth = false }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(initialUser)
+  const [session, setSession] = useState<Session | null>(initialSession)
+  // Start with loading=false if we have server-side auth check (even if result is null)
+  // This prevents flash of loading state when server confirms no session
+  const [loading, setLoading] = useState(!serverSideAuth)
   const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    // Skip initial session fetch if we have server-side auth data
+    if (!serverSideAuth) {
+      // Get initial session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      })
+    } else {
+      // We have server data, no need to wait - set loading to false immediately
       setLoading(false)
-    })
+    }
 
     // Listen for auth changes
     const {
@@ -40,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [serverSideAuth, supabase])
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -59,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: Record<string, unknown>) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,

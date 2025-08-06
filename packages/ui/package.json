@@ -13,7 +13,9 @@
     "lib/**"
   ],
   "exports": {
+    ".": "./index.tsx",
     "./styles.css": "./dist/styles.css",
+    "./lib/*": "./lib/*.ts",
     "./*": "./*.tsx"
   },
   "scripts": {

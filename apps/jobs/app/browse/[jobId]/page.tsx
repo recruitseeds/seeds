@@ -7,6 +7,7 @@ import { TipTapRenderer } from '../../../components/tiptap-renderer'
 import { getJobServerSide } from '../../../lib/server-queries'
 import { ApplicationForm } from './application-form'
 import { ApplyButtons } from './apply-buttons'
+import { ApplicationStateProvider } from '../../../components/application-state-provider'
 import { createClient } from '../../../lib/supabase/server'
 
 // Format job type for display
@@ -80,25 +81,25 @@ export default async function JobPage({ params }: JobPageProps) {
 
         <div className='container mx-auto px-4 pb-8'>
           <HydrationBoundary state={dehydratedState}>
-            <div className='job-layout-container'>
+            <ApplicationStateProvider initialState={{ hasApplied, applicationId }}>
+              <div className='job-layout-container'>
               <aside className='job-layout-sidebar'>
                 <div className='job-layout-sidebar-inner'>
                   <div className='p-6 space-y-6'>
                     <div>
                       <p className='text-muted-foreground text-sm mb-2'>
-                        {formatDepartment(job.department)} · {formatJobType(job.job_type)} · Remote/Hybrid
+                        {[
+                          formatDepartment(job.department),
+                          formatJobType(job.job_type),
+                          // Add location-based remote info when available
+                          // For now, we'll leave this blank since we don't have remote_type in the API
+                        ].filter(Boolean).join(' · ')}
                       </p>
                       <h1 className='text-2xl font-bold mb-4'>{job.title}</h1>
                       <p className='text-lg text-muted-foreground'>{job.organization.name}</p>
                     </div>
 
-                    <ApplyButtons 
-                      jobId={jobId} 
-                      serverApplicationCheck={{
-                        hasApplied,
-                        applicationId
-                      }}
-                    />
+                    <ApplyButtons jobId={jobId} />
 
                     {/* Job details temporarily commented out */}
                     {/* <div className='space-y-3 pt-6 border-t'>
@@ -146,15 +147,12 @@ export default async function JobPage({ params }: JobPageProps) {
                     <ApplicationForm 
                       jobId={jobId} 
                       orgSlug={job.organization.name.toLowerCase().replace(/\s+/g, '-')}
-                      serverApplicationCheck={{
-                        hasApplied,
-                        applicationId
-                      }}
                     />
                   </div>
                 </section>
               </main>
             </div>
+            </ApplicationStateProvider>
           </HydrationBoundary>
         </div>
       </div>

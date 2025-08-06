@@ -1,4 +1,4 @@
-import { Icon } from '@seeds/ui'
+import { Icon } from '@seeds/ui/icon'
 import { type Editor, isNodeSelection } from '@tiptap/react'
 import * as React from 'react'
 import { useTiptapEditor } from '../hooks/use-tiptap-editor'

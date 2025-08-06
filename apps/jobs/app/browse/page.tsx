@@ -1,12 +1,10 @@
-import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
+import { HydrationBoundary } from '@tanstack/react-query'
 import { Header } from '../../components/header'
 import { JobsSection } from '../../components/jobs-section'
 import { getSearchResultsServerSide } from '../../lib/server-queries'
-import { getServerQueryClient } from '../../lib/query-client'
-import { Providers } from '../../components/providers'
 
 interface BrowsePageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string
     location?: string
     job_type?: string
@@ -14,7 +12,7 @@ interface BrowsePageProps {
     salary?: string
     experience?: string
     page?: string
-  }
+  }>
 }
 
 /**
@@ -22,28 +20,29 @@ interface BrowsePageProps {
  * This ensures the page loads immediately with data from the server
  */
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
+  // AWAIT the searchParams - this is the fix!
+  const params = await searchParams
+
   // Extract search parameters
-  const query = searchParams.q || ''
-  const location = searchParams.location || ''
-  const page = parseInt(searchParams.page || '1', 10)
+  const query = params.q || ''
+  const location = params.location || ''
+  const page = parseInt(params.page || '1', 10)
   const limit = 20
 
   // Build filters from search params
   const filters: Record<string, any> = {}
-  if (searchParams.job_type) filters.jobType = searchParams.job_type
-  if (searchParams.remote) filters.remote = searchParams.remote
-  if (searchParams.salary) filters.salary = searchParams.salary
-  if (searchParams.experience) filters.experience = searchParams.experience
+  if (params.job_type) filters.jobType = params.job_type
+  if (params.remote) filters.remote = params.remote
+  if (params.salary) filters.salary = params.salary
+  if (params.experience) filters.experience = params.experience
 
   try {
     // Prefetch data on the server
-    const { dehydratedState, data, searchParams: serverSearchParams } = await getSearchResultsServerSide(
-      query,
-      location,
-      filters,
-      page,
-      limit
-    )
+    const {
+      dehydratedState,
+      data,
+      searchParams: serverSearchParams,
+    } = await getSearchResultsServerSide(query, location, filters, page, limit)
 
     // Determine page title and description based on search params
     const getPageTitle = () => {
@@ -63,19 +62,13 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     return (
       <div className='min-h-screen bg-background'>
         <Header />
-        
+
         <main className='container mx-auto px-4 py-16'>
           <div className='mb-12 text-center'>
-            <h1 className='text-4xl font-bold mb-4'>
-              {getPageTitle()}
-            </h1>
-            <p className='text-muted-foreground text-lg'>
-              {getPageDescription()}
-            </p>
+            <h1 className='text-4xl font-bold mb-4'>{getPageTitle()}</h1>
+            <p className='text-muted-foreground text-lg'>{getPageDescription()}</p>
             {data.success && data.pagination.total > 0 && (
-              <p className='text-sm text-muted-foreground mt-2'>
-                {data.pagination.total} jobs found
-              </p>
+              <p className='text-sm text-muted-foreground mt-2'>{data.pagination.total} jobs found</p>
             )}
           </div>
 
@@ -97,26 +90,20 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
     )
   } catch (error) {
     console.error('Failed to load browse page:', error)
-    
+
     // Fallback UI for when server-side data fetching fails
     return (
       <div className='min-h-screen bg-background'>
         <Header />
-        
+
         <main className='container mx-auto px-4 py-16'>
           <div className='mb-12 text-center'>
             <h1 className='text-4xl font-bold mb-4'>Browse All Jobs</h1>
-            <p className='text-muted-foreground text-lg'>
-              Discover opportunities from leading companies
-            </p>
+            <p className='text-muted-foreground text-lg'>Discover opportunities from leading companies</p>
           </div>
 
           {/* Fallback - let client-side queries handle data fetching */}
-          <JobsSection 
-            searchQuery={query}
-            location={location}
-            initialFilters={filters}
-          />
+          <JobsSection searchQuery={query} location={location} initialFilters={filters} />
         </main>
       </div>
     )

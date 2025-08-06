@@ -486,7 +486,7 @@ publicJobsRoutes.openapi(applyToJobRoute, async (c: Context): Promise<any> => {
 			mimeType: resumeFile.mimeType,
 			sizeBytes: fileContent.length,
 			tags: resumeFile.tags,
-			isDefaultResume: true,
+			isDefaultResume: false,
 		});
 
 

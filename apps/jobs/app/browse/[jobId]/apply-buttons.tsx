@@ -4,34 +4,27 @@ import { Button } from '@seeds/ui/button'
 import { Check } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../../components/auth-provider'
+import { useApplicationState } from '../../../components/application-state-provider'
 import { AuthModal } from '../../../components/auth-modal'
 
 interface ApplyButtonsProps {
   jobId: string
-  serverApplicationCheck?: {
-    hasApplied: boolean
-    applicationId: string | null
-  }
 }
 
-export function ApplyButtons({ jobId, serverApplicationCheck }: ApplyButtonsProps) {
+export function ApplyButtons({ jobId }: ApplyButtonsProps) {
   const { isAuthenticated, user } = useAuth()
+  const { applicationState } = useApplicationState()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
-  // Use server-side application check if available, otherwise client-side fallback
-  const hasApplied = serverApplicationCheck?.hasApplied || false
-  const isChecking = false // No need for checking state with server-side data
+  const { hasApplied, isSubmitting } = applicationState
+  const isChecking = isSubmitting
 
   const handleApply = () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true)
-      return
-    }
-
     if (hasApplied) {
       return // Don't allow multiple applications
     }
 
+    // Always scroll to apply section, regardless of auth state
     const applySection = document.getElementById('apply')
     if (applySection) {
       const elementPosition = applySection.getBoundingClientRect().top
@@ -58,14 +51,13 @@ export function ApplyButtons({ jobId, serverApplicationCheck }: ApplyButtonsProp
   }
 
   const getApplyButtonContent = () => {
-    if (isChecking) return 'Checking...'
     if (hasApplied) return (
       <>
         <Check className='h-4 w-4 mr-2' />
         Applied
       </>
     )
-    if (!isAuthenticated) return 'Sign in to Apply'
+    if (!isAuthenticated) return 'Apply'
     return 'Apply'
   }
 
@@ -75,7 +67,7 @@ export function ApplyButtons({ jobId, serverApplicationCheck }: ApplyButtonsProp
         <Button 
           variant={hasApplied ? 'outline' : 'default'} 
           onClick={handleApply}
-          disabled={isChecking || hasApplied}
+          disabled={hasApplied}
         >
           {getApplyButtonContent()}
         </Button>

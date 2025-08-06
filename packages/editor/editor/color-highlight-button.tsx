@@ -2,7 +2,7 @@ import type { Node } from '@tiptap/pm/model'
 import { type Editor, isNodeSelection } from '@tiptap/react'
 import * as React from 'react'
 
-import { cn } from '@seeds/ui/lib/utils'
+import { cn } from '@seeds/ui'
 import { useTiptapEditor } from '../hooks/use-tiptap-editor'
 import { findNodePosition, isMarkInSchema } from '../lib/tiptap-utils'
 import { Button, type TipTapButtonProps as ButtonProps } from './button'

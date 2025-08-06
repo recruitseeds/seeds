@@ -39,7 +39,7 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
     enabled: isAuthenticated, // Only enable when user is authenticated
   })
   const toggleSaveJob = useToggleSaveJob()
-  
+
   const isSaved = savedJobData?.data?.isSaved ?? false
 
   const handleSave = async (e: React.MouseEvent) => {
@@ -130,14 +130,15 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
 
         {/* Actions */}
         <div className='flex items-center gap-2'>
-          <Button 
-            variant='ghost' 
-            size='icon' 
-            onClick={handleSave} 
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={handleSave}
             className='h-8 w-8'
-            disabled={toggleSaveJob.isPending}
-          >
-            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current text-primary' : ''} ${toggleSaveJob.isPending ? 'opacity-50' : ''}`} />
+            disabled={toggleSaveJob.isPending}>
+            <Bookmark
+              className={`w-4 h-4 ${isSaved ? 'fill-current text-primary' : ''} ${toggleSaveJob.isPending ? 'opacity-50' : ''}`}
+            />
           </Button>
 
           <Button asChild variant='outline' size='sm'>

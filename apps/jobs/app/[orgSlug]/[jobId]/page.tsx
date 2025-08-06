@@ -41,13 +41,18 @@ export default async function JobPage({ params }: JobPageProps) {
                 <div className='p-6 space-y-6'>
                   <div>
                     <p className='text-muted-foreground text-sm mb-2'>
-                      {job.department} · {job.job_type} · Remote/Hybrid
+                      {[
+                        job.department && job.department !== 'General' ? job.department : null,
+                        job.job_type,
+                        // Add location-based remote info when available
+                        // For now, we'll leave this blank since we don't have remote_type in the API
+                      ].filter(Boolean).join(' · ')}
                     </p>
                     <h1 className='text-2xl font-bold mb-4'>{job.title}</h1>
                     <p className='text-lg text-muted-foreground'>{job.organization.name}</p>
                   </div>
 
-                  <ApplyButtons />
+                  <ApplyButtons jobId={jobId} />
 
                   {/* Job details temporarily commented out */}
                   {/* <div className='space-y-3 pt-6 border-t'>
@@ -100,7 +105,7 @@ export default async function JobPage({ params }: JobPageProps) {
         </div>
       </div>
     )
-  } catch (error) {
+  } catch {
     notFound()
   }
 }

@@ -2,29 +2,82 @@
 
 import { Button } from '@seeds/ui/button'
 import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
 import { Textarea } from '@seeds/ui/textarea'
 import { Alert, AlertTitle, AlertDescription } from '@seeds/ui/alert'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@seeds/ui/form'
 import { Check, Upload, AlertTriangle, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { fileToBase64, submitJobApplication, parseResumeAndScore, checkExistingApplication, type ApplicationRequest, type JobsApiError, type ResumeParseResponse } from '../../../lib/api'
 import { AuthModal } from '../../../components/auth-modal'
 import { useAuth } from '../../../components/auth-provider'
+import { useApplicationState } from '../../../components/application-state-provider'
+
+// Form validation schema
+const applicationFormSchema = z.object({
+  firstName: z.string()
+    .min(1, 'First name is required')
+    .min(2, 'First name must be at least 2 characters')
+    .max(50, 'First name must be less than 50 characters'),
+  lastName: z.string()
+    .min(1, 'Last name is required')
+    .min(2, 'Last name must be at least 2 characters')
+    .max(50, 'Last name must be less than 50 characters'),
+  email: z.string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+  phone: z.string()
+    .optional(),
+  linkedin: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true
+      try {
+        const url = new URL(val)
+        return url.hostname === 'linkedin.com' || url.hostname === 'www.linkedin.com'
+      } catch {
+        return false
+      }
+    }, 'Please enter a valid LinkedIn URL'),
+  portfolio: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true
+      try {
+        new URL(val)
+        return true
+      } catch {
+        return false
+      }
+    }, 'Please enter a valid URL'),
+  coverLetter: z.string().optional(),
+  additionalInfo: z.string().optional(),
+  resume: z.instanceof(File, { message: 'Resume is required' })
+    .refine((file) => {
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain'
+      ]
+      return allowedTypes.includes(file.type)
+    }, 'Please upload a PDF, DOC, DOCX, or TXT file')
+    .refine((file) => file.size <= 5 * 1024 * 1024, 'File size must be less than 5MB')
+})
+
+type ApplicationFormData = z.infer<typeof applicationFormSchema>
 
 interface ApplicationFormProps {
   jobId: string
   orgSlug: string
-  serverApplicationCheck?: {
-    hasApplied: boolean
-    applicationId: string | null
-  }
 }
 
-export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: ApplicationFormProps) {
+export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
   const { isAuthenticated, user, session } = useAuth()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { applicationState, setHasApplied, setIsSubmitting } = useApplicationState()
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [applicationResult, setApplicationResult] = useState<{
@@ -37,24 +90,30 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
   const [resumeParseResult, setResumeParseResult] = useState<ResumeParseResponse | null>(null)
   const [isParsingResume, setIsParsingResume] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    linkedin: '',
-    portfolio: '',
-    coverLetter: '',
-    additionalInfo: '',
+
+  // Initialize form with react-hook-form and zod validation
+  const form = useForm<ApplicationFormData>({
+    resolver: zodResolver(applicationFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      linkedin: '',
+      portfolio: '',
+      coverLetter: '',
+      additionalInfo: '',
+    },
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const { setValue, watch } = form
+
+  const onSubmit = async (formData: ApplicationFormData) => {
     setError(null)
     setIsSubmitting(true)
 
     // Check if user has already applied
-    if (hasAlreadyApplied) {
+    if (applicationState.hasApplied) {
       setError('You have already applied to this position. Please check your email for updates.')
       setIsSubmitting(false)
       return
@@ -65,12 +124,21 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
         localStorage.setItem('pendingApplication', JSON.stringify({
           jobId,
           orgSlug,
-          formData,
-          resumeFile: resumeFile ? {
-            name: resumeFile.name,
-            type: resumeFile.type,
-            size: resumeFile.size,
-            lastModified: resumeFile.lastModified
+          formData: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            linkedin: formData.linkedin,
+            portfolio: formData.portfolio,
+            coverLetter: formData.coverLetter,
+            additionalInfo: formData.additionalInfo,
+          },
+          resumeFile: formData.resume ? {
+            name: formData.resume.name,
+            type: formData.resume.type,
+            size: formData.resume.size,
+            lastModified: formData.resume.lastModified
           } : null,
           timestamp: Date.now()
         }))
@@ -80,42 +148,18 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
         return
       }
 
-      if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
-        throw new Error('Please fill in all required fields (name and email)')
-      }
-
-      if (!resumeFile) {
-        throw new Error('Please upload your resume')
-      }
-
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain'
-      ]
-
-      if (!allowedTypes.includes(resumeFile.type)) {
-        throw new Error('Please upload a PDF, DOC, DOCX, or TXT file')
-      }
-
-      const maxSize = 5 * 1024 * 1024
-      if (resumeFile.size > maxSize) {
-        throw new Error('File size must be less than 5MB')
-      }
-
-      const base64Content = await fileToBase64(resumeFile)
+      const base64Content = await fileToBase64(formData.resume)
 
       const applicationData: ApplicationRequest = {
         candidateData: {
           name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
           email: formData.email.trim(),
-          phone: formData.phone.trim() || undefined,
+          phone: formData.phone?.trim() || undefined,
         },
         resumeFile: {
-          fileName: resumeFile.name,
+          fileName: formData.resume.name,
           content: base64Content,
-          mimeType: resumeFile.type as ApplicationRequest['resumeFile']['mimeType'],
+          mimeType: formData.resume.type as ApplicationRequest['resumeFile']['mimeType'],
           tags: ['frontend', 'web-development']
         }
       }
@@ -129,6 +173,9 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
         score: result.data.score,
         nextSteps: result.data.nextSteps
       })
+      
+      // Update shared state immediately for optimistic UI
+      setHasApplied(true, result.data.applicationId)
       
       localStorage.removeItem('pendingApplication')
       
@@ -191,66 +238,31 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain'
-      ]
-      
-      if (!allowedTypes.includes(file.type)) {
-        setError('Please upload a PDF, DOC, DOCX, or TXT file')
-        return
-      }
-      
-      const maxSize = 5 * 1024 * 1024
-      if (file.size > maxSize) {
-        setError('File size must be less than 5MB')
-        return
-      }
-      
       setError(null)
-      setResumeFile(file)
+      setValue('resume', file)
     }
   }
 
-  // This function is no longer needed - React Query handles the checking
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    
-    // No need to manually check applications - React Query handles it
-  }
-
-  // Pre-fill form with user data when authenticated (no useEffect needed)
-  if (isAuthenticated && user) {
+  // Pre-fill form with user data when authenticated
+  if (isAuthenticated && user && !form.formState.isDirty) {
     const metadata = user.user_metadata || {}
-    if (!formData.firstName && metadata.first_name) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: metadata.first_name || '',
-        lastName: metadata.last_name || '',
-        email: user.email || '',
-      }))
+    if (metadata.first_name) {
+      setValue('firstName', metadata.first_name || '')
+      setValue('lastName', metadata.last_name || '')
+      setValue('email', user.email || '')
     }
   }
 
-  const handleAuthSuccess = (authUser: any) => {
+  const handleAuthSuccess = (authUser: unknown) => {
     console.log('Authentication successful:', authUser)
     setShowAuthModal(false)
   }
 
-  // Use server-side application check if available, otherwise client-side
-  const hasAlreadyApplied = serverApplicationCheck?.hasApplied || false
-  const existingApplicationId = serverApplicationCheck?.applicationId || null
+  // Use shared application state
+  const { hasApplied, applicationId, isSubmitting } = applicationState
 
   // Show existing application status if user has already applied
-  if (hasAlreadyApplied && !isSubmitting) {
+  if (hasApplied && !isSubmitting) {
     return (
       <div className='text-center py-12 space-y-6'>
         <div className='inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-blue-100'>
@@ -264,9 +276,9 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
             <p className='text-muted-foreground'>
               You have already submitted an application for this position.
             </p>
-            {existingApplicationId && (
+            {applicationId && (
               <p className='text-sm text-muted-foreground'>
-                Application ID: {existingApplicationId}
+                Application ID: {applicationId}
               </p>
             )}
             <p className='text-sm text-muted-foreground'>
@@ -316,181 +328,220 @@ export function ApplicationForm({ jobId, orgSlug, serverApplicationCheck }: Appl
         mode="login"
       />
       
-      <form onSubmit={handleSubmit} className='space-y-6'>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='firstName'>
-              First Name <span className='text-brand'>*</span>
-            </Label>
-            <Input
-              id='firstName'
-              name='firstName'
-              value={formData.firstName}
-              onChange={handleInputChange}
-              required
-              placeholder='John'
-              className='w-full'
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    First Name <span className='text-brand'>*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder='John' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Last Name <span className='text-brand'>*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder='Doe' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='lastName'>
-              Last Name <span className='text-brand'>*</span>
-            </Label>
-            <Input
-              id='lastName'
-              name='lastName'
-              value={formData.lastName}
-              onChange={handleInputChange}
-              required
-              placeholder='Doe'
-              className='w-full'
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Email <span className='text-brand'>*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      type='email'
+                      placeholder='john.doe@example.com'
+                      className={hasApplied ? 'border-red-500' : ''}
+                      {...field}
+                    />
+                  </FormControl>
+                  {hasApplied && (
+                    <div className='mt-2 p-3 bg-red-50 border border-red-200 rounded-md'>
+                      <p className='text-sm text-red-800 font-medium'>
+                        You have already applied to this position
+                      </p>
+                      <p className='text-xs text-red-600 mt-1'>
+                        Application ID: {applicationId}
+                      </p>
+                      <p className='text-xs text-red-600'>
+                        Please check your email for updates on your application status.
+                      </p>
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type='tel'
+                      placeholder='+1 (555) 000-0000'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
-        </div>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='email'>
-              Email <span className='text-brand'>*</span>
-            </Label>
-            <Input
-              id='email'
-              name='email'
-              type='email'
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              placeholder='john.doe@example.com'
-              className={`w-full ${hasAlreadyApplied ? 'border-red-500' : ''}`}
-            />
-            {checkingApplication && (
-              <p className='text-xs text-muted-foreground mt-1'>
-                Checking if you've already applied...
-              </p>
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field: { value, onChange, ...field } }) => (
+              <FormItem>
+                <FormLabel>
+                  Resume/CV <span className='text-brand'>*</span>
+                </FormLabel>
+                <FormControl>
+                  <div className='relative'>
+                    <input
+                      type='file'
+                      accept='.pdf,.doc,.docx,.txt'
+                      onChange={handleFileChange}
+                      className='hidden'
+                      id='resume-upload'
+                      {...field}
+                    />
+                    <label
+                      htmlFor='resume-upload'
+                      className='flex items-center justify-center gap-2 p-4 border border-dashed rounded-lg cursor-pointer hover:border-primary/30 transition-colors'>
+                      <Upload className='h-5 w-5 text-muted-foreground' />
+                      <span className='text-sm text-muted-foreground'>
+                        {value ? value.name : 'Drop your resume here or click to browse'}
+                      </span>
+                    </label>
+                  </div>
+                </FormControl>
+                <p className='text-xs text-muted-foreground'>PDF, DOC, DOCX, or TXT (max 5MB)</p>
+                <FormMessage />
+              </FormItem>
             )}
-            {hasAlreadyApplied && (
-              <div className='mt-2 p-3 bg-red-50 border border-red-200 rounded-md'>
-                <p className='text-sm text-red-800 font-medium'>
-                  You have already applied to this position
-                </p>
-                <p className='text-xs text-red-600 mt-1'>
-                  Application ID: {existingApplicationId}
-                </p>
-                <p className='text-xs text-red-600'>
-                  Please check your email for updates on your application status.
-                </p>
-              </div>
+          />
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <FormField
+              control={form.control}
+              name="linkedin"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>LinkedIn Profile</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type='url'
+                      placeholder='https://linkedin.com/in/johndoe'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="portfolio"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Portfolio</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type='url'
+                      placeholder='https://johndoe.com'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="coverLetter"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cover Letter</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell us why you're interested in this role and what makes you a great fit..."
+                    className='min-h-[120px]'
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
-
-          <div className='space-y-2'>
-            <Label htmlFor='phone'>Phone</Label>
-            <Input
-              id='phone'
-              name='phone'
-              type='tel'
-              value={formData.phone}
-              onChange={handleInputChange}
-              placeholder='+1 (555) 000-0000'
-              className='w-full'
-            />
-          </div>
-        </div>
-
-        <div className='space-y-2'>
-          <Label htmlFor='resume'>
-            Resume/CV <span className='text-brand'>*</span>
-          </Label>
-          <div className='relative'>
-            <input
-              id='resume'
-              name='resume'
-              type='file'
-              accept='.pdf,.doc,.docx'
-              onChange={handleFileChange}
-              required
-              className='hidden'
-            />
-            <label
-              htmlFor='resume'
-              className='flex items-center justify-center gap-2 p-4 border border-dashed rounded-lg cursor-pointer hover:border-primary/30 transition-colors'>
-              <Upload className='h-5 w-5 text-muted-foreground' />
-              <span className='text-sm text-muted-foreground'>
-                {resumeFile ? resumeFile.name : 'Drop your resume here or click to browse'}
-              </span>
-            </label>
-          </div>
-          <p className='text-xs text-muted-foreground'>PDF, DOC, or DOCX (max 5MB)</p>
-        </div>
-
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='linkedin'>LinkedIn Profile</Label>
-            <Input
-              id='linkedin'
-              name='linkedin'
-              type='url'
-              value={formData.linkedin}
-              onChange={handleInputChange}
-              placeholder='https://linkedin.com/in/johndoe'
-              className='w-full'
-            />
-          </div>
-
-          <div className='space-y-2'>
-            <Label htmlFor='portfolio'>Portfolio</Label>
-            <Input
-              id='portfolio'
-              name='portfolio'
-              type='url'
-              value={formData.portfolio}
-              onChange={handleInputChange}
-              placeholder='https://johndoe.com'
-              className='w-full'
-            />
-          </div>
-        </div>
-
-        <div className='space-y-2'>
-          <Label htmlFor='coverLetter'>Cover Letter</Label>
-          <Textarea
-            id='coverLetter'
-            name='coverLetter'
-            value={formData.coverLetter}
-            onChange={handleInputChange}
-            placeholder="Tell us why you're interested in this role and what makes you a great fit..."
-            className='min-h-[120px] w-full'
           />
-        </div>
 
-        <div className='space-y-2'>
-          <Label htmlFor='additionalInfo'>Additional Information</Label>
-          <Textarea
-            id='additionalInfo'
-            name='additionalInfo'
-            value={formData.additionalInfo}
-            onChange={handleInputChange}
-            placeholder="Anything else you'd like us to know? (availability, salary expectations, etc.)"
-            className='min-h-[80px] w-full'
+          <FormField
+            control={form.control}
+            name="additionalInfo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Additional Information</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Anything else you'd like us to know? (availability, salary expectations, etc.)"
+                    className='min-h-[80px]'
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className='flex items-center justify-between pt-4'>
-          <p className='text-sm text-muted-foreground'>
-            <span className='text-brand'>*</span> Required fields
-          </p>
-          <Button 
-            type='submit' 
-            disabled={isSubmitting || hasAlreadyApplied || checkingApplication} 
-            size='lg' 
-            loading={isSubmitting}
-            title={hasAlreadyApplied ? 'You have already applied to this position' : undefined}
-          >
-            {hasAlreadyApplied ? 'Already Applied' : 'Submit Application'}
-          </Button>
-        </div>
-      </form>
+          <div className='flex items-center justify-between pt-4'>
+            <p className='text-sm text-muted-foreground'>
+              <span className='text-brand'>*</span> Required fields
+            </p>
+            <Button 
+              type='submit' 
+              disabled={isSubmitting || hasApplied} 
+              size='lg' 
+              loading={isSubmitting}
+              title={hasApplied ? 'You have already applied to this position' : undefined}
+            >
+              {hasApplied ? 'Already Applied' : 'Submit Application'}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   )
 }

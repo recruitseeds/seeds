@@ -96,7 +96,7 @@ export default async function CompanyJobsPage({ params }: CompanyJobsPageProps) 
                   <div className='flex items-center gap-6 text-sm text-muted-foreground mb-3'>
                     <div className='flex items-center gap-1'>
                       <MapPin className='h-4 w-4' />
-                      Remote/Hybrid
+                      {job.location || 'Location TBD'}
                     </div>
                     <div className='flex items-center gap-1'>
                       <Clock className='h-4 w-4' />

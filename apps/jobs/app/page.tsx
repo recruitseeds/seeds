@@ -26,3 +26,7 @@ export default async function HomePage() {
     </div>
   )
 }
+
+// export default function Page() {
+//   return <div>Hello</div>
+// }

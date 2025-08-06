@@ -943,7 +943,7 @@ testJobsRoutes.openapi(applyToJobTestRoute, async (c: Context): Promise<any> => 
 				mimeType: resumeFile.mimeType,
 				sizeBytes: fileContent.length,
 				tags: resumeFile.tags,
-				isDefaultResume: true,
+				isDefaultResume: false,
 			});
 			
 			// Step 3: Update application with file ID

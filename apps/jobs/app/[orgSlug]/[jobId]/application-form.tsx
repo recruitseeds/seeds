@@ -5,10 +5,18 @@ import { Input } from '@seeds/ui/input'
 import { Label } from '@seeds/ui/label'
 import { Textarea } from '@seeds/ui/textarea'
 import { Alert, AlertTitle, AlertDescription } from '@seeds/ui/alert'
-import { Check, Upload, AlertTriangle, ExternalLink } from 'lucide-react'
-import { useState } from 'react'
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@seeds/ui/dropdown-menu'
+import { Check, Upload, AlertTriangle, ExternalLink, ChevronDown, FileText } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { checkAuthentication, fileToBase64, submitJobApplication, parseResumeAndScore, checkExistingApplication, type ApplicationRequest, type JobsApiError, type ResumeParseResponse } from '../../../lib/api'
 import { AuthModal } from '../../../components/auth-modal'
+import { useAuth } from '../../../components/auth-provider'
 
 interface ApplicationFormProps {
   jobId: string
@@ -16,6 +24,7 @@ interface ApplicationFormProps {
 }
 
 export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
+  const { isAuthenticated, user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [resumeFile, setResumeFile] = useState<File | null>(null)
@@ -35,6 +44,30 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
   const [hasAlreadyApplied, setHasAlreadyApplied] = useState(false)
   const [checkingApplication, setCheckingApplication] = useState(false)
   const [existingApplicationId, setExistingApplicationId] = useState<string | null>(null)
+
+  // Check if authenticated user has already applied and reset on auth changes
+  useEffect(() => {
+    if (isAuthenticated && user?.email) {
+      console.log('Checking existing application for authenticated user:', user.email)
+      checkExistingApplication(jobId, user.email)
+        .then((result) => {
+          console.log('Application check result:', result)
+          setHasAlreadyApplied(result.data.hasApplied)
+          setExistingApplicationId(result.data.applicationId || null)
+        })
+        .catch((error) => {
+          console.warn('Failed to check existing application on mount:', error)
+        })
+    } else {
+      // Reset application state when user logs out
+      console.log('User logged out, resetting application state')
+      setHasAlreadyApplied(false)
+      setExistingApplicationId(null)
+      setIsSubmitted(false)
+      setApplicationResult(null)
+      setError(null)
+    }
+  }, [isAuthenticated, user?.email, jobId])
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -46,13 +79,46 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
     additionalInfo: '',
   })
 
+  // Mock data for existing resume files - TODO: Replace with actual API call
+  const [existingResumeFiles] = useState([
+    {
+      id: '1',
+      name: 'Software_Engineer_Resume_2024.pdf',
+      uploadedAt: '2024-01-15T10:30:00Z',
+      size: '2.3 MB'
+    },
+    {
+      id: '2', 
+      name: 'Frontend_Developer_CV.docx',
+      uploadedAt: '2024-01-10T15:45:00Z',
+      size: '1.8 MB'
+    },
+    {
+      id: '3',
+      name: 'John_Doe_Resume_Latest.pdf', 
+      uploadedAt: '2024-01-08T09:15:00Z',
+      size: '2.1 MB'
+    }
+  ])
+  
+  const [selectedExistingResume, setSelectedExistingResume] = useState<{
+    id: string
+    name: string
+    uploadedAt: string
+    size: string
+  } | null>(null)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
-    // Check if user has already applied
-    if (hasAlreadyApplied) {
+    // Clear any checking state when submitting
+    setCheckingApplication(false)
+
+    // Only check hasAlreadyApplied if we're authenticated and have confirmed status
+    // Don't block submission based on debounced email checks
+    if (isAuthenticated && hasAlreadyApplied && existingApplicationId) {
       setError('You have already applied to this position. Please check your email for updates.')
       setIsSubmitting(false)
       return
@@ -83,8 +149,8 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
         throw new Error('Please fill in all required fields (name and email)')
       }
 
-      if (!resumeFile) {
-        throw new Error('Please upload your resume')
+      if (!resumeFile && !selectedExistingResume) {
+        throw new Error('Please upload your resume or select an existing one')
       }
 
       const allowedTypes = [
@@ -210,27 +276,21 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
       
       setError(null)
       setResumeFile(file)
+      setSelectedExistingResume(null) // Clear existing resume selection when new file is uploaded
     }
   }
 
-  const checkExistingApplicationDebounced = async (email: string) => {
-    if (!email || !email.includes('@')) return
-    
-    setCheckingApplication(true)
-    setHasAlreadyApplied(false)
-    setExistingApplicationId(null)
-    
-    try {
-      const result = await checkExistingApplication(jobId, email)
-      setHasAlreadyApplied(result.hasApplied)
-      setExistingApplicationId(result.applicationId || null)
-    } catch (err) {
-      // Silently fail - don't prevent form submission on check errors
-      console.warn('Failed to check existing application:', err)
-    } finally {
-      setCheckingApplication(false)
-    }
+  const handleExistingResumeSelect = (resume: typeof existingResumeFiles[0]) => {
+    setSelectedExistingResume(resume)
+    setResumeFile(null) // Clear uploaded file when existing resume is selected
+    setError(null)
   }
+
+  const handleUploadNewResume = () => {
+    const input = document.getElementById('resume') as HTMLInputElement
+    input?.click()
+  }
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -240,15 +300,8 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
       [name]: value,
     }))
     
-    // Check for existing applications when email is entered
-    if (name === 'email' && value.includes('@')) {
-      // Debounce the check to avoid too many API calls
-      const timeoutId = setTimeout(() => {
-        checkExistingApplicationDebounced(value)
-      }, 1000)
-      
-      return () => clearTimeout(timeoutId)
-    }
+    // Removed email-based application checking to prevent race conditions
+    // Application status is only checked on auth state changes
   }
 
   const handleAuthSuccess = (user: any) => {
@@ -265,6 +318,33 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
       }))
     }
     
+  }
+
+  // Show "Already Applied" message only for authenticated users who have actually applied
+  if (isAuthenticated && hasAlreadyApplied && existingApplicationId && !isSubmitted) {
+    return (
+      <div className='text-center py-12 space-y-6'>
+        <div className='inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-blue-100'>
+          <Check className='h-8 w-8 text-blue-600' />
+        </div>
+        
+        <div className='space-y-4'>
+          <h3 className='text-2xl font-semibold'>Already Applied</h3>
+          
+          <div className='max-w-md mx-auto space-y-3'>
+            <p className='text-muted-foreground'>
+              You have already submitted an application for this position.
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              Application ID: <span className='font-mono'>{existingApplicationId}</span>
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              The company will review your information and reach out to you if you're a good fit.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (isSubmitted && applicationResult) {
@@ -289,7 +369,8 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
 
   return (
     <div>
-      {error && (
+      {/* Only show errors if user hasn't already applied */}
+      {error && !hasAlreadyApplied && (
         <Alert variant="destructive" className='mb-6'>
           <AlertTriangle className='h-4 w-4' />
           <AlertTitle>Application Error</AlertTitle>
@@ -351,22 +432,31 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
               onChange={handleInputChange}
               required
               placeholder='john.doe@example.com'
-              className={`w-full ${hasAlreadyApplied ? 'border-red-500' : ''}`}
+              className={`w-full ${hasAlreadyApplied ? 'border-destructive' : ''}`}
             />
-            {checkingApplication && (
-              <p className='text-xs text-muted-foreground mt-1'>
-                Checking if you've already applied...
-              </p>
-            )}
-            {hasAlreadyApplied && (
-              <div className='mt-2 p-3 bg-red-50 border border-red-200 rounded-md'>
-                <p className='text-sm text-red-800 font-medium'>
+            <div className='min-h-[1.25rem] mt-1'>
+              {checkingApplication && (
+                <p className='text-xs text-muted-foreground'>
+                  Checking if you've already applied...
+                </p>
+              )}
+              {/* Only show email validation for authenticated users with confirmed application */}
+              {isAuthenticated && hasAlreadyApplied && existingApplicationId && !checkingApplication && (
+                <p className='text-sm text-destructive-foreground'>
+                  This email has already been used to apply to this position
+                </p>
+              )}
+            </div>
+            {/* Only show application block for authenticated users with confirmed application */}
+            {isAuthenticated && hasAlreadyApplied && existingApplicationId && (
+              <div className='mt-2 p-3 bg-destructive-subtle border border-destructive-border rounded-md'>
+                <p className='text-sm text-destructive-vibrant font-medium'>
                   You have already applied to this position
                 </p>
-                <p className='text-xs text-red-600 mt-1'>
+                <p className='text-xs text-destructive-vibrant mt-1'>
                   Application ID: {existingApplicationId}
                 </p>
-                <p className='text-xs text-red-600'>
+                <p className='text-xs text-destructive-vibrant'>
                   Please check your email for updates on your application status.
                 </p>
               </div>
@@ -391,25 +481,103 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
           <Label htmlFor='resume'>
             Resume/CV <span className='text-brand'>*</span>
           </Label>
-          <div className='relative'>
-            <input
-              id='resume'
-              name='resume'
-              type='file'
-              accept='.pdf,.doc,.docx'
-              onChange={handleFileChange}
-              required
-              className='hidden'
-            />
-            <label
-              htmlFor='resume'
-              className='flex items-center justify-center gap-2 p-4 border border-dashed rounded-lg cursor-pointer hover:border-primary/30 transition-colors'>
-              <Upload className='h-5 w-5 text-muted-foreground' />
-              <span className='text-sm text-muted-foreground'>
-                {resumeFile ? resumeFile.name : 'Drop your resume here or click to browse'}
-              </span>
-            </label>
-          </div>
+          
+          {isAuthenticated && existingResumeFiles.length > 0 ? (
+            // Enhanced dropdown for authenticated users with existing files
+            <div>
+              <input
+                id='resume'
+                name='resume'
+                type='file'
+                accept='.pdf,.doc,.docx'
+                onChange={handleFileChange}
+                className='hidden'
+              />
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    className='w-full justify-between h-auto p-4 border-dashed hover:border-primary/30'
+                  >
+                    <div className='flex items-center gap-2'>
+                      {selectedExistingResume ? (
+                        <>
+                          <FileText className='h-5 w-5 text-muted-foreground' />
+                          <span className='text-sm'>
+                            {selectedExistingResume.name}
+                          </span>
+                        </>
+                      ) : resumeFile ? (
+                        <>
+                          <Upload className='h-5 w-5 text-muted-foreground' />
+                          <span className='text-sm'>
+                            {resumeFile.name}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className='h-5 w-5 text-muted-foreground' />
+                          <span className='text-sm text-muted-foreground'>
+                            Choose resume or upload new
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <ChevronDown className='h-4 w-4 text-muted-foreground' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className='w-full min-w-[400px]' align='start'>
+                  <DropdownMenuItem onClick={handleUploadNewResume} className='flex items-center gap-2'>
+                    <Upload className='h-4 w-4' />
+                    <div>
+                      <div className='font-medium'>Upload new resume</div>
+                      <div className='text-xs text-muted-foreground'>PDF, DOC, or DOCX (max 5MB)</div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {existingResumeFiles.map((resume) => (
+                    <DropdownMenuItem 
+                      key={resume.id} 
+                      onClick={() => handleExistingResumeSelect(resume)}
+                      className='flex items-center gap-2'
+                    >
+                      <FileText className='h-4 w-4' />
+                      <div className='flex-1'>
+                        <div className='font-medium text-sm'>{resume.name}</div>
+                        <div className='text-xs text-muted-foreground'>
+                          Uploaded {new Date(resume.uploadedAt).toLocaleDateString()} • {resume.size}
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            // Original file upload for non-authenticated users or users with no existing files
+            <div className='relative'>
+              <input
+                id='resume'
+                name='resume'
+                type='file'
+                accept='.pdf,.doc,.docx'
+                onChange={handleFileChange}
+                required
+                className='hidden'
+              />
+              <label
+                htmlFor='resume'
+                className='flex items-center justify-center gap-2 p-4 border border-dashed rounded-lg cursor-pointer hover:border-primary/30 transition-colors'>
+                <Upload className='h-5 w-5 text-muted-foreground' />
+                <span className='text-sm text-muted-foreground'>
+                  {resumeFile ? resumeFile.name : 'Drop your resume here or click to browse'}
+                </span>
+              </label>
+            </div>
+          )}
+          
           <p className='text-xs text-muted-foreground'>PDF, DOC, or DOCX (max 5MB)</p>
         </div>
 

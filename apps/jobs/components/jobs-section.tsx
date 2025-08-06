@@ -14,7 +14,7 @@ import {
 } from '@seeds/ui/pagination'
 import { ChevronDown, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { formatSalary, getTimeAgo, type JobPosting } from '../lib/api'
 import { useJobSearch } from '../lib/queries'
 import { JobCard } from './job-card'
@@ -204,12 +204,10 @@ export function JobsSection({
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Get current search parameters
   const currentQuery = searchParams.get('q') || searchQuery
   const currentLocation = searchParams.get('location') || location
   const currentPage = parseInt(searchParams.get('page') || '1', 10)
 
-  // Filter state
   const [selectedTypes, setSelectedTypes] = useState<string[]>(
     initialFilters.jobType ? initialFilters.jobType.split(',') : []
   )
@@ -223,11 +221,9 @@ export function JobsSection({
     initialFilters.department ? initialFilters.department.split(',') : []
   )
 
-  // Local search state
   const [searchInput, setSearchInput] = useState(currentQuery)
   const [locationInput, setLocationInput] = useState(currentLocation)
 
-  // Build current filters
   const currentFilters = {
     query: currentQuery,
     location: currentLocation,
@@ -237,23 +233,24 @@ export function JobsSection({
     experience: selectedLevels.length ? selectedLevels.join(',') : undefined,
   }
 
-  // Use React Query for data fetching - with initial data to prevent flicker
   const { data, error, isLoading, isFetching } = useJobSearch(currentPage, 20, currentFilters, {
-    initialData: initialJobs.length > 0 ? {
-      success: true,
-      data: initialJobs,
-      pagination: initialPagination || {
-        page: 1,
-        limit: 20,
-        total: initialJobs.length,
-        totalPages: Math.ceil(initialJobs.length / 20),
-        hasNext: false,
-        hasPrev: false,
-      }
-    } : undefined
+    initialData:
+      initialJobs.length > 0
+        ? {
+            success: true,
+            data: initialJobs,
+            pagination: initialPagination || {
+              page: 1,
+              limit: 20,
+              total: initialJobs.length,
+              totalPages: Math.ceil(initialJobs.length / 20),
+              hasNext: false,
+              hasPrev: false,
+            },
+          }
+        : undefined,
   })
 
-  // Update URL with search parameters
   const updateURL = useCallback(
     (params: Record<string, string | number | undefined>) => {
       const newParams = new URLSearchParams(searchParams.toString())
@@ -266,7 +263,6 @@ export function JobsSection({
         }
       })
 
-      // Reset to page 1 when filters change (except when page is being set)
       if (!params.page) {
         newParams.delete('page')
       }
@@ -276,7 +272,6 @@ export function JobsSection({
     [router, searchParams]
   )
 
-  // Handle search form submission
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
@@ -288,8 +283,7 @@ export function JobsSection({
     [searchInput, locationInput, updateURL]
   )
 
-  // Handle filter changes
-  useEffect(() => {
+  const handleApplyFilters = useCallback(() => {
     updateURL({
       q: currentQuery,
       location: currentLocation,
@@ -297,11 +291,10 @@ export function JobsSection({
       remote: selectedRemote.length ? selectedRemote.join(',') : undefined,
       department: selectedDepartments.length ? selectedDepartments.join(',') : undefined,
       experience: selectedLevels.length ? selectedLevels.join(',') : undefined,
-      page: currentPage === 1 ? undefined : currentPage,
+      page: 1,
     })
-  }, [selectedTypes, selectedLevels, selectedRemote, selectedDepartments])
+  }, [currentQuery, currentLocation, selectedTypes, selectedLevels, selectedRemote, selectedDepartments, updateURL])
 
-  // Handle page changes
   const handlePageChange = useCallback(
     (page: number) => {
       updateURL({ page: page === 1 ? undefined : page })
@@ -309,7 +302,6 @@ export function JobsSection({
     [updateURL]
   )
 
-  // Clear all filters
   const clearAll = useCallback(() => {
     setSelectedTypes([])
     setSelectedLevels([])
@@ -366,8 +358,7 @@ export function JobsSection({
     }
   }
 
-  // Get the actual data from React Query
-  const jobs = data?.data || initialJobs
+  const jobs = data?.data || []
   const pagination = data?.pagination ||
     initialPagination || {
       page: 1,
@@ -402,13 +393,11 @@ export function JobsSection({
         <div className='container mx-auto px-4'>
           <div className='mb-8'>
             <h2 className='text-2xl sm:text-3xl font-bold mb-2'>Latest Opportunities</h2>
-            <p className='text-muted-foreground text-red-600'>{error}</p>
+            <p className='text-muted-foreground text-red-600'>
+              {error instanceof Error ? error.message : 'Failed to load jobs'}
+            </p>
           </div>
-          <Button
-            onClick={() => {
-              handlePageChange(1)
-            }}
-            variant='outline'>
+          <Button onClick={() => window.location.reload()} variant='outline'>
             Retry
           </Button>
         </div>
@@ -419,7 +408,6 @@ export function JobsSection({
   return (
     <section className='pb-8'>
       <div className='container mx-auto px-4'>
-        {/* Search Form */}
         <div className='mb-8'>
           <form onSubmit={handleSearch} className='flex gap-4 mb-6'>
             <div className='flex-1'>
@@ -459,11 +447,21 @@ export function JobsSection({
 
         <div className='job-filters-mobile-toggle w-full mb-6'>
           <JobFilters {...filterProps} />
+          {hasFilters && (
+            <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
+              Apply Filters
+            </Button>
+          )}
         </div>
 
         <div className='lg:flex lg:gap-8'>
           <aside className='job-filters-sidebar w-64 flex-shrink-0'>
             <JobFilters {...filterProps} />
+            {hasFilters && (
+              <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
+                Apply Filters
+              </Button>
+            )}
           </aside>
 
           <div className='flex-1 min-w-0'>
@@ -491,28 +489,34 @@ export function JobsSection({
                       />
                     </PaginationItem>
 
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      let pageNum = i + 1
-                      if (pagination.totalPages > 5 && currentPage > 3) {
-                        pageNum = currentPage - 2 + i
-                        if (pageNum > pagination.totalPages) {
-                          pageNum = pagination.totalPages - 4 + i
-                        }
-                      }
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            href='#'
-                            onClick={(e) => {
-                              e.preventDefault()
-                              handlePageChange(pageNum)
-                            }}
-                            isActive={currentPage === pageNum}>
-                            {pageNum}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    })}
+                    {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                      .filter((page) => {
+                        return (
+                          page === 1 ||
+                          page === pagination.totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        )
+                      })
+                      .map((page, index, array) => (
+                        <>
+                          {index > 0 && array[index - 1] !== page - 1 && (
+                            <PaginationItem key={`ellipsis-${page}`}>
+                              <span className='px-3'>...</span>
+                            </PaginationItem>
+                          )}
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              href='#'
+                              onClick={(e) => {
+                                e.preventDefault()
+                                handlePageChange(page)
+                              }}
+                              isActive={page === currentPage}>
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      ))}
 
                     <PaginationItem>
                       <PaginationNext
