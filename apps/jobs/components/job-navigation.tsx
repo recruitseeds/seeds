@@ -1,6 +1,14 @@
 'use client'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@seeds/ui/avatar'
 import { Button, buttonVariants } from '@seeds/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@seeds/ui/dropdown-menu'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -10,15 +18,7 @@ import {
   NavigationMenuTrigger,
 } from '@seeds/ui/navigation-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@seeds/ui/sheet'
-import { Avatar, AvatarFallback, AvatarImage } from '@seeds/ui/avatar'
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@seeds/ui/dropdown-menu'
-import { Menu, LogOut, User, Settings } from 'lucide-react'
+import { LogOut, Menu, Settings, User } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useAuth } from './auth-provider'
@@ -27,9 +27,17 @@ interface JobNavigationProps {
   onAuthRequired?: () => void
 }
 
+function getUserInitials(name: string): string {
+  const parts = name.split(' ')
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  }
+  return name.slice(0, 2).toUpperCase()
+}
+
 export function JobNavigation({ onAuthRequired }: JobNavigationProps) {
+  const { isAuthenticated, user, signOut, loading } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, isAuthenticated, signOut, loading } = useAuth()
 
   const handleSignIn = () => {
     if (onAuthRequired) {
@@ -39,15 +47,6 @@ export function JobNavigation({ onAuthRequired }: JobNavigationProps) {
 
   const handleSignOut = async () => {
     await signOut()
-  }
-
-  const getUserInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
   }
 
   return (
@@ -99,6 +98,7 @@ export function JobNavigation({ onAuthRequired }: JobNavigationProps) {
       </NavigationMenu>
 
       <div className='hidden md:flex items-center space-x-4'>
+        {/* Only show loading skeleton when auth state is truly unknown */}
         {loading ? (
           <div className='w-8 h-8 rounded-full bg-muted animate-pulse' />
         ) : isAuthenticated && user ? (
@@ -106,25 +106,31 @@ export function JobNavigation({ onAuthRequired }: JobNavigationProps) {
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' size='sm' className='relative h-8 w-8 rounded-full p-0'>
                 <Avatar className='h-8 w-8'>
-                  <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email || 'User'} />
+                  <AvatarImage
+                    src={user.user_metadata?.avatar_url}
+                    alt={user.user_metadata?.full_name || user.email || 'User'}
+                  />
                   <AvatarFallback>
-                    {user.user_metadata?.full_name 
+                    {user.user_metadata?.full_name
                       ? getUserInitials(user.user_metadata.full_name)
-                      : user.email?.[0]?.toUpperCase() || 'U'
-                    }
+                      : user.email?.[0]?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
               <DropdownMenuItem asChild>
-                <Link href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'}/dashboard`} className='flex items-center'>
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'}/dashboard`}
+                  className='flex items-center'>
                   <User className='mr-2 h-4 w-4' />
                   Dashboard
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'}/settings`} className='flex items-center'>
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'}/settings`}
+                  className='flex items-center'>
                   <Settings className='mr-2 h-4 w-4' />
                   Settings
                 </Link>
@@ -185,41 +191,43 @@ export function JobNavigation({ onAuthRequired }: JobNavigationProps) {
               </nav>
 
               <div className='flex flex-col space-y-3 pt-6 border-t border-border'>
-                {isAuthenticated && user ? (
+                {/* Same loading state handling for mobile */}
+                {loading ? (
+                  <div className='flex items-center space-x-3 px-2'>
+                    <div className='h-8 w-8 rounded-full bg-muted animate-pulse' />
+                    <div className='h-4 w-24 bg-muted animate-pulse rounded' />
+                  </div>
+                ) : isAuthenticated && user ? (
                   <>
                     <div className='flex items-center space-x-3 px-2'>
                       <Avatar className='h-8 w-8'>
-                        <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email || 'User'} />
+                        <AvatarImage
+                          src={user.user_metadata?.avatar_url}
+                          alt={user.user_metadata?.full_name || user.email || 'User'}
+                        />
                         <AvatarFallback>
-                          {user.user_metadata?.full_name 
+                          {user.user_metadata?.full_name
                             ? getUserInitials(user.user_metadata.full_name)
-                            : user.email?.[0]?.toUpperCase() || 'U'
-                          }
+                            : user.email?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className='flex-1 min-w-0'>
-                        <p className='text-sm font-medium truncate'>
-                          {user.user_metadata?.full_name || user.email}
-                        </p>
+                        <p className='text-sm font-medium truncate'>{user.user_metadata?.full_name || user.email}</p>
                       </div>
                     </div>
-                    <Button 
-                      asChild 
-                      variant='outline' 
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Link href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'}/dashboard`}>
+                    <Button asChild variant='outline' onClick={() => setMobileMenuOpen(false)}>
+                      <Link
+                        href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'}/dashboard`}>
                         <User className='mr-2 h-4 w-4' />
                         Dashboard
                       </Link>
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => {
                         handleSignOut()
                         setMobileMenuOpen(false)
                       }}
-                      variant='secondary'
-                    >
+                      variant='secondary'>
                       <LogOut className='mr-2 h-4 w-4' />
                       Sign Out
                     </Button>

@@ -1,298 +1,292 @@
-import { createRoute, z } from "@hono/zod-openapi";
-import type { Database } from "@seeds/supabase/types/db";
-import { createClient } from "@supabase/supabase-js";
-import type { Context } from "hono";
-import {
-	createOpenAPIApp,
-	ErrorResponseSchema,
-	MetadataSchema,
-} from "../../../lib/openapi.js";
-import { ApplicationService } from "../../../services/application.js";
-import { ConfigService } from "../../../services/config.js";
-import { EmailService } from "../../../services/email.js";
-import { FileUploadService } from "../../../services/file-upload.js";
-import { Logger } from "../../../services/logger.js";
+import { createRoute, z } from '@hono/zod-openapi'
+import type { Database } from '@seeds/supabase/types/db'
+import { createClient } from '@supabase/supabase-js'
+import type { Context } from 'hono'
+import { createOpenAPIApp, ErrorResponseSchema, MetadataSchema } from '../../../lib/openapi.js'
+import { ApplicationService } from '../../../services/application.js'
+import { ConfigService } from '../../../services/config.js'
+import { EmailService } from '../../../services/email.js'
+import { FileUploadService } from '../../../services/file-upload.js'
+import { Logger } from '../../../services/logger.js'
 
-const testJobsRoutes = createOpenAPIApp();
+const testJobsRoutes = createOpenAPIApp()
 
-// Reuse schemas from the main jobs route
 const JobPostingSchema = z
-	.object({
-		id: z.string().uuid().describe("Unique job posting identifier"),
-		title: z.string().describe("Job title"),
-		department: z.string().nullable().describe("Department or team"),
-		job_type: z.string().describe("Employment type"),
-		experience_level: z.string().nullable().describe("Required experience level"),
-		salary_min: z.number().nullable().describe("Minimum salary in USD"),
-		salary_max: z.number().nullable().describe("Maximum salary in USD"),
-		salary_type: z.string().nullable().describe("Salary type"),
-		status: z.string().describe("Job posting status"),
-		published_at: z.string().nullable().describe("Publication timestamp"),
-		created_at: z.string().nullable().describe("Creation timestamp"),
-		organization: z
-			.object({
-				id: z.string().uuid().describe("Organization ID"),
-				name: z.string().describe("Organization name"),
-				domain: z.string().nullable().describe("Organization domain"),
-				logo_url: z.string().nullable().describe("Organization logo URL"),
-			})
-			.describe("Organization details"),
-	})
-	.describe("Job posting summary information");
+  .object({
+    id: z.string().uuid().describe('Unique job posting identifier'),
+    title: z.string().describe('Job title'),
+    department: z.string().nullable().describe('Department or team'),
+    job_type: z.string().describe('Employment type'),
+    experience_level: z.string().nullable().describe('Required experience level'),
+    salary_min: z.number().nullable().describe('Minimum salary in USD'),
+    salary_max: z.number().nullable().describe('Maximum salary in USD'),
+    salary_type: z.string().nullable().describe('Salary type'),
+    status: z.string().describe('Job posting status'),
+    published_at: z.string().nullable().describe('Publication timestamp'),
+    created_at: z.string().nullable().describe('Creation timestamp'),
+    organization: z
+      .object({
+        id: z.string().uuid().describe('Organization ID'),
+        name: z.string().describe('Organization name'),
+        domain: z.string().nullable().describe('Organization domain'),
+        logo_url: z.string().nullable().describe('Organization logo URL'),
+      })
+      .describe('Organization details'),
+  })
+  .describe('Job posting summary information')
 
 const JobPostingDetailSchema = JobPostingSchema.extend({
-	content: z.any().describe("Job description content from TipTap editor"),
-});
+  content: z.any().describe('Job description content from TipTap editor'),
+})
 
 const JobListingResponseSchema = z
-	.object({
-		success: z.literal(true).describe("Indicates successful response"),
-		data: z.array(JobPostingSchema).describe("Array of job posting summaries"),
-		pagination: z
-			.object({
-				page: z.number().int().min(1).describe("Current page number"),
-				limit: z.number().int().min(1).max(100).describe("Items per page"),
-				total: z.number().int().min(0).describe("Total number of jobs"),
-				totalPages: z.number().int().min(0).describe("Total number of pages"),
-				hasNext: z.boolean().describe("Whether there are more pages"),
-				hasPrev: z.boolean().describe("Whether there are previous pages"),
-			})
-			.describe("Pagination information"),
-		metadata: MetadataSchema,
-	})
-	.describe("Job listings response with pagination");
+  .object({
+    success: z.literal(true).describe('Indicates successful response'),
+    data: z.array(JobPostingSchema).describe('Array of job posting summaries'),
+    pagination: z
+      .object({
+        page: z.number().int().min(1).describe('Current page number'),
+        limit: z.number().int().min(1).max(100).describe('Items per page'),
+        total: z.number().int().min(0).describe('Total number of jobs'),
+        totalPages: z.number().int().min(0).describe('Total number of pages'),
+        hasNext: z.boolean().describe('Whether there are more pages'),
+        hasPrev: z.boolean().describe('Whether there are previous pages'),
+      })
+      .describe('Pagination information'),
+    metadata: MetadataSchema,
+  })
+  .describe('Job listings response with pagination')
 
 const JobDetailResponseSchema = z
-	.object({
-		success: z.literal(true).describe("Indicates successful response"),
-		data: JobPostingDetailSchema,
-		metadata: MetadataSchema,
-	})
-	.describe("Individual job posting details response");
+  .object({
+    success: z.literal(true).describe('Indicates successful response'),
+    data: JobPostingDetailSchema,
+    metadata: MetadataSchema,
+  })
+  .describe('Individual job posting details response')
 
-// Application schemas from main jobs.ts
 const CandidateDataSchema = z
-	.object({
-		name: z.string().min(1).max(100).describe("Full name of the candidate"),
-		email: z.string().email().describe("Valid email address for communications"),
-		phone: z.string().optional().describe("Phone number in any format"),
-	})
-	.describe("Candidate personal information");
+  .object({
+    name: z.string().min(1).max(100).describe('Full name of the candidate'),
+    email: z.string().email().describe('Valid email address for communications'),
+    phone: z.string().optional().describe('Phone number in any format'),
+  })
+  .describe('Candidate personal information')
 
 const ResumeFileSchema = z
-	.object({
-		fileName: z.string().min(1).max(255).describe("Original filename with extension"),
-		content: z.string().describe("Base64 encoded file content"),
-		mimeType: z
-			.enum([
-				"application/pdf",
-				"application/msword",
-				"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-				"text/plain",
-			])
-			.describe("MIME type of the uploaded file"),
-		tags: z.array(z.string()).optional().describe("Optional tags for categorizing the resume"),
-	})
-	.describe("Resume file data");
+  .object({
+    fileName: z.string().min(1).max(255).describe('Original filename with extension'),
+    content: z.string().describe('Base64 encoded file content'),
+    mimeType: z
+      .enum([
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+      ])
+      .describe('MIME type of the uploaded file'),
+    tags: z.array(z.string()).optional().describe('Optional tags for categorizing the resume'),
+  })
+  .describe('Resume file data')
 
 const ApplicationRequestSchema = z
-	.object({
-		candidateData: CandidateDataSchema,
-		resumeFile: ResumeFileSchema,
-	})
-	.describe("Job application submission data");
+  .object({
+    candidateData: CandidateDataSchema,
+    resumeFile: ResumeFileSchema,
+  })
+  .describe('Job application submission data')
 
 const ApplicationResponseDataSchema = z
-	.object({
-		applicationId: z.string().uuid().describe("Unique application identifier"),
-		candidateId: z.string().uuid().describe("Unique candidate identifier"),
-		status: z.enum(["under_review", "auto_rejected"]).describe("Current application status"),
-		score: z.number().int().min(0).max(100).optional().describe("Candidate match score (0-100)"),
-		nextSteps: z.string().describe("Information about what happens next"),
-	})
-	.describe("Application submission result");
+  .object({
+    applicationId: z.string().uuid().describe('Unique application identifier'),
+    candidateId: z.string().uuid().describe('Unique candidate identifier'),
+    status: z.enum(['under_review', 'auto_rejected']).describe('Current application status'),
+    score: z.number().int().min(0).max(100).optional().describe('Candidate match score (0-100)'),
+    nextSteps: z.string().describe('Information about what happens next'),
+  })
+  .describe('Application submission result')
 
 const ApplicationResponseSchema = z
-	.object({
-		success: z.literal(true).describe("Indicates successful application submission"),
-		data: ApplicationResponseDataSchema,
-		metadata: MetadataSchema,
-	})
-	.describe("Successful application response");
+  .object({
+    success: z.literal(true).describe('Indicates successful application submission'),
+    data: ApplicationResponseDataSchema,
+    metadata: MetadataSchema,
+  })
+  .describe('Successful application response')
 
 const listJobsTestRoute = createRoute({
-	method: "get",
-	path: "/",
-	tags: ["Test - Job Listings"],
-	summary: "[TEST] List all published job postings (no auth)",
-	description: `
+  method: 'get',
+  path: '/',
+  tags: ['Test - Job Listings'],
+  summary: '[TEST] List all published job postings (no auth)',
+  description: `
 TEST ENDPOINT - No authentication required.
 
 Retrieve a paginated list of all published job postings across all organizations.
 This is identical to the production endpoint but without authentication requirements
 for e2e testing purposes.
 	`,
-	request: {
-		query: z.object({
-			page: z
-				.string()
-				.regex(/^\d+$/)
-				.transform(Number)
-				.refine((val) => val >= 1, "Page must be >= 1")
-				.default("1")
-				.describe("Page number for pagination"),
-			limit: z
-				.string()
-				.regex(/^\d+$/)
-				.transform(Number)
-				.refine((val) => val >= 1 && val <= 100, "Limit must be 1-100")
-				.default("20")
-				.describe("Number of jobs per page"),
-		}),
-	},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: JobListingResponseSchema,
-				},
-			},
-			description: "Successfully retrieved job listings",
-		},
-		400: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Invalid pagination parameters",
-		},
-		500: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Internal server error",
-		},
-	},
-});
+  request: {
+    query: z.object({
+      page: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .refine((val) => val >= 1, 'Page must be >= 1')
+        .default('1')
+        .describe('Page number for pagination'),
+      limit: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .refine((val) => val >= 1 && val <= 100, 'Limit must be 1-100')
+        .default('20')
+        .describe('Number of jobs per page'),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: JobListingResponseSchema,
+        },
+      },
+      description: 'Successfully retrieved job listings',
+    },
+    400: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Invalid pagination parameters',
+    },
+    500: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Internal server error',
+    },
+  },
+})
 
 const getJobTestRoute = createRoute({
-	method: "get",
-	path: "/{jobId}",
-	tags: ["Test - Job Listings"],
-	summary: "[TEST] Get detailed job posting information (no auth)",
-	description: `
+  method: 'get',
+  path: '/{jobId}',
+  tags: ['Test - Job Listings'],
+  summary: '[TEST] Get detailed job posting information (no auth)',
+  description: `
 TEST ENDPOINT - No authentication required.
 
 Retrieve comprehensive details for a specific job posting including full content.
 This is identical to the production endpoint but without authentication requirements
 for e2e testing purposes.
 	`,
-	request: {
-		params: z.object({
-			jobId: z.string().uuid().describe("Unique job posting identifier"),
-		}),
-	},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: JobDetailResponseSchema,
-				},
-			},
-			description: "Successfully retrieved job details",
-		},
-		404: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Job posting not found or not published",
-		},
-		500: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Internal server error",
-		},
-	},
-});
+  request: {
+    params: z.object({
+      jobId: z.string().uuid().describe('Unique job posting identifier'),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: JobDetailResponseSchema,
+        },
+      },
+      description: 'Successfully retrieved job details',
+    },
+    404: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Job posting not found or not published',
+    },
+    500: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Internal server error',
+    },
+  },
+})
 
 const checkApplicationTestRoute = createRoute({
-	method: "get",
-	path: "/{jobId}/check-application",
-	tags: ["Test - Job Applications"],
-	summary: "[TEST] Check if user has already applied to job (no auth)",
-	description: `
+  method: 'get',
+  path: '/{jobId}/check-application',
+  tags: ['Test - Job Applications'],
+  summary: '[TEST] Check if user has already applied to job (no auth)',
+  description: `
 TEST ENDPOINT - No authentication required.
 
 Check if a candidate has already applied to a specific job posting based on their email address.
 This endpoint returns whether the candidate has submitted an application and optionally 
 the application ID.
 	`,
-	request: {
-		params: z.object({
-			jobId: z.string().uuid().describe("Unique identifier for the job posting"),
-		}),
-		query: z.object({
-			email: z.string().email().describe("Email address to check for existing applications"),
-		}),
-	},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: z.object({
-						success: z.literal(true),
-						data: z.object({
-							hasApplied: z.boolean().describe("Whether the candidate has already applied"),
-							applicationId: z.string().uuid().optional().describe("Application ID if exists"),
-							appliedAt: z.string().optional().describe("When the application was submitted"),
-						}),
-						metadata: MetadataSchema,
-					}),
-				},
-			},
-			description: "Successfully checked application status",
-		},
-		400: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Invalid request parameters",
-		},
-		404: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Job posting not found",
-		},
-		500: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Internal server error",
-		},
-	},
-});
+  request: {
+    params: z.object({
+      jobId: z.string().uuid().describe('Unique identifier for the job posting'),
+    }),
+    query: z.object({
+      email: z.string().email().describe('Email address to check for existing applications'),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.literal(true),
+            data: z.object({
+              hasApplied: z.boolean().describe('Whether the candidate has already applied'),
+              applicationId: z.string().uuid().optional().describe('Application ID if exists'),
+              appliedAt: z.string().optional().describe('When the application was submitted'),
+            }),
+            metadata: MetadataSchema,
+          }),
+        },
+      },
+      description: 'Successfully checked application status',
+    },
+    400: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Invalid request parameters',
+    },
+    404: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Job posting not found',
+    },
+    500: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Internal server error',
+    },
+  },
+})
 
 const applyToJobTestRoute = createRoute({
-	method: "post",
-	path: "/{jobId}/apply",
-	tags: ["Test - Job Applications"],
-	summary: "[TEST] Submit application to a job posting (no auth)",
-	description: `
+  method: 'post',
+  path: '/{jobId}/apply',
+  tags: ['Test - Job Applications'],
+  summary: '[TEST] Submit application to a job posting (no auth)',
+  description: `
 TEST ENDPOINT - No authentication required.
 
 Submit a job application with candidate information and resume. This is identical 
@@ -306,98 +300,96 @@ This endpoint:
 - Schedules automated communications based on score
 - Returns application status and next steps
 	`,
-	request: {
-		params: z.object({
-			jobId: z.string().uuid().describe("Unique identifier for the job posting"),
-		}),
-		body: {
-			content: {
-				"application/json": {
-					schema: ApplicationRequestSchema,
-				},
-			},
-			description: "Application data including candidate information and resume file",
-		},
-	},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: ApplicationResponseSchema,
-				},
-			},
-			description: "Application submitted successfully",
-		},
-		400: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Invalid request data - check file format, size, or required fields",
-		},
-		404: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Job posting not found or not accepting applications",
-		},
-		413: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "File too large - maximum 5MB allowed",
-		},
-		422: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Unprocessable entity - file validation failed",
-		},
-		500: {
-			content: {
-				"application/json": {
-					schema: ErrorResponseSchema,
-				},
-			},
-			description: "Internal server error during application processing",
-		},
-	},
-});
+  request: {
+    params: z.object({
+      jobId: z.string().uuid().describe('Unique identifier for the job posting'),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: ApplicationRequestSchema,
+        },
+      },
+      description: 'Application data including candidate information and resume file',
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: ApplicationResponseSchema,
+        },
+      },
+      description: 'Application submitted successfully',
+    },
+    400: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Invalid request data - check file format, size, or required fields',
+    },
+    404: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Job posting not found or not accepting applications',
+    },
+    413: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'File too large - maximum 5MB allowed',
+    },
+    422: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Unprocessable entity - file validation failed',
+    },
+    500: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Internal server error during application processing',
+    },
+  },
+})
 
 testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
-	const startTime = Date.now();
-	const correlationId = c.get("correlationId") || crypto.randomUUID();
-	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+  const startTime = Date.now()
+  const correlationId = c.get('correlationId') || crypto.randomUUID()
+  const logger = new Logger({ correlationId, requestId: c.get('requestId') })
 
-	try {
-		const page = parseInt(c.req.query('page') || '1', 10);
-		const limit = parseInt(c.req.query('limit') || '20', 10);
-		const offset = (page - 1) * limit;
+  try {
+    const page = parseInt(c.req.query('page') || '1', 10)
+    const limit = parseInt(c.req.query('limit') || '20', 10)
+    const offset = (page - 1) * limit
 
-		logger.info("Fetching job listings (test endpoint)", { page, limit, offset });
+    logger.info('Fetching job listings (test endpoint)', { page, limit, offset })
 
-		const config = ConfigService.getInstance().getConfig();
-		const supabase = createClient<Database>(
-			config.supabaseUrl,
-			config.supabaseServiceRoleKey,
-		);
+    const config = ConfigService.getInstance().getConfig()
+    const supabase = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey)
 
-		const countQuery = supabase
-			.from("job_postings")
-			.select("id", { count: "exact", head: true })
-			.eq("status", "published")
-			.not("published_at", "is", null);
+    const countQuery = supabase
+      .from('job_postings')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .not('published_at', 'is', null)
 
-		const dataQuery = supabase
-			.from("job_postings")
-			.select(`
+    const dataQuery = supabase
+      .from('job_postings')
+      .select(
+        `
 				id,
 				title,
 				department,
@@ -415,123 +407,118 @@ testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
 					domain,
 					logo_url
 				)
-			`)
-			.eq("status", "published")
-			.not("published_at", "is", null)
-			.order("published_at", { ascending: false })
-			.range(offset, offset + limit - 1);
+			`
+      )
+      .eq('status', 'published')
+      .not('published_at', 'is', null)
+      .order('published_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
-		const [countResult, dataResult] = await Promise.all([
-			countQuery,
-			dataQuery,
-		]);
+    const [countResult, dataResult] = await Promise.all([countQuery, dataQuery])
 
-		if (countResult.error) {
-			logger.error("Failed to fetch job count", {
-				error: countResult.error.message,
-				code: countResult.error.code,
-			});
-			throw new Error("Failed to fetch job listings");
-		}
+    if (countResult.error) {
+      logger.error('Failed to fetch job count', {
+        error: countResult.error.message,
+        code: countResult.error.code,
+      })
+      throw new Error('Failed to fetch job listings')
+    }
 
-		if (dataResult.error) {
-			logger.error("Failed to fetch job data", {
-				error: dataResult.error.message,
-				code: dataResult.error.code,
-			});
-			throw new Error("Failed to fetch job listings");
-		}
+    if (dataResult.error) {
+      logger.error('Failed to fetch job data', {
+        error: dataResult.error.message,
+        code: dataResult.error.code,
+      })
+      throw new Error('Failed to fetch job listings')
+    }
 
-		const total = countResult.count || 0;
-		const totalPages = Math.ceil(total / limit);
+    const total = countResult.count || 0
+    const totalPages = Math.ceil(total / limit)
 
-		const jobs = dataResult.data.map((job) => ({
-			id: job.id,
-			title: job.title,
-			department: job.department,
-			job_type: job.job_type,
-			experience_level: job.experience_level,
-			salary_min: job.salary_min,
-			salary_max: job.salary_max,
-			salary_type: job.salary_type,
-			status: job.status,
-			published_at: job.published_at,
-			created_at: job.created_at,
-			organization: {
-				id: job.organizations.id,
-				name: job.organizations.name,
-				domain: job.organizations.domain,
-				logo_url: job.organizations.logo_url,
-			},
-		}));
+    const jobs = dataResult.data.map((job) => ({
+      id: job.id,
+      title: job.title,
+      department: job.department,
+      job_type: job.job_type,
+      experience_level: job.experience_level,
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+      salary_type: job.salary_type,
+      status: job.status,
+      published_at: job.published_at,
+      created_at: job.created_at,
+      organization: {
+        id: job.organizations.id,
+        name: job.organizations.name,
+        domain: job.organizations.domain,
+        logo_url: job.organizations.logo_url,
+      },
+    }))
 
-		logger.info("Successfully fetched job listings (test endpoint)", {
-			jobCount: jobs.length,
-			totalJobs: total,
-			page,
-			totalPages,
-			processingTimeMs: Date.now() - startTime,
-		});
+    logger.info('Successfully fetched job listings (test endpoint)', {
+      jobCount: jobs.length,
+      totalJobs: total,
+      page,
+      totalPages,
+      processingTimeMs: Date.now() - startTime,
+    })
 
-		return c.json({
-			success: true as const,
-			data: jobs,
-			pagination: {
-				page,
-				limit,
-				total,
-				totalPages,
-				hasNext: page < totalPages,
-				hasPrev: page > 1,
-			},
-			metadata: {
-				processingTimeMs: Date.now() - startTime,
-				correlationId,
-				timestamp: new Date().toISOString(),
-			},
-		});
-	} catch (error) {
-		logger.error("Failed to fetch job listings (test endpoint)", {
-			error: error instanceof Error ? error.message : "Unknown error",
-			stack: error instanceof Error ? error.stack : undefined,
-		});
+    return c.json({
+      success: true as const,
+      data: jobs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+      metadata: {
+        processingTimeMs: Date.now() - startTime,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    logger.error('Failed to fetch job listings (test endpoint)', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
 
-		return c.json(
-			{
-				success: false as const,
-				error: {
-					code: "FETCH_ERROR",
-					message:
-						"An error occurred while fetching job listings. Please try again.",
-				},
-				timestamp: new Date().toISOString(),
-				correlationId,
-			},
-			500,
-		);
-	}
-});
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: 'FETCH_ERROR',
+          message: 'An error occurred while fetching job listings. Please try again.',
+        },
+        timestamp: new Date().toISOString(),
+        correlationId,
+      },
+      500
+    )
+  }
+})
 
 testJobsRoutes.openapi(getJobTestRoute, async (c: Context): Promise<any> => {
-	const startTime = Date.now();
-	const correlationId = c.get("correlationId") || crypto.randomUUID();
-	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+  const startTime = Date.now()
+  const correlationId = c.get('correlationId') || crypto.randomUUID()
+  const logger = new Logger({ correlationId, requestId: c.get('requestId') })
 
-	try {
-		const params = c.req.param();
-		const jobId = params.jobId;
+  try {
+    const params = c.req.param()
+    const jobId = params.jobId
 
-		logger.info("Fetching job details (test endpoint)", { jobId });
+    logger.info('Fetching job details (test endpoint)', { jobId })
 
-		const config = ConfigService.getInstance().getConfig();
-		const supabase = createClient<Database>(
-			config.supabaseUrl,
-			config.supabaseServiceRoleKey,
-		);
+    const config = ConfigService.getInstance().getConfig()
+    const supabase = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey)
 
-		const { data, error } = await supabase
-			.from("job_postings")
-			.select(`
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select(
+        `
 				id,
 				title,
 				content,
@@ -550,734 +537,699 @@ testJobsRoutes.openapi(getJobTestRoute, async (c: Context): Promise<any> => {
 					domain,
 					logo_url
 				)
-			`)
-			.eq("id", jobId)
-			.eq("status", "published")
-			.not("published_at", "is", null)
-			.single();
+			`
+      )
+      .eq('id', jobId)
+      .eq('status', 'published')
+      .not('published_at', 'is', null)
+      .single()
 
-		if (error) {
-			if (error.code === "PGRST116") {
-				logger.warn("Job not found or not published (test endpoint)", {
-					jobId,
-					error: error.message,
-				});
-				return c.json(
-					{
-						success: false as const,
-						error: {
-							code: "JOB_NOT_FOUND",
-							message: "Job posting not found or not currently available.",
-						},
-						timestamp: new Date().toISOString(),
-						correlationId,
-					},
-					404,
-				);
-			}
+    if (error) {
+      if (error.code === 'PGRST116') {
+        logger.warn('Job not found or not published (test endpoint)', {
+          jobId,
+          error: error.message,
+        })
+        return c.json(
+          {
+            success: false as const,
+            error: {
+              code: 'JOB_NOT_FOUND',
+              message: 'Job posting not found or not currently available.',
+            },
+            timestamp: new Date().toISOString(),
+            correlationId,
+          },
+          404
+        )
+      }
 
-			logger.error("Failed to fetch job details (test endpoint)", {
-				jobId,
-				error: error.message,
-				code: error.code,
-			});
-			throw new Error("Failed to fetch job details");
-		}
+      logger.error('Failed to fetch job details (test endpoint)', {
+        jobId,
+        error: error.message,
+        code: error.code,
+      })
+      throw new Error('Failed to fetch job details')
+    }
 
-		const job = {
-			id: data.id,
-			title: data.title,
-			content: data.content,
-			department: data.department,
-			job_type: data.job_type,
-			experience_level: data.experience_level,
-			salary_min: data.salary_min,
-			salary_max: data.salary_max,
-			salary_type: data.salary_type,
-			status: data.status,
-			published_at: data.published_at,
-			created_at: data.created_at,
-			organization: {
-				id: data.organizations.id,
-				name: data.organizations.name,
-				domain: data.organizations.domain,
-				logo_url: data.organizations.logo_url,
-			},
-		};
+    const job = {
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      department: data.department,
+      job_type: data.job_type,
+      experience_level: data.experience_level,
+      salary_min: data.salary_min,
+      salary_max: data.salary_max,
+      salary_type: data.salary_type,
+      status: data.status,
+      published_at: data.published_at,
+      created_at: data.created_at,
+      organization: {
+        id: data.organizations.id,
+        name: data.organizations.name,
+        domain: data.organizations.domain,
+        logo_url: data.organizations.logo_url,
+      },
+    }
 
-		logger.info("Successfully fetched job details (test endpoint)", {
-			jobId,
-			jobTitle: job.title,
-			organizationName: job.organization.name,
-			processingTimeMs: Date.now() - startTime,
-		});
+    logger.info('Successfully fetched job details (test endpoint)', {
+      jobId,
+      jobTitle: job.title,
+      organizationName: job.organization.name,
+      processingTimeMs: Date.now() - startTime,
+    })
 
-		return c.json({
-			success: true as const,
-			data: job,
-			metadata: {
-				processingTimeMs: Date.now() - startTime,
-				correlationId,
-				timestamp: new Date().toISOString(),
-			},
-		});
-	} catch (error) {
-		logger.error("Failed to fetch job details (test endpoint)", {
-			error: error instanceof Error ? error.message : "Unknown error",
-			stack: error instanceof Error ? error.stack : undefined,
-		});
+    return c.json({
+      success: true as const,
+      data: job,
+      metadata: {
+        processingTimeMs: Date.now() - startTime,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    logger.error('Failed to fetch job details (test endpoint)', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
 
-		return c.json(
-			{
-				success: false as const,
-				error: {
-					code: "FETCH_ERROR",
-					message:
-						"An error occurred while fetching job details. Please try again.",
-				},
-				timestamp: new Date().toISOString(),
-				correlationId,
-			},
-			500,
-		);
-	}
-});
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: 'FETCH_ERROR',
+          message: 'An error occurred while fetching job details. Please try again.',
+        },
+        timestamp: new Date().toISOString(),
+        correlationId,
+      },
+      500
+    )
+  }
+})
 
 testJobsRoutes.openapi(checkApplicationTestRoute, async (c: Context): Promise<any> => {
-	const startTime = Date.now();
-	const correlationId = c.get("correlationId") || crypto.randomUUID();
-	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+  const startTime = Date.now()
+  const correlationId = c.get('correlationId') || crypto.randomUUID()
+  const logger = new Logger({ correlationId, requestId: c.get('requestId') })
 
-	try {
-		const params = c.req.param();
-		const jobId = params.jobId;
-		const email = c.req.query('email');
+  try {
+    const params = c.req.param()
+    const jobId = params.jobId
+    const email = c.req.query('email')
 
-		if (!email) {
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "VALIDATION_ERROR",
-						message: "Email parameter is required",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				400,
-			);
-		}
+    if (!email) {
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Email parameter is required',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        400
+      )
+    }
 
-		logger.info("Checking for existing application (test endpoint)", {
-			jobId,
-			email: email.substring(0, 3) + "*****", // Partially hide email in logs
-		});
+    logger.info('Checking for existing application (test endpoint)', {
+      jobId,
+      email: email.substring(0, 3) + '*****',
+    })
 
-		const config = ConfigService.getInstance().getConfig();
-		const supabase = createClient<Database>(
-			config.supabaseUrl,
-			config.supabaseServiceRoleKey,
-		);
+    const config = ConfigService.getInstance().getConfig()
+    const supabase = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey)
 
-		// Check if application exists
-		const { data: existingApplication, error } = await supabase
-			.from("job_applications")
-			.select("id, applied_at")
-			.eq("job_posting_id", jobId)
-			.eq("candidate_email", email)
-			.single();
+    const { data: existingApplication, error } = await supabase
+      .from('job_applications')
+      .select('id, applied_at')
+      .eq('job_posting_id', jobId)
+      .eq('candidate_email', email)
+      .single()
 
-		if (error && error.code !== "PGRST116") { // PGRST116 means no rows found
-			logger.error("Database error checking application (test endpoint)", {
-				jobId,
-				error: error.message,
-				code: error.code,
-			});
-			throw new Error("Failed to check application status");
-		}
+    if (error && error.code !== 'PGRST116') {
+      logger.error('Database error checking application (test endpoint)', {
+        jobId,
+        error: error.message,
+        code: error.code,
+      })
+      throw new Error('Failed to check application status')
+    }
 
-		const hasApplied = !!existingApplication;
+    const hasApplied = !!existingApplication
 
-		logger.info("Application check completed (test endpoint)", {
-			jobId,
-			hasApplied,
-			applicationId: existingApplication?.id,
-			processingTimeMs: Date.now() - startTime,
-		});
+    logger.info('Application check completed (test endpoint)', {
+      jobId,
+      hasApplied,
+      applicationId: existingApplication?.id,
+      processingTimeMs: Date.now() - startTime,
+    })
 
-		return c.json({
-			success: true as const,
-			data: {
-				hasApplied,
-				applicationId: existingApplication?.id,
-				appliedAt: existingApplication?.applied_at,
-			},
-			metadata: {
-				processingTimeMs: Date.now() - startTime,
-				correlationId,
-				timestamp: new Date().toISOString(),
-			},
-		});
-	} catch (error) {
-		logger.error("Failed to check application (test endpoint)", {
-			error: error instanceof Error ? error.message : "Unknown error",
-			stack: error instanceof Error ? error.stack : undefined,
-		});
+    return c.json({
+      success: true as const,
+      data: {
+        hasApplied,
+        applicationId: existingApplication?.id,
+        appliedAt: existingApplication?.applied_at,
+      },
+      metadata: {
+        processingTimeMs: Date.now() - startTime,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    logger.error('Failed to check application (test endpoint)', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
 
-		return c.json(
-			{
-				success: false as const,
-				error: {
-					code: "CHECK_ERROR",
-					message: "An error occurred while checking application status. Please try again.",
-				},
-				timestamp: new Date().toISOString(),
-				correlationId,
-			},
-			500,
-		);
-	}
-});
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: 'CHECK_ERROR',
+          message: 'An error occurred while checking application status. Please try again.',
+        },
+        timestamp: new Date().toISOString(),
+        correlationId,
+      },
+      500
+    )
+  }
+})
 
-// Job application handler (copied from main jobs.ts with same logic)
 testJobsRoutes.openapi(applyToJobTestRoute, async (c: Context): Promise<any> => {
-	const startTime = Date.now();
-	const correlationId = c.get("correlationId") || crypto.randomUUID();
-	const logger = new Logger({ correlationId, requestId: c.get("requestId") });
+  const startTime = Date.now()
+  const correlationId = c.get('correlationId') || crypto.randomUUID()
+  const logger = new Logger({ correlationId, requestId: c.get('requestId') })
 
-	try {
-		const body = await c.req.json();
-		const params = c.req.param();
+  try {
+    const body = await c.req.json()
+    const params = c.req.param()
 
-		const jobId = params.jobId;
-		const { candidateData, resumeFile } = body;
+    const jobId = params.jobId
+    const { candidateData, resumeFile } = body
 
-		if (!jobId) {
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "VALIDATION_ERROR",
-						message: "Job ID is required",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				400,
-			);
-		}
+    if (!jobId) {
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Job ID is required',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        400
+      )
+    }
 
-		if (!candidateData || !resumeFile) {
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "VALIDATION_ERROR",
-						message: "Candidate data and resume file are required",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				400,
-			);
-		}
+    if (!candidateData || !resumeFile) {
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Candidate data and resume file are required',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        400
+      )
+    }
 
-		logger.info("Processing job application (test endpoint)", {
-			jobId,
-			candidateEmail: candidateData.email,
-			fileName: resumeFile.fileName,
-			fileSize: resumeFile.content.length,
-		});
+    logger.info('Processing job application (test endpoint)', {
+      jobId,
+      candidateEmail: candidateData.email,
+      fileName: resumeFile.fileName,
+      fileSize: resumeFile.content.length,
+    })
 
-		const config = ConfigService.getInstance().getConfig();
+    const config = ConfigService.getInstance().getConfig()
 
-		const supabase = createClient<Database>(
-			config.supabaseUrl,
-			config.supabaseServiceRoleKey,
-		);
+    const supabase = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey)
 
-		// Check for duplicate applications
-		const { data: existingApplication } = await supabase
-			.from("job_applications")
-			.select("id")
-			.eq("candidate_email", candidateData.email)
-			.eq("job_posting_id", jobId)
-			.limit(1);
+    const { data: existingApplication, error: checkError } = await supabase
+      .from('job_applications')
+      .select('id, applied_at')
+      .eq('candidate_email', candidateData.email.toLowerCase().trim())
+      .eq('job_posting_id', jobId)
+      .maybeSingle()
 
-		if (existingApplication && existingApplication.length > 0) {
-			logger.info("Duplicate application prevented (test endpoint)", {
-				candidateEmail: candidateData.email,
-				jobId,
-				existingApplicationId: existingApplication[0].id,
-			});
+    if (checkError) {
+      logger.error('Error checking for existing application', {
+        error: checkError.message,
+        candidateEmail: candidateData.email,
+        jobId,
+      })
+    }
 
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "DUPLICATE_APPLICATION",
-						message: "You have already applied to this job position.",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				422, // Unprocessable Entity
-			);
-		}
+    if (existingApplication) {
+      logger.info('Duplicate application prevented (test endpoint)', {
+        candidateEmail: candidateData.email,
+        jobId,
+        existingApplicationId: existingApplication.id,
+        appliedAt: existingApplication.applied_at,
+      })
 
-		const fileUploadService = new FileUploadService(supabase, logger);
-		const applicationService = new ApplicationService(supabase, logger);
-		const emailService = new EmailService(logger, supabase);
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'DUPLICATE_APPLICATION',
+            message: 'You have already applied to this job position.',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        422
+      )
+    }
 
-		// Validate and decode file content
-		let fileContent: Buffer;
-		try {
-			fileContent = Buffer.from(resumeFile.content, "base64");
-		} catch (error) {
-			logger.error("Invalid base64 content (test endpoint)", { error });
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "INVALID_FILE_ENCODING",
-						message: "Resume file must be valid base64 encoded content",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				400,
-			);
-		}
+    const fileUploadService = new FileUploadService(supabase, logger)
+    const applicationService = new ApplicationService(supabase, logger)
+    const emailService = new EmailService(logger, supabase)
 
-		if (fileContent.length === 0) {
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "EMPTY_FILE",
-						message: "Resume file cannot be empty",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				400,
-			);
-		}
+    let fileContent: Buffer
+    try {
+      fileContent = Buffer.from(resumeFile.content, 'base64')
+    } catch (error) {
+      logger.error('Invalid base64 content (test endpoint)', { error })
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'INVALID_FILE_ENCODING',
+            message: 'Resume file must be valid base64 encoded content',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        400
+      )
+    }
 
-		const maxSizeBytes = 5 * 1024 * 1024;
-		if (fileContent.length > maxSizeBytes) {
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "FILE_TOO_LARGE",
-						message: `File size ${fileContent.length} bytes exceeds maximum allowed size of ${maxSizeBytes} bytes`,
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				413,
-			);
-		}
+    if (fileContent.length === 0) {
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'EMPTY_FILE',
+            message: 'Resume file cannot be empty',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        400
+      )
+    }
 
-		// File validation function
-		const validateFileContent = (buffer: Buffer, mimeType: string): boolean => {
-			const signatures: Record<string, number[]> = {
-				"application/pdf": [0x25, 0x50, 0x44, 0x46],
-				"text/plain": [],
-			};
+    const maxSizeBytes = 5 * 1024 * 1024
+    if (fileContent.length > maxSizeBytes) {
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'FILE_TOO_LARGE',
+            message: `File size ${fileContent.length} bytes exceeds maximum allowed size of ${maxSizeBytes} bytes`,
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        413
+      )
+    }
 
-			const expectedSignature = signatures[mimeType];
-			if (expectedSignature && expectedSignature.length > 0) {
-				const fileSignature = Array.from(
-					buffer.subarray(0, expectedSignature.length),
-				);
-				return (
-					JSON.stringify(fileSignature) === JSON.stringify(expectedSignature)
-				);
-			}
+    const validateFileContent = (buffer: Buffer, mimeType: string): boolean => {
+      const signatures: Record<string, number[]> = {
+        'application/pdf': [0x25, 0x50, 0x44, 0x46],
+        'text/plain': [],
+      }
 
-			return buffer.length > 0;
-		};
+      const expectedSignature = signatures[mimeType]
+      if (expectedSignature && expectedSignature.length > 0) {
+        const fileSignature = Array.from(buffer.subarray(0, expectedSignature.length))
+        return JSON.stringify(fileSignature) === JSON.stringify(expectedSignature)
+      }
 
-		if (!validateFileContent(fileContent, resumeFile.mimeType)) {
-			logger.warn("File content validation failed (test endpoint)", {
-				mimeType: resumeFile.mimeType,
-				fileName: resumeFile.fileName,
-				fileSize: fileContent.length,
-			});
+      return buffer.length > 0
+    }
 
-			return c.json(
-				{
-					success: false as const,
-					error: {
-						code: "INVALID_FILE_CONTENT",
-						message:
-							"File content does not match the specified MIME type or is corrupted.",
-					},
-					timestamp: new Date().toISOString(),
-					correlationId,
-				},
-				422,
-			);
-		}
+    if (!validateFileContent(fileContent, resumeFile.mimeType)) {
+      logger.warn('File content validation failed (test endpoint)', {
+        mimeType: resumeFile.mimeType,
+        fileName: resumeFile.fileName,
+        fileSize: fileContent.length,
+      })
 
-		// Use a transaction-like approach: create application first, then file
-		// If file upload fails, we rollback the application
-		let application;
-		let uploadedFile;
-		
-		try {
-			// Step 1: Create application 
-			application = await applicationService.createApplication({
-				jobPostingId: jobId,
-				candidateData,
-				resumeFileId: "", // Will be updated after file upload
-			});
-			
-			// Step 2: Upload file (most likely to fail)
-			uploadedFile = await fileUploadService.uploadResume({
-				candidateId: application.candidateId,
-				fileName: resumeFile.fileName,
-				fileContent,
-				mimeType: resumeFile.mimeType,
-				sizeBytes: fileContent.length,
-				tags: resumeFile.tags,
-				isDefaultResume: false,
-			});
-			
-			// Step 3: Update application with file ID
-			const { error: updateError } = await supabase
-				.from("job_applications")
-				.update({ 
-					resume_file_id: uploadedFile.id,
-					updated_at: new Date().toISOString()
-				})
-				.eq("id", application.applicationId);
-				
-			if (updateError) {
-				logger.error("Failed to update application with file ID", {
-					applicationId: application.applicationId,
-					fileId: uploadedFile.id,
-					error: updateError.message,
-				});
-				// This is not critical - the application and file both exist
-			}
-			
-		} catch (error) {
-			// If file upload fails, clean up the application
-			if (application && !uploadedFile) {
-				try {
-					// Delete the application record
-					await supabase
-						.from("job_applications")
-						.delete()
-						.eq("id", application.applicationId);
-					
-					logger.info("Cleaned up orphaned application after file upload failure", {
-						applicationId: application.applicationId,
-						candidateId: application.candidateId,
-					});
-				} catch (cleanupError) {
-					logger.error("Failed to cleanup orphaned application", {
-						applicationId: application.applicationId,
-						error: cleanupError instanceof Error ? cleanupError.message : "Unknown error",
-					});
-				}
-			}
-			throw error; // Re-throw the original error
-		}
+      return c.json(
+        {
+          success: false as const,
+          error: {
+            code: 'INVALID_FILE_CONTENT',
+            message: 'File content does not match the specified MIME type or is corrupted.',
+          },
+          timestamp: new Date().toISOString(),
+          correlationId,
+        },
+        422
+      )
+    }
 
-		logger.info("Job application created, starting resume parsing (test endpoint)", {
-			applicationId: application.applicationId,
-			candidateId: application.candidateId,
-			resumeFileId: uploadedFile.id,
-		});
+    let application
+    let uploadedFile
 
-		// Resume parsing and scoring (same as production)
-		interface CandidateScore {
-			overallScore: number;
-			requiredSkillsScore: number;
-			experienceScore: number;
-			educationScore: number;
-			skillMatches: Array<{
-				skill: string;
-				found: boolean;
-				confidence: number;
-				context?: string;
-			}>;
-			missingRequiredSkills: string[];
-			recommendations: string[];
-		}
+    try {
+      application = await applicationService.createApplication({
+        jobPostingId: jobId,
+        candidateData: {
+          ...candidateData,
+          email: candidateData.email.toLowerCase().trim(),
+        },
+        resumeFileId: '',
+      })
 
-		let parsedResumeData: unknown = null;
-		let candidateScore: CandidateScore | null = null;
-		let enhancedStatus = application.status;
+      uploadedFile = await fileUploadService.uploadResume({
+        candidateId: application.candidateId,
+        fileName: resumeFile.fileName,
+        fileContent,
+        mimeType: resumeFile.mimeType,
+        sizeBytes: fileContent.length,
+        tags: resumeFile.tags,
+        isDefaultResume: false,
+      })
 
-		try {
-			const resumeText = fileContent.toString("utf-8");
+      const { error: updateError } = await supabase
+        .from('job_applications')
+        .update({
+          resume_file_id: uploadedFile.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', application.applicationId)
 
-			logger.info("Initiating resume parsing and scoring (test endpoint)", {
-				candidateId: application.candidateId,
-				jobPostingId: jobId,
-				resumeFileName: resumeFile.fileName,
-			});
+      if (updateError) {
+        logger.error('Failed to update application with file ID', {
+          applicationId: application.applicationId,
+          fileId: uploadedFile.id,
+          error: updateError.message,
+        })
+      }
+    } catch (error) {
+      if (application && !uploadedFile) {
+        try {
+          await supabase.from('job_applications').delete().eq('id', application.applicationId)
 
-			// Call resume parsing endpoint - use test endpoint to avoid auth
-			const baseUrl = c.req.header("host")
-				? `${c.req.header("x-forwarded-proto") || "http"}://${c.req.header("host")}`
-				: "http://localhost:3001";
+          logger.info('Cleaned up orphaned application after file upload failure', {
+            applicationId: application.applicationId,
+            candidateId: application.candidateId,
+          })
+        } catch (cleanupError) {
+          logger.error('Failed to cleanup orphaned application', {
+            applicationId: application.applicationId,
+            error: cleanupError instanceof Error ? cleanupError.message : 'Unknown error',
+          })
+        }
+      }
+      throw error
+    }
 
-			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 30000);
+    logger.info('Job application created, starting resume parsing (test endpoint)', {
+      applicationId: application.applicationId,
+      candidateId: application.candidateId,
+      resumeFileId: uploadedFile.id,
+    })
 
-			const parseResponse = await fetch(
-				`${baseUrl}/api/v1/candidates/${application.candidateId}/parse-resume`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: "Bearer test-key",
-						"x-correlation-id": correlationId,
-					},
-					body: JSON.stringify({
-						candidateId: application.candidateId,
-						jobId: jobId,
-						fileContent: resumeText,
-						fileName: resumeFile.fileName,
-					}),
-					signal: controller.signal,
-				},
-			);
+    interface CandidateScore {
+      overallScore: number
+      requiredSkillsScore: number
+      experienceScore: number
+      educationScore: number
+      skillMatches: Array<{
+        skill: string
+        found: boolean
+        confidence: number
+        context?: string
+      }>
+      missingRequiredSkills: string[]
+      recommendations: string[]
+    }
 
-			clearTimeout(timeoutId);
+    let parsedResumeData: unknown = null
+    let candidateScore: CandidateScore | null = null
+    let enhancedStatus = application.status
 
-			if (parseResponse.ok) {
-				const parseResult = (await parseResponse.json()) as {
-					data: {
-						parsedData: unknown;
-						score: CandidateScore;
-						shouldAutoReject: boolean;
-					};
-					metadata?: {
-						processingTimeMs?: number;
-					};
-				};
-				parsedResumeData = parseResult.data.parsedData;
-				candidateScore = parseResult.data.score;
+    try {
+      const resumeText = fileContent.toString('utf-8')
 
-				if (parseResult.data.shouldAutoReject) {
-					enhancedStatus = "auto_rejected";
-				}
+      logger.info('Initiating resume parsing and scoring (test endpoint)', {
+        candidateId: application.candidateId,
+        jobPostingId: jobId,
+        resumeFileName: resumeFile.fileName,
+      })
 
-				logger.info("Resume parsing and scoring completed (test endpoint)", {
-					candidateId: application.candidateId,
-					overallScore: candidateScore.overallScore,
-					requiredSkillsScore: candidateScore.requiredSkillsScore,
-					shouldAutoReject: parseResult.data.shouldAutoReject,
-					processingTime: parseResult.metadata?.processingTimeMs,
-					finalStatus: enhancedStatus,
-				});
-			} else {
-				logger.warn("Resume parsing failed, continuing with application (test endpoint)", {
-					candidateId: application.candidateId,
-					parseStatus: parseResponse.status,
-					parseStatusText: parseResponse.statusText,
-				});
-			}
-		} catch (parseError) {
-			if (parseError instanceof Error && parseError.name === "AbortError") {
-				logger.warn("Resume parsing timeout, continuing with application (test endpoint)", {
-					candidateId: application.candidateId,
-					timeout: "30 seconds",
-				});
-			} else {
-				logger.warn("Resume parsing error, continuing with application (test endpoint)", {
-					candidateId: application.candidateId,
-					error:
-						parseError instanceof Error
-							? parseError.message
-							: String(parseError),
-				});
-			}
-		}
+      const baseUrl = c.req.header('host')
+        ? `${c.req.header('x-forwarded-proto') || 'http'}://${c.req.header('host')}`
+        : 'http://localhost:3001'
 
-		// Email handling (simplified for test)
-		try {
-			const { data: jobData } = await supabase
-				.from("job_postings")
-				.select("title, organizations(name)")
-				.eq("id", jobId)
-				.single();
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
 
-			const jobTitle = jobData?.title || "Position";
-			interface OrganizationWithName {
-				name: string;
-			}
+      const parseResponse = await fetch(`${baseUrl}/api/v1/candidates/${application.candidateId}/parse-resume`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer test-key',
+          'x-correlation-id': correlationId,
+        },
+        body: JSON.stringify({
+          candidateId: application.candidateId,
+          jobId: jobId,
+          fileContent: resumeText,
+          fileName: resumeFile.fileName,
+        }),
+        signal: controller.signal,
+      })
 
-			const companyName =
-				(jobData?.organizations as OrganizationWithName)?.name || "Company";
+      clearTimeout(timeoutId)
 
-			logger.info("Scheduling application emails (test endpoint)", {
-				candidateId: application.candidateId,
-				applicationId: application.applicationId,
-				jobTitle,
-				companyName,
-				status: enhancedStatus,
-			});
+      if (parseResponse.ok) {
+        const parseResult = (await parseResponse.json()) as {
+          data: {
+            parsedData: unknown
+            score: CandidateScore
+            shouldAutoReject: boolean
+          }
+          metadata?: {
+            processingTimeMs?: number
+          }
+        }
+        parsedResumeData = parseResult.data.parsedData
+        candidateScore = parseResult.data.score
 
-			// Send immediate confirmation
-			await emailService.sendImmediateApplicationConfirmation({
-				candidateName: candidateData.name,
-				candidateEmail: candidateData.email,
-				jobTitle,
-				companyName,
-				applicationId: application.applicationId,
-			});
+        if (parseResult.data.shouldAutoReject) {
+          enhancedStatus = 'auto_rejected'
+        }
 
-			// Handle auto-rejection
-			if (enhancedStatus === "auto_rejected") {
-				const { error: updateError } = await supabase
-					.from("job_applications")
-					.update({
-						status: "auto_rejected",
-						updated_at: new Date().toISOString(),
-					})
-					.eq("id", application.applicationId);
+        logger.info('Resume parsing and scoring completed (test endpoint)', {
+          candidateId: application.candidateId,
+          overallScore: candidateScore.overallScore,
+          requiredSkillsScore: candidateScore.requiredSkillsScore,
+          shouldAutoReject: parseResult.data.shouldAutoReject,
+          processingTime: parseResult.metadata?.processingTimeMs,
+          finalStatus: enhancedStatus,
+        })
+      } else {
+        logger.warn('Resume parsing failed, continuing with application (test endpoint)', {
+          candidateId: application.candidateId,
+          parseStatus: parseResponse.status,
+          parseStatusText: parseResponse.statusText,
+        })
+      }
+    } catch (parseError) {
+      if (parseError instanceof Error && parseError.name === 'AbortError') {
+        logger.warn('Resume parsing timeout, continuing with application (test endpoint)', {
+          candidateId: application.candidateId,
+          timeout: '30 seconds',
+        })
+      } else {
+        logger.warn('Resume parsing error, continuing with application (test endpoint)', {
+          candidateId: application.candidateId,
+          error: parseError instanceof Error ? parseError.message : String(parseError),
+        })
+      }
+    }
 
-				if (updateError) {
-					logger.warn("Failed to update application status to auto_rejected (test endpoint)", {
-						applicationId: application.applicationId,
-						error: updateError.message,
-					});
-				}
+    try {
+      const { data: jobData } = await supabase
+        .from('job_postings')
+        .select('title, organizations(name)')
+        .eq('id', jobId)
+        .single()
 
-				// Send rejection email
-				await emailService.sendTemplatedEmail(
-					"candidate-rejection",
-					{
-						candidateName: candidateData.name,
-						jobTitle,
-						companyName,
-						applicationId: application.applicationId,
-					},
-					candidateData.email,
-					{
-						correlationId,
-						candidateId: application.candidateId,
-						companyId: companyName.toLowerCase().replace(/\s+/g, "-"),
-					},
-				);
-			}
+      const jobTitle = jobData?.title || 'Position'
+      interface OrganizationWithName {
+        name: string
+      }
 
-			logger.info("Email scheduling completed (test endpoint)", {
-				applicationId: application.applicationId,
-				confirmationScheduled: true,
-				autoRejectionScheduled: enhancedStatus === "auto_rejected",
-			});
-		} catch (emailError) {
-			logger.warn("Email scheduling failed, continuing with application (test endpoint)", {
-				applicationId: application.applicationId,
-				error:
-					emailError instanceof Error ? emailError.message : String(emailError),
-			});
-		}
+      const companyName = (jobData?.organizations as OrganizationWithName)?.name || 'Company'
 
-		// Build response
-		interface JobApplicationResponse {
-			success: true;
-			data: {
-				applicationId: string;
-				candidateId: string;
-				status: "under_review" | "auto_rejected";
-				nextSteps: string;
-				score?: number;
-			};
-			metadata: {
-				processingTimeMs: number;
-				correlationId: string;
-				timestamp: string;
-			};
-		}
+      logger.info('Scheduling application emails (test endpoint)', {
+        candidateId: application.candidateId,
+        applicationId: application.applicationId,
+        jobTitle,
+        companyName,
+        status: enhancedStatus,
+      })
 
-		const responseData: JobApplicationResponse["data"] = {
-			applicationId: application.applicationId,
-			candidateId: application.candidateId,
-			status: enhancedStatus,
-			nextSteps:
-				enhancedStatus === "auto_rejected"
-					? "Your application has been reviewed. Unfortunately, you don't meet the minimum requirements for this position."
-					: application.nextSteps,
-		};
+      await emailService.sendImmediateApplicationConfirmation({
+        candidateName: candidateData.name,
+        candidateEmail: candidateData.email,
+        jobTitle,
+        companyName,
+        applicationId: application.applicationId,
+      })
 
-		if (candidateScore && candidateScore.overallScore >= 30) {
-			responseData.score = candidateScore.overallScore;
-		}
+      if (enhancedStatus === 'auto_rejected') {
+        const { error: updateError } = await supabase
+          .from('job_applications')
+          .update({
+            status: 'auto_rejected',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', application.applicationId)
 
-		return c.json({
-			success: true as const,
-			data: responseData,
-			metadata: {
-				processingTimeMs: Date.now() - startTime,
-				correlationId,
-				timestamp: new Date().toISOString(),
-			},
-		});
-	} catch (error) {
-		logger.error("Failed to process job application (test endpoint)", {
-			error: error instanceof Error ? error.message : "Unknown error",
-			stack: error instanceof Error ? error.stack : undefined,
-		});
+        if (updateError) {
+          logger.warn('Failed to update application status to auto_rejected (test endpoint)', {
+            applicationId: application.applicationId,
+            error: updateError.message,
+          })
+        }
 
-		if (error instanceof Error) {
-			if (
-				error.message.includes("not found") ||
-				error.message.includes("not accepting applications")
-			) {
-				return c.json(
-					{
-						success: false as const,
-						error: {
-							code: "JOB_NOT_FOUND",
-							message: error.message,
-						},
-						timestamp: new Date().toISOString(),
-						correlationId,
-					},
-					404,
-				);
-			}
+        await emailService.sendTemplatedEmail(
+          'candidate-rejection',
+          {
+            candidateName: candidateData.name,
+            jobTitle,
+            companyName,
+            applicationId: application.applicationId,
+          },
+          candidateData.email,
+          {
+            correlationId,
+            candidateId: application.candidateId,
+            companyId: companyName.toLowerCase().replace(/\s+/g, '-'),
+          }
+        )
+      }
 
-			if (error.message.includes("file") || error.message.includes("upload")) {
-				return c.json(
-					{
-						success: false as const,
-						error: {
-							code: "FILE_PROCESSING_ERROR",
-							message: error.message,
-						},
-						timestamp: new Date().toISOString(),
-						correlationId,
-					},
-					422,
-				);
-			}
-		}
+      logger.info('Email scheduling completed (test endpoint)', {
+        applicationId: application.applicationId,
+        confirmationScheduled: true,
+        autoRejectionScheduled: enhancedStatus === 'auto_rejected',
+      })
+    } catch (emailError) {
+      logger.warn('Email scheduling failed, continuing with application (test endpoint)', {
+        applicationId: application.applicationId,
+        error: emailError instanceof Error ? emailError.message : String(emailError),
+      })
+    }
 
-		return c.json(
-			{
-				success: false as const,
-				error: {
-					code: "INTERNAL_ERROR",
-					message:
-						"An error occurred while processing your application. Please try again.",
-				},
-				timestamp: new Date().toISOString(),
-				correlationId,
-			},
-			500,
-		);
-	}
-});
+    interface JobApplicationResponse {
+      success: true
+      data: {
+        applicationId: string
+        candidateId: string
+        status: 'under_review' | 'auto_rejected'
+        nextSteps: string
+        score?: number
+      }
+      metadata: {
+        processingTimeMs: number
+        correlationId: string
+        timestamp: string
+      }
+    }
 
-export { testJobsRoutes };
+    const responseData: JobApplicationResponse['data'] = {
+      applicationId: application.applicationId,
+      candidateId: application.candidateId,
+      status: enhancedStatus,
+      nextSteps:
+        enhancedStatus === 'auto_rejected'
+          ? "Your application has been reviewed. Unfortunately, you don't meet the minimum requirements for this position."
+          : application.nextSteps,
+    }
+
+    if (candidateScore && candidateScore.overallScore >= 30) {
+      responseData.score = candidateScore.overallScore
+    }
+
+    return c.json({
+      success: true as const,
+      data: responseData,
+      metadata: {
+        processingTimeMs: Date.now() - startTime,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    logger.error('Failed to process job application (test endpoint)', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+
+    if (error instanceof Error) {
+      if (error.message.includes('not found') || error.message.includes('not accepting applications')) {
+        return c.json(
+          {
+            success: false as const,
+            error: {
+              code: 'JOB_NOT_FOUND',
+              message: error.message,
+            },
+            timestamp: new Date().toISOString(),
+            correlationId,
+          },
+          404
+        )
+      }
+
+      if (error.message.includes('file') || error.message.includes('upload')) {
+        return c.json(
+          {
+            success: false as const,
+            error: {
+              code: 'FILE_PROCESSING_ERROR',
+              message: error.message,
+            },
+            timestamp: new Date().toISOString(),
+            correlationId,
+          },
+          422
+        )
+      }
+    }
+
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An error occurred while processing your application. Please try again.',
+        },
+        timestamp: new Date().toISOString(),
+        correlationId,
+      },
+      500
+    )
+  }
+})
+
+export { testJobsRoutes }
