@@ -1,19 +1,16 @@
 #!/bin/bash
 
 # Test script for Pipeline Template API
-# Usage: ./test-pipeline-api.sh <api-key>
+# Usage: ./test-pipeline-api.sh [api-key] [environment]
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <api-key>"
-  echo "Example: $0 uk_your_api_key_here"
-  exit 1
+API_KEY="${1:-3ZJMPsS1DKLUgn1MpJ3ZnTdq}"
+ENVIRONMENT="${2:-production}"
+
+if [ "$ENVIRONMENT" = "local" ]; then
+  BASE_URL="http://localhost:3001/api/v1/public"
+else
+  BASE_URL="https://api.recruitseeds.com/api/v1/public"
 fi
-
-API_KEY="$1"
-BASE_URL="http://localhost:3001/api/v1/public"
-
-# For production testing, uncomment this line:
-# BASE_URL="https://api.recruitseeds.com/api/v1/public"
 
 echo "Testing Pipeline Templates API with key: ${API_KEY:0:10}..."
 echo ""
