@@ -1,268 +1,340 @@
-'use client'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { api } from '@/lib/api'
+import { AlertCircle, CheckCircle, Loader2, Upload } from 'lucide-react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
-import { Button } from '@seeds/ui/button'
-import { Input } from '@seeds/ui/input'
-import { Label } from '@seeds/ui/label'
-import { Textarea } from '@seeds/ui/textarea'
-import { Upload, FileText, X } from 'lucide-react'
-import { useState, useRef } from 'react'
-import { formatSalary } from '../lib/api'
-import type { JobPostingDetail } from '../lib/api'
-
-interface JobApplicationFormProps {
-  job: JobPostingDetail
+interface ApplicationFormProps {
+  jobId: string
+  onSuccess?: (response: any) => void
+  onError?: (error: any) => void
+  className?: string
 }
 
-interface FormData {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  coverLetter: string
-  resumeFile: File | null
-}
-
-export function JobApplicationForm({ job }: JobApplicationFormProps) {
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
+export function ApplicationForm({ jobId, onSuccess, onError, className }: ApplicationFormProps) {
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
     phone: '',
-    coverLetter: '',
-    resumeFile: null,
   })
-  
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const [resumeFileData, setResumeFileData] = useState<{
+    fileName: string
+    content: string
+    mimeType: string
+  } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [dragOver, setDragOver] = useState(false)
+  const [applicationStatus, setApplicationStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [applicationResponse, setApplicationResponse] = useState<any>(null)
+  const [errorMessage, setErrorMessage] = useState<string>('')
+
+  const submissionInProgress = useRef(false)
+  const lastSubmissionTime = useRef<number>(0)
+  const submissionCount = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const handleFileSelect = (file: File | null) => {
-    setFormData(prev => ({ ...prev, resumeFile: file }))
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    
-    const files = Array.from(e.dataTransfer.files)
-    const file = files[0]
-    
-    if (file && isValidFileType(file)) {
-      handleFileSelect(file)
+  useEffect(() => {
+    if (applicationStatus === 'success' && applicationResponse) {
+      const timer = setTimeout(() => {
+        resetForm()
+      }, 10000)
+      return () => clearTimeout(timer)
     }
+  }, [applicationStatus, applicationResponse])
+
+  const resetForm = () => {
+    setFormData({ name: '', email: '', phone: '' })
+    setResumeFile(null)
+    setResumeFileData(null)
+    setApplicationStatus('idle')
+    setApplicationResponse(null)
+    setErrorMessage('')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+    submissionInProgress.current = false
+    setIsSubmitting(false)
   }
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && isValidFileType(file)) {
-      handleFileSelect(file)
-    }
-  }
+    if (!file) return
 
-  const isValidFileType = (file: File) => {
-    const validTypes = [
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error('File too large. Maximum size is 5MB.')
+      return
+    }
+
+    const allowedTypes = [
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
+      'text/plain',
     ]
-    return validTypes.includes(file.type) && file.size <= 5 * 1024 * 1024 // 5MB limit
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a PDF, DOC, DOCX, or TXT file.')
+      return
+    }
+
+    setResumeFile(file)
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string
+      const base64Content = base64.split(',')[1]
+      setResumeFileData({
+        fileName: file.name,
+        content: base64Content,
+        mimeType: file.type,
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const submissionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const currentTime = Date.now()
+    const timeSinceLastSubmission = currentTime - lastSubmissionTime.current
+
+    console.log('Form submission attempt', {
+      submissionId,
+      submissionCount: submissionCount.current + 1,
+      timeSinceLastSubmission,
+      isSubmitting,
+      submissionInProgress: submissionInProgress.current,
+      jobId,
+      email: formData.email,
+    })
+
+    if (submissionInProgress.current) {
+      console.warn('Submission already in progress - blocking', {
+        submissionId,
+      })
+      return
+    }
+
+    if (isSubmitting) {
+      console.warn('Form is submitting - blocking', { submissionId })
+      return
+    }
+
+    if (timeSinceLastSubmission < 2000) {
+      console.error('Rapid submission detected - blocking', {
+        submissionId,
+        timeSinceLastSubmission,
+      })
+      toast.error('Please wait a moment before submitting again')
+      return
+    }
+
+    if (!formData.name || !formData.email || !resumeFileData) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    submissionInProgress.current = true
     setIsSubmitting(true)
+    lastSubmissionTime.current = currentTime
+    submissionCount.current += 1
+
+    console.log('Proceeding with submission', {
+      submissionId,
+      submissionNumber: submissionCount.current,
+    })
 
     try {
-      // TODO: Check for authentication first
-      // If not authenticated, show login modal or redirect
-      // If authenticated, proceed with application submission
-      
-      console.log('Form data:', formData)
-      console.log('Job ID:', job.id)
-      
-      // Placeholder for authentication check and submission logic
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-      
-      alert('Application submitted successfully!')
-    } catch (error) {
-      console.error('Application submission failed:', error)
-      alert('Failed to submit application. Please try again.')
+      console.log('Making API request', {
+        submissionId,
+        url: `/test/v1/public/jobs/${jobId}/apply`,
+        method: 'POST',
+        payload: {
+          email: formData.email,
+          fileName: resumeFileData.fileName,
+        },
+      })
+
+      const response = await api.jobs.apply(jobId, {
+        candidateData: formData,
+        resumeFile: resumeFileData,
+      })
+
+      console.log('API response received', {
+        submissionId,
+        success: response.success,
+        applicationId: response.data?.applicationId,
+        status: response.data?.status,
+      })
+
+      if (response.success) {
+        setApplicationStatus('success')
+        setApplicationResponse(response.data)
+        onSuccess?.(response)
+
+        setTimeout(() => {
+          resetForm()
+        }, 5000)
+      }
+    } catch (error: any) {
+      console.error('Submission error', {
+        submissionId,
+        error: error.message,
+        code: error.code,
+      })
+
+      if (error.code === 'DUPLICATE_APPLICATION') {
+        console.warn('Duplicate application error', {
+          submissionId,
+          timeSinceLastSubmission,
+          submissionCount: submissionCount.current,
+        })
+      }
+
+      setApplicationStatus('error')
+      setErrorMessage(error.message || 'An error occurred while submitting your application')
+      onError?.(error)
     } finally {
-      setIsSubmitting(false)
+      setTimeout(() => {
+        submissionInProgress.current = false
+        setIsSubmitting(false)
+        console.log('Submission flags reset', { submissionId })
+      }, 500)
     }
   }
 
-  const isFormValid = formData.firstName && formData.lastName && formData.email && formData.resumeFile
+  if (applicationStatus === 'success' && applicationResponse) {
+    return (
+      <Card className={className}>
+        <CardContent className='pt-6'>
+          <div className='space-y-4'>
+            <div className='flex items-center space-x-2 text-green-600'>
+              <CheckCircle className='h-5 w-5' />
+              <span className='font-semibold'>Application Submitted Successfully!</span>
+            </div>
+            <p className='text-sm text-muted-foreground'>Application ID: {applicationResponse.applicationId}</p>
+            {applicationResponse.score && <p className='text-sm'>Match Score: {applicationResponse.score}%</p>}
+            <p className='text-sm'>{applicationResponse.nextSteps}</p>
+            <Button onClick={resetForm} variant='outline' className='w-full'>
+              Apply to Another Position
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <div className='bg-card border border-border rounded-lg p-6'>
-      <div className='mb-6'>
-        <h2 className='text-xl font-semibold mb-2'>Apply for this position</h2>
-        <div className='text-sm text-muted-foreground space-y-1'>
-          <p><strong>{job.title}</strong></p>
-          <p>{job.organization.name}</p>
-          <p>{formatSalary(job.salary_min, job.salary_max, job.salary_type)}</p>
-          <p className='capitalize'>{job.job_type.replace('_', ' ')}</p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className='space-y-4'>
-        {/* Name Fields */}
-        <div className='grid grid-cols-2 gap-3'>
-          <div>
-            <Label htmlFor='firstName'>First Name *</Label>
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Apply for This Position</CardTitle>
+        <CardDescription>Submit your application and we'll get back to you soon</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='name'>Full Name *</Label>
             <Input
-              id='firstName'
-              type='text'
-              value={formData.firstName}
-              onChange={(e) => handleInputChange('firstName', e.target.value)}
-              placeholder='John'
+              id='name'
+              name='name'
+              value={formData.name}
+              onChange={handleInputChange}
               required
+              disabled={isSubmitting}
+              placeholder='John Doe'
             />
           </div>
-          <div>
-            <Label htmlFor='lastName'>Last Name *</Label>
+
+          <div className='space-y-2'>
+            <Label htmlFor='email'>Email Address *</Label>
             <Input
-              id='lastName'
-              type='text'
-              value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
-              placeholder='Doe'
+              id='email'
+              name='email'
+              type='email'
+              value={formData.email}
+              onChange={handleInputChange}
               required
+              disabled={isSubmitting}
+              placeholder='john@example.com'
             />
           </div>
-        </div>
 
-        {/* Email */}
-        <div>
-          <Label htmlFor='email'>Email Address *</Label>
-          <Input
-            id='email'
-            type='email'
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder='john@example.com'
-            required
-          />
-        </div>
+          <div className='space-y-2'>
+            <Label htmlFor='phone'>Phone Number</Label>
+            <Input
+              id='phone'
+              name='phone'
+              type='tel'
+              value={formData.phone}
+              onChange={handleInputChange}
+              disabled={isSubmitting}
+              placeholder='+1 (555) 123-4567'
+            />
+          </div>
 
-        {/* Phone */}
-        <div>
-          <Label htmlFor='phone'>Phone Number</Label>
-          <Input
-            id='phone'
-            type='tel'
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            placeholder='+1 (555) 123-4567'
-          />
-        </div>
-
-        {/* Resume Upload */}
-        <div>
-          <Label>Resume *</Label>
-          <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              dragOver 
-                ? 'border-primary bg-primary/5' 
-                : 'border-border hover:border-primary/50'
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            {formData.resumeFile ? (
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center space-x-3'>
-                  <FileText className='h-8 w-8 text-primary' />
-                  <div className='text-left'>
-                    <p className='font-medium text-sm'>{formData.resumeFile.name}</p>
-                    <p className='text-xs text-muted-foreground'>
-                      {(formData.resumeFile.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
+          <div className='space-y-2'>
+            <Label htmlFor='resume'>Resume *</Label>
+            <div className='flex items-center space-x-2'>
+              <Input
+                ref={fileInputRef}
+                id='resume'
+                type='file'
+                accept='.pdf,.doc,.docx,.txt'
+                onChange={handleFileChange}
+                disabled={isSubmitting}
+                className='flex-1'
+              />
+              {resumeFile && (
+                <div className='flex items-center text-sm text-muted-foreground'>
+                  <Upload className='h-4 w-4 mr-1' />
+                  {resumeFile.name}
                 </div>
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='sm'
-                  onClick={() => handleFileSelect(null)}
-                >
-                  <X className='h-4 w-4' />
-                </Button>
-              </div>
+              )}
+            </div>
+            <p className='text-xs text-muted-foreground'>Accepted formats: PDF, DOC, DOCX, TXT (max 5MB)</p>
+          </div>
+
+          {applicationStatus === 'error' && errorMessage && (
+            <Alert variant='destructive'>
+              <AlertCircle className='h-4 w-4' />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+
+          <Button
+            type='submit'
+            disabled={isSubmitting || !formData.name || !formData.email || !resumeFileData}
+            className='w-full'
+            onClick={(e) => {
+              console.log('Submit button clicked', {
+                isSubmitting,
+                submissionInProgress: submissionInProgress.current,
+                timestamp: new Date().toISOString(),
+              })
+            }}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                Submitting...
+              </>
             ) : (
-              <div className='space-y-2'>
-                <Upload className='h-8 w-8 mx-auto text-muted-foreground' />
-                <div>
-                  <p className='font-medium'>Drop your resume here, or</p>
-                  <Button
-                    type='button'
-                    variant='link'
-                    className='p-0 h-auto'
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    browse files
-                  </Button>
-                </div>
-                <p className='text-xs text-muted-foreground'>
-                  PDF, DOC, DOCX, or TXT files up to 5MB
-                </p>
-              </div>
+              'Submit Application'
             )}
-            <input
-              ref={fileInputRef}
-              type='file'
-              className='hidden'
-              accept='.pdf,.doc,.docx,.txt'
-              onChange={handleFileInputChange}
-            />
-          </div>
-        </div>
-
-        {/* Cover Letter */}
-        <div>
-          <Label htmlFor='coverLetter'>Cover Letter (Optional)</Label>
-          <Textarea
-            id='coverLetter'
-            value={formData.coverLetter}
-            onChange={(e) => handleInputChange('coverLetter', e.target.value)}
-            placeholder='Tell us why you\'re interested in this position...'
-            rows={4}
-            className='resize-none'
-          />
-        </div>
-
-        {/* Submit Button */}
-        <Button 
-          type='submit' 
-          className='w-full' 
-          disabled={!isFormValid || isSubmitting}
-        >
-          {isSubmitting ? 'Submitting...' : 'Apply Now'}
-        </Button>
-
-        {/* Form Requirements */}
-        <div className='text-xs text-muted-foreground space-y-1'>
-          <p>* Required fields</p>
-          <p>By applying, you agree to our Terms of Service and Privacy Policy.</p>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

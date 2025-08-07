@@ -33,6 +33,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      application_form_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          fields: Json
+          id: string
+          is_default: boolean | null
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_default?: boolean | null
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'application_form_templates_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'organization_users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'application_form_templates_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       application_step_history: {
         Row: {
           application_id: string
@@ -859,12 +913,21 @@ export type Database = {
           created_by: string
           department: string | null
           experience_level: string | null
+          form_template_id: string | null
           hiring_manager_id: string | null
           id: string
           job_type: string
+          location_config: Json | null
+          location_display: string | null
+          location_template_used: string | null
+          location_type: string | null
           organization_id: string
           pipeline_id: string | null
+          pipeline_template_id: string | null
+          primary_lat: number | null
+          primary_lng: number | null
           published_at: string | null
+          remote_allowed: boolean | null
           salary_max: number | null
           salary_min: number | null
           salary_type: string | null
@@ -878,12 +941,21 @@ export type Database = {
           created_by: string
           department?: string | null
           experience_level?: string | null
+          form_template_id?: string | null
           hiring_manager_id?: string | null
           id?: string
           job_type: string
+          location_config?: Json | null
+          location_display?: string | null
+          location_template_used?: string | null
+          location_type?: string | null
           organization_id: string
           pipeline_id?: string | null
+          pipeline_template_id?: string | null
+          primary_lat?: number | null
+          primary_lng?: number | null
           published_at?: string | null
+          remote_allowed?: boolean | null
           salary_max?: number | null
           salary_min?: number | null
           salary_type?: string | null
@@ -897,12 +969,21 @@ export type Database = {
           created_by?: string
           department?: string | null
           experience_level?: string | null
+          form_template_id?: string | null
           hiring_manager_id?: string | null
           id?: string
           job_type?: string
+          location_config?: Json | null
+          location_display?: string | null
+          location_template_used?: string | null
+          location_type?: string | null
           organization_id?: string
           pipeline_id?: string | null
+          pipeline_template_id?: string | null
+          primary_lat?: number | null
+          primary_lng?: number | null
           published_at?: string | null
+          remote_allowed?: boolean | null
           salary_max?: number | null
           salary_min?: number | null
           salary_type?: string | null
@@ -916,6 +997,13 @@ export type Database = {
             columns: ['created_by']
             isOneToOne: false
             referencedRelation: 'organization_users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'job_postings_form_template_id_fkey'
+            columns: ['form_template_id']
+            isOneToOne: false
+            referencedRelation: 'application_form_templates'
             referencedColumns: ['id']
           },
           {
@@ -937,6 +1025,13 @@ export type Database = {
             columns: ['pipeline_id']
             isOneToOne: false
             referencedRelation: 'hiring_pipelines'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'job_postings_pipeline_template_id_fkey'
+            columns: ['pipeline_template_id']
+            isOneToOne: false
+            referencedRelation: 'pipeline_templates'
             referencedColumns: ['id']
           },
         ]
@@ -1007,6 +1102,59 @@ export type Database = {
             columns: ['parent_template_id']
             isOneToOne: false
             referencedRelation: 'job_templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      location_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          location_config: Json
+          location_display: string | null
+          location_type: string
+          name: string
+          organization_id: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          location_config?: Json
+          location_display?: string | null
+          location_type: string
+          name: string
+          organization_id: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          location_config?: Json
+          location_display?: string | null
+          location_type?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'location_templates_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
             referencedColumns: ['id']
           },
         ]
@@ -1212,6 +1360,50 @@ export type Database = {
           },
         ]
       }
+      organization_settings: {
+        Row: {
+          ai_settings: Json | null
+          application_settings: Json | null
+          branding: Json | null
+          compliance_settings: Json | null
+          created_at: string | null
+          email_settings: Json | null
+          id: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_settings?: Json | null
+          application_settings?: Json | null
+          branding?: Json | null
+          compliance_settings?: Json | null
+          created_at?: string | null
+          email_settings?: Json | null
+          id?: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_settings?: Json | null
+          application_settings?: Json | null
+          branding?: Json | null
+          compliance_settings?: Json | null
+          created_at?: string | null
+          email_settings?: Json | null
+          id?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_settings_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: true
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       organization_users: {
         Row: {
           created_at: string | null
@@ -1272,8 +1464,10 @@ export type Database = {
       organizations: {
         Row: {
           created_at: string | null
+          default_location_config: Json | null
           domain: string | null
           id: string
+          location_preferences: Json | null
           logo_url: string | null
           message_retention_days: number | null
           name: string
@@ -1282,8 +1476,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          default_location_config?: Json | null
           domain?: string | null
           id?: string
+          location_preferences?: Json | null
           logo_url?: string | null
           message_retention_days?: number | null
           name: string
@@ -1292,8 +1488,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          default_location_config?: Json | null
           domain?: string | null
           id?: string
+          location_preferences?: Json | null
           logo_url?: string | null
           message_retention_days?: number | null
           name?: string
@@ -1365,6 +1563,60 @@ export type Database = {
             columns: ['task_owner_id']
             isOneToOne: false
             referencedRelation: 'organization_users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      pipeline_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          organization_id: string
+          steps: Json
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          organization_id: string
+          steps?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          organization_id?: string
+          steps?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pipeline_templates_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'organization_users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'pipeline_templates_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
             referencedColumns: ['id']
           },
         ]
@@ -1480,6 +1732,41 @@ export type Database = {
           candidate_name: string
           job_title: string
           company_name: string
+        }[]
+      }
+      job_allows_country: {
+        Args: { job_location_config: Json; country_code: string }
+        Returns: boolean
+      }
+      jobs_within_distance: {
+        Args: { lat: number; lng: number; radius_miles: number }
+        Returns: {
+          content: Json
+          created_at: string | null
+          created_by: string
+          department: string | null
+          experience_level: string | null
+          form_template_id: string | null
+          hiring_manager_id: string | null
+          id: string
+          job_type: string
+          location_config: Json | null
+          location_display: string | null
+          location_template_used: string | null
+          location_type: string | null
+          organization_id: string
+          pipeline_id: string | null
+          pipeline_template_id: string | null
+          primary_lat: number | null
+          primary_lng: number | null
+          published_at: string | null
+          remote_allowed: boolean | null
+          salary_max: number | null
+          salary_min: number | null
+          salary_type: string | null
+          status: string
+          title: string
+          updated_at: string | null
         }[]
       }
       mark_rejection_email_failed: {

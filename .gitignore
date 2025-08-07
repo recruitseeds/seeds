@@ -71,3 +71,6 @@ apps/api/generated-sdks/
 
 # Development reference docs (keep local only)
 REACT_QUERY_GUIDE.md
+
+# Instructions folder (development notes and planning docs)
+instructions/

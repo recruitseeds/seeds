@@ -191,6 +191,11 @@ interface JobsSectionProps {
   searchQuery?: string
   location?: string
   initialFilters?: Record<string, any>
+  showSearch?: boolean
+  showFilters?: boolean
+  showTitle?: boolean
+  title?: string
+  description?: string
 }
 
 export function JobsSection({
@@ -200,6 +205,11 @@ export function JobsSection({
   searchQuery = '',
   location = '',
   initialFilters = {},
+  showSearch = true,
+  showFilters = true,
+  showTitle = true,
+  title,
+  description,
 }: JobsSectionProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -297,9 +307,11 @@ export function JobsSection({
 
   const handlePageChange = useCallback(
     (page: number) => {
-      updateURL({ page: page === 1 ? undefined : page })
+      if (showSearch || showFilters) {
+        updateURL({ page: page === 1 ? undefined : page })
+      }
     },
-    [updateURL]
+    [updateURL, showSearch, showFilters]
   )
 
   const clearAll = useCallback(() => {
@@ -374,7 +386,7 @@ export function JobsSection({
       <section className='pb-8'>
         <div className='container mx-auto px-4'>
           <div className='mb-8'>
-            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>Latest Opportunities</h2>
+            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>{title || 'Loading...'}</h2>
             <p className='text-muted-foreground'>Loading jobs...</p>
           </div>
           <div className='animate-pulse space-y-4'>
@@ -392,7 +404,7 @@ export function JobsSection({
       <section className='pb-8'>
         <div className='container mx-auto px-4'>
           <div className='mb-8'>
-            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>Latest Opportunities</h2>
+            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>{title || 'Jobs'}</h2>
             <p className='text-muted-foreground text-red-600'>
               {error instanceof Error ? error.message : 'Failed to load jobs'}
             </p>
@@ -405,64 +417,78 @@ export function JobsSection({
     )
   }
 
+  const getTitle = () => {
+    if (title) return title
+    if (currentQuery) return `Search Results for "${currentQuery}"`
+    return 'Browse All Jobs'
+  }
+
+  const getDescription = () => {
+    if (description) return description
+    return `${pagination.total} ${pagination.total === 1 ? 'job' : 'jobs'} found${isFetching ? ' • Updating...' : ''}`
+  }
+
   return (
     <section className='pb-8'>
       <div className='container mx-auto px-4'>
-        <div className='mb-8'>
-          <form onSubmit={handleSearch} className='flex gap-4 mb-6'>
-            <div className='flex-1'>
-              <Input
-                type='text'
-                placeholder='Search jobs by title, skills, or company...'
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className='w-full'
-              />
-            </div>
-            <div className='flex-1'>
-              <Input
-                type='text'
-                placeholder='Location'
-                value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
-                className='w-full'
-              />
-            </div>
-            <Button type='submit' className='flex items-center gap-2'>
-              <Search className='h-4 w-4' />
-              Search
-            </Button>
-          </form>
-        </div>
+        {showSearch && (
+          <div className='mb-8'>
+            <form onSubmit={handleSearch} className='flex gap-4'>
+              <div className='flex-1'>
+                <Input
+                  type='text'
+                  placeholder='Search jobs by title, skills, or company...'
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className='w-full'
+                />
+              </div>
+              <div className='flex-1'>
+                <Input
+                  type='text'
+                  placeholder='Location'
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  className='w-full'
+                />
+              </div>
+              <Button type='submit' className='flex items-center gap-2'>
+                <Search className='h-4 w-4' />
+                Search
+              </Button>
+            </form>
+          </div>
+        )}
 
-        <div className='mb-8'>
-          <h2 className='text-2xl sm:text-3xl font-bold mb-2'>
-            {currentQuery ? `Search Results for "${currentQuery}"` : 'Latest Opportunities'}
-          </h2>
-          <p className='text-muted-foreground'>
-            {pagination.total} {pagination.total === 1 ? 'job' : 'jobs'} found
-            {isFetching && ' • Updating...'}
-          </p>
-        </div>
+        {showTitle !== false && (
+          <div className='mb-8'>
+            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>{getTitle()}</h2>
+            <p className='text-muted-foreground'>{getDescription()}</p>
+          </div>
+        )}
 
-        <div className='job-filters-mobile-toggle w-full mb-6'>
-          <JobFilters {...filterProps} />
-          {hasFilters && (
-            <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
-              Apply Filters
-            </Button>
-          )}
-        </div>
-
-        <div className='lg:flex lg:gap-8'>
-          <aside className='job-filters-sidebar w-64 flex-shrink-0'>
+        {showFilters && (
+          <div className='job-filters-mobile-toggle w-full mb-6'>
             <JobFilters {...filterProps} />
             {hasFilters && (
               <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
                 Apply Filters
               </Button>
             )}
-          </aside>
+          </div>
+        )}
+
+        <div className={showFilters ? 'lg:flex lg:gap-8' : ''}>
+          {showFilters && (
+            <aside className='job-filters-sidebar w-64 flex-shrink-0'>
+              <JobFilters {...filterProps} />
+              {hasFilters && (
+                <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
+                  Apply Filters
+                </Button>
+              )}
+            </aside>
+          )}
 
           <div className='flex-1 min-w-0'>
             <div className='border rounded-lg overflow-hidden'>
@@ -474,7 +500,7 @@ export function JobsSection({
               ))}
             </div>
 
-            {pagination.total > 10 && (
+            {pagination.total > 10 && (showSearch || showFilters) && (
               <div className='mt-8'>
                 <Pagination>
                   <PaginationContent>
@@ -530,6 +556,14 @@ export function JobsSection({
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
+              </div>
+            )}
+
+            {!showSearch && !showFilters && jobs.length > 10 && (
+              <div className='mt-8 text-center'>
+                <Button onClick={() => router.push('/browse')} variant='outline' size='lg'>
+                  View All Jobs
+                </Button>
               </div>
             )}
           </div>

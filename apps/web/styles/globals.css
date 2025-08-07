@@ -1,2 +1,39 @@
 @import 'tailwindcss';
 @import '@seeds/tailwind/globals.css';
+
+.suggestions {
+  @apply !bg-background !text-foreground hover:!bg-accent !font-mono;
+}
+
+/* apps/web/app/globals.css */
+.mapboxgl-ctrl-geocoder {
+  @apply !border !border-input !rounded-md !bg-background !shadow-sm;
+  min-width: 100%;
+  font-family: inherit;
+}
+
+.mapboxgl-ctrl-geocoder--input {
+  @apply !text-foreground !bg-background;
+  height: 40px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+}
+
+.mapboxgl-ctrl-geocoder--suggestion {
+  @apply !text-foreground !bg-background hover:!bg-accent;
+}
+
+.mapboxgl-ctrl-geocoder--powered-by {
+  display: none !important; /* Hide "Powered by Mapbox" */
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type='number'] {
+  -moz-appearance: textfield;
+}

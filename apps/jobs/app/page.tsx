@@ -19,14 +19,17 @@ export default async function HomePage() {
       <Header />
       <main className='flex-1'>
         <HeroSection />
-        <JobsSection initialJobs={jobsData.data} initialPagination={jobsData.pagination} />
+        <JobsSection
+          initialJobs={jobsData.data}
+          initialPagination={jobsData.pagination}
+          showSearch={false}
+          showFilters={false}
+          title='Latest Opportunities'
+          description='Discover new positions from leading companies'
+        />
       </main>
       <Footer />
       <ClientWrapper />
     </div>
   )
 }
-
-// export default function Page() {
-//   return <div>Hello</div>
-// }

@@ -11,71 +11,38 @@ interface BrowsePageProps {
     remote?: string
     salary?: string
     experience?: string
+    department?: string
     page?: string
   }>
 }
 
-/**
- * Server Component that prefetches job data based on search parameters
- * This ensures the page loads immediately with data from the server
- */
 export default async function BrowsePage({ searchParams }: BrowsePageProps) {
-  // AWAIT the searchParams - this is the fix!
   const params = await searchParams
 
-  // Extract search parameters
   const query = params.q || ''
   const location = params.location || ''
   const page = parseInt(params.page || '1', 10)
   const limit = 20
 
-  // Build filters from search params
   const filters: Record<string, any> = {}
   if (params.job_type) filters.jobType = params.job_type
   if (params.remote) filters.remote = params.remote
+  if (params.department) filters.department = params.department
   if (params.salary) filters.salary = params.salary
   if (params.experience) filters.experience = params.experience
 
   try {
-    // Prefetch data on the server
     const {
       dehydratedState,
       data,
       searchParams: serverSearchParams,
     } = await getSearchResultsServerSide(query, location, filters, page, limit)
 
-    // Determine page title and description based on search params
-    const getPageTitle = () => {
-      if (query && location) return `Search Results for "${query}" in ${location}`
-      if (query) return `Search Results for "${query}"`
-      if (location) return `Jobs in ${location}`
-      return 'Browse All Jobs'
-    }
-
-    const getPageDescription = () => {
-      if (query && location) return `Showing results for "${query}" in ${location}`
-      if (query) return `Showing results for "${query}"`
-      if (location) return `Showing jobs in ${location}`
-      return 'Discover opportunities from leading companies'
-    }
-
     return (
       <div className='min-h-screen bg-background'>
         <Header />
 
-        <main className='container mx-auto px-4 py-16'>
-          <div className='mb-12 text-center'>
-            <h1 className='text-4xl font-bold mb-4'>{getPageTitle()}</h1>
-            <p className='text-muted-foreground text-lg'>{getPageDescription()}</p>
-            {data.success && data.pagination.total > 0 && (
-              <p className='text-sm text-muted-foreground mt-2'>{data.pagination.total} jobs found</p>
-            )}
-          </div>
-
-          {/* 
-            HydrationBoundary ensures that server-prefetched data 
-            is properly hydrated on the client side
-          */}
+        <main className='container mx-auto px-4 py-8'>
           <HydrationBoundary state={dehydratedState}>
             <JobsSection
               initialJobs={data.success ? data.data : []}
@@ -83,6 +50,9 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
               searchQuery={query}
               location={location}
               initialFilters={filters}
+              showSearch={true}
+              showFilters={true}
+              showTitle={false}
             />
           </HydrationBoundary>
         </main>
@@ -91,19 +61,18 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   } catch (error) {
     console.error('Failed to load browse page:', error)
 
-    // Fallback UI for when server-side data fetching fails
     return (
       <div className='min-h-screen bg-background'>
         <Header />
-
-        <main className='container mx-auto px-4 py-16'>
-          <div className='mb-12 text-center'>
-            <h1 className='text-4xl font-bold mb-4'>Browse All Jobs</h1>
-            <p className='text-muted-foreground text-lg'>Discover opportunities from leading companies</p>
-          </div>
-
-          {/* Fallback - let client-side queries handle data fetching */}
-          <JobsSection searchQuery={query} location={location} initialFilters={filters} />
+        <main className='container mx-auto px-4 py-8'>
+          <JobsSection
+            searchQuery={query}
+            location={location}
+            initialFilters={filters}
+            showSearch={true}
+            showFilters={true}
+            showTitle={false}
+          />
         </main>
       </div>
     )

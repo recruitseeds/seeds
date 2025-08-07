@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@seeds/ui/input'
 import { Textarea } from '@seeds/ui/textarea'
 import { AlertTriangle, Check, Upload } from 'lucide-react'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useApplicationState } from '../../../components/application-state-provider'
@@ -21,7 +21,6 @@ import {
   submitJobApplication,
 } from '../../../lib/api'
 
-// Form validation schema
 const applicationFormSchema = z.object({
   firstName: z
     .string()
@@ -87,6 +86,7 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
   const { applicationState, setHasApplied, setIsSubmitting } = useApplicationState()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [applicationResult, setApplicationResult] = useState<{
     applicationId: string
@@ -99,13 +99,12 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
   const [isParsingResume, setIsParsingResume] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
 
-  // Initialize form with react-hook-form and zod validation
   const form = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
+      firstName: user?.user_metadata?.first_name || '',
+      lastName: user?.user_metadata?.last_name || '',
+      email: user?.email || '',
       phone: '',
       linkedin: '',
       portfolio: '',
@@ -116,12 +115,26 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
 
   const { setValue, watch } = form
 
+  // Only reset form when logging out (not when logging in)
+  React.useEffect(() => {
+    if (!isAuthenticated && isSubmitted) {
+      // User logged out after submitting - reset everything
+      setIsSubmitted(false)
+      setApplicationResult(null)
+      setResumeParseResult(null)
+      setError(null)
+      setInfoMessage(null)
+      setParseError(null)
+      form.reset()
+    }
+  }, [isAuthenticated, isSubmitted, form])
+
   const onSubmit = async (formData: ApplicationFormData) => {
     setError(null)
+    setInfoMessage(null)
     setIsSubmitting(true)
 
-    // Check if user has already applied
-    if (applicationState.hasApplied) {
+    if (applicationState.hasApplied && !isSubmitted) {
       setError('You have already applied to this position. Please check your email for updates.')
       setIsSubmitting(false)
       return
@@ -187,10 +200,9 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
         nextSteps: result.data.nextSteps,
       })
 
-      // Update shared state immediately for optimistic UI
-      setHasApplied(true, result.data.applicationId)
-
       localStorage.removeItem('pendingApplication')
+
+      setIsSubmitted(true)
 
       setIsParsingResume(true)
       setParseError(null)
@@ -228,13 +240,14 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
         setIsParsingResume(false)
       }
 
-      setIsSubmitted(true)
+      setHasApplied(true, result.data.applicationId)
     } catch (err) {
       console.error('Application submission error:', err)
 
       if (err instanceof Error) {
         if (err.message.includes('DUPLICATE_APPLICATION')) {
           setError('You have already applied to this position. Please check your email for updates.')
+          setHasApplied(true)
         } else if (err.message.includes('FILE_TOO_LARGE')) {
           setError('Your resume file is too large. Please upload a file smaller than 5MB.')
         } else if (err.message.includes('INVALID_FILE')) {
@@ -254,30 +267,74 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
     const file = e.target.files?.[0]
     if (file) {
       setError(null)
+      setInfoMessage(null)
       setValue('resume', file)
-    }
-  }
-
-  // Pre-fill form with user data when authenticated
-  if (isAuthenticated && user && !form.formState.isDirty) {
-    const metadata = user.user_metadata || {}
-    if (metadata.first_name) {
-      setValue('firstName', metadata.first_name || '')
-      setValue('lastName', metadata.last_name || '')
-      setValue('email', user.email || '')
     }
   }
 
   const handleAuthSuccess = (authUser: unknown) => {
     console.log('Authentication successful:', authUser)
     setShowAuthModal(false)
+
+    // Restore form data from localStorage after login
+    const pendingApplication = localStorage.getItem('pendingApplication')
+    if (pendingApplication) {
+      try {
+        const data = JSON.parse(pendingApplication)
+        if (data.jobId === jobId) {
+          // Restore form values
+          if (data.formData) {
+            setValue('firstName', data.formData.firstName || '')
+            setValue('lastName', data.formData.lastName || '')
+            setValue('email', data.formData.email || '')
+            setValue('phone', data.formData.phone || '')
+            setValue('linkedin', data.formData.linkedin || '')
+            setValue('portfolio', data.formData.portfolio || '')
+            setValue('coverLetter', data.formData.coverLetter || '')
+            setValue('additionalInfo', data.formData.additionalInfo || '')
+          }
+
+          // Check if resume needs to be re-selected
+          const currentResume = form.getValues('resume')
+          if (!currentResume && data.resumeFile) {
+            setInfoMessage('Your form data has been restored. Please re-select your resume file to continue.')
+          }
+        }
+      } catch (err) {
+        console.error('Failed to restore pending application:', err)
+      }
+    }
   }
 
-  // Use shared application state
   const { hasApplied, applicationId, isSubmitting } = applicationState
 
-  // Show existing application status if user has already applied
-  if (hasApplied && !isSubmitting) {
+  if (isSubmitted && applicationResult) {
+    return (
+      <div className='text-center py-12 space-y-6'>
+        <div className='inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-green-100'>
+          <Check className='h-8 w-8 text-green-600' />
+        </div>
+
+        <div className='space-y-4'>
+          <h3 className='text-2xl font-semibold'>Application Submitted!</h3>
+
+          <div className='max-w-md mx-auto space-y-3'>
+            <p className='text-muted-foreground'>
+              Thank you for your application! The company will review your information and reach out to you soon.
+            </p>
+            {applicationResult.applicationId && (
+              <p className='text-sm text-muted-foreground'>Application ID: {applicationResult.applicationId}</p>
+            )}
+            {applicationResult.score && (
+              <p className='text-sm text-muted-foreground'>Match Score: {applicationResult.score}%</p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (hasApplied && !isSubmitting && !isSubmitted) {
     return (
       <div className='text-center py-12 space-y-6'>
         <div className='inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-blue-100'>
@@ -299,26 +356,6 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
     )
   }
 
-  if (isSubmitted && applicationResult) {
-    return (
-      <div className='text-center py-12 space-y-6'>
-        <div className='inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-green-100'>
-          <Check className='h-8 w-8 text-green-600' />
-        </div>
-
-        <div className='space-y-4'>
-          <h3 className='text-2xl font-semibold'>Application Submitted!</h3>
-
-          <div className='max-w-md mx-auto space-y-3'>
-            <p className='text-muted-foreground'>
-              Thank you for your application! The company will review your information and reach out to you soon.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div>
       {error && (
@@ -329,7 +366,13 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
         </Alert>
       )}
 
-      {/* Authentication Modal */}
+      {infoMessage && !error && (
+        <Alert className='mb-6'>
+          <AlertTitle>Welcome back!</AlertTitle>
+          <AlertDescription>{infoMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
@@ -383,22 +426,8 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
                     Email <span className='text-brand'>*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type='email'
-                      placeholder='john.doe@example.com'
-                      className={hasApplied ? 'border-red-500' : ''}
-                      {...field}
-                    />
+                    <Input type='email' placeholder='john.doe@example.com' {...field} />
                   </FormControl>
-                  {hasApplied && (
-                    <div className='mt-2 p-3 bg-red-50 border border-red-200 rounded-md'>
-                      <p className='text-sm text-red-800 font-medium'>You have already applied to this position</p>
-                      <p className='text-xs text-red-600 mt-1'>Application ID: {applicationId}</p>
-                      <p className='text-xs text-red-600'>
-                        Please check your email for updates on your application status.
-                      </p>
-                    </div>
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -525,11 +554,11 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
             </p>
             <Button
               type='submit'
-              disabled={isSubmitting || hasApplied}
+              disabled={isSubmitting || (hasApplied && !isSubmitted)}
               size='lg'
               loading={isSubmitting}
-              title={hasApplied ? 'You have already applied to this position' : undefined}>
-              {hasApplied ? 'Already Applied' : 'Submit Application'}
+              title={hasApplied && !isSubmitted ? 'You have already applied to this position' : undefined}>
+              {hasApplied && !isSubmitted ? 'Already Applied' : 'Submit Application'}
             </Button>
           </div>
         </form>

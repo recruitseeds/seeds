@@ -3,9 +3,9 @@
 import { Button } from '@seeds/ui/button'
 import { Check } from 'lucide-react'
 import { useState } from 'react'
-import { useAuth } from '../../../components/auth-provider'
 import { useApplicationState } from '../../../components/application-state-provider'
 import { AuthModal } from '../../../components/auth-modal'
+import { useAuth } from '../../../components/auth-provider'
 
 interface ApplyButtonsProps {
   jobId: string
@@ -51,12 +51,13 @@ export function ApplyButtons({ jobId }: ApplyButtonsProps) {
   }
 
   const getApplyButtonContent = () => {
-    if (hasApplied) return (
-      <>
-        <Check className='h-4 w-4 mr-2' />
-        Applied
-      </>
-    )
+    if (hasApplied)
+      return (
+        <>
+          <Check className='h-4 w-4 mr-2' />
+          Applied
+        </>
+      )
     if (!isAuthenticated) return 'Apply'
     return 'Apply'
   }
@@ -64,11 +65,7 @@ export function ApplyButtons({ jobId }: ApplyButtonsProps) {
   return (
     <>
       <div className='flex gap-3'>
-        <Button 
-          variant={hasApplied ? 'outline' : 'default'} 
-          onClick={handleApply}
-          disabled={hasApplied}
-        >
+        <Button variant={hasApplied ? 'outline' : 'default'} onClick={handleApply} disabled={hasApplied}>
           {getApplyButtonContent()}
         </Button>
         <Button variant='outline' onClick={handleRefer}>
@@ -80,7 +77,7 @@ export function ApplyButtons({ jobId }: ApplyButtonsProps) {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
-        mode="login"
+        mode='login'
       />
     </>
   )
