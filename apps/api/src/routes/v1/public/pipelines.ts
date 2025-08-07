@@ -1,21 +1,15 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@seeds/supabase/types/db'
-import type { Context } from 'hono'
 import {
   createOpenAPIApp,
   ErrorResponseSchema,
   MetadataSchema,
 } from '../../../lib/openapi.js'
 import {
-  type PublicAuthContext,
   publicAuth,
 } from '../../../middleware/public-auth.js'
 import { adaptiveRateLimit } from '../../../middleware/rate-limit.js'
-import {
-  businessValidation,
-  validate,
-} from '../../../middleware/validation.js'
 import { ConfigService } from '../../../services/config.js'
 import { Logger } from '../../../services/logger.js'
 
@@ -70,7 +64,6 @@ const createPipelineSchema = z.object({
     .describe('Pipeline steps in order'),
 })
 
-const updatePipelineSchema = createPipelineSchema.partial()
 
 const ListPipelinesResponseSchema = z.object({
   success: z.literal(true),
@@ -189,22 +182,21 @@ const createPipelineRoute = createRoute({
   },
 })
 
-publicPipelinesRoutes.openapi(listPipelinesRoute, async (c: Context<PublicAuthContext>) => {
+publicPipelinesRoutes.openapi(listPipelinesRoute, async (c): Promise<any> => {
   const logger = new Logger({
     correlationId: c.get('correlationId'),
     requestId: c.get('requestId'),
-    endpoint: '/api/v1/public/pipelines',
-    method: 'GET',
   })
 
   const timer = logger.startTimer()
 
   try {
-    const { companyId: organizationId } = c.get('apiKeyMeta')
+    const apiKeyMeta = c.get('apiKeyMeta') as { companyId: string; tier: string; permissions: string[] }
+    const { companyId: organizationId } = apiKeyMeta
     const config = ConfigService.getInstance()
     const supabase = createClient<Database>(
-      config.get('SUPABASE_URL'),
-      config.get('SUPABASE_SERVICE_ROLE_KEY')
+      config.getConfig().supabaseUrl,
+      config.getConfig().supabaseServiceRoleKey
     )
 
     logger.info('Fetching pipeline templates', {
@@ -224,11 +216,12 @@ publicPipelinesRoutes.openapi(listPipelinesRoute, async (c: Context<PublicAuthCo
         errorCode: error.code,
       })
       return c.json({
-        success: false,
+        success: false as const,
         error: {
           code: 'DATABASE_ERROR',
           message: 'Failed to fetch pipeline templates',
         },
+        timestamp: new Date().toISOString(),
         correlationId: c.get('correlationId'),
       }, 400)
     }
@@ -240,7 +233,7 @@ publicPipelinesRoutes.openapi(listPipelinesRoute, async (c: Context<PublicAuthCo
     })
 
     return c.json({
-      success: true,
+      success: true as const,
       data,
       metadata: {
         count: data?.length || 0,
@@ -257,33 +250,33 @@ publicPipelinesRoutes.openapi(listPipelinesRoute, async (c: Context<PublicAuthCo
     })
     
     return c.json({
-      success: false,
+      success: false as const,
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Internal server error',
       },
+      timestamp: new Date().toISOString(),
       correlationId: c.get('correlationId'),
     }, 500)
   }
 })
 
-publicPipelinesRoutes.openapi(getPipelineRoute, async (c: Context<PublicAuthContext>) => {
+publicPipelinesRoutes.openapi(getPipelineRoute, async (c): Promise<any> => {
   const logger = new Logger({
     correlationId: c.get('correlationId'),
     requestId: c.get('requestId'),
-    endpoint: `/api/v1/public/pipelines/${c.req.param('id')}`,
-    method: 'GET',
   })
 
   const timer = logger.startTimer()
 
   try {
-    const { companyId: organizationId } = c.get('apiKeyMeta')
+    const apiKeyMeta = c.get('apiKeyMeta') as { companyId: string; tier: string; permissions: string[] }
+    const { companyId: organizationId } = apiKeyMeta
     const { id } = c.req.valid('param')
     const config = ConfigService.getInstance()
     const supabase = createClient<Database>(
-      config.get('SUPABASE_URL'),
-      config.get('SUPABASE_SERVICE_ROLE_KEY')
+      config.getConfig().supabaseUrl,
+      config.getConfig().supabaseServiceRoleKey
     )
 
     logger.info('Fetching single pipeline template', {
@@ -305,11 +298,12 @@ publicPipelinesRoutes.openapi(getPipelineRoute, async (c: Context<PublicAuthCont
           pipelineId: id,
         })
         return c.json({
-          success: false,
+          success: false as const,
           error: {
             code: 'PIPELINE_NOT_FOUND',
             message: 'Pipeline template not found',
           },
+          timestamp: new Date().toISOString(),
           correlationId: c.get('correlationId'),
         }, 404)
       }
@@ -320,11 +314,12 @@ publicPipelinesRoutes.openapi(getPipelineRoute, async (c: Context<PublicAuthCont
         errorCode: error.code,
       })
       return c.json({
-        success: false,
+        success: false as const,
         error: {
           code: 'DATABASE_ERROR',
           message: 'Failed to fetch pipeline template',
         },
+        timestamp: new Date().toISOString(),
         correlationId: c.get('correlationId'),
       }, 400)
     }
@@ -336,7 +331,7 @@ publicPipelinesRoutes.openapi(getPipelineRoute, async (c: Context<PublicAuthCont
     })
 
     return c.json({
-      success: true,
+      success: true as const,
       data,
       metadata: {
         processingTimeMs: duration,
@@ -352,34 +347,34 @@ publicPipelinesRoutes.openapi(getPipelineRoute, async (c: Context<PublicAuthCont
     })
     
     return c.json({
-      success: false,
+      success: false as const,
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Internal server error',
       },
+      timestamp: new Date().toISOString(),
       correlationId: c.get('correlationId'),
     }, 500)
   }
 })
 
-publicPipelinesRoutes.openapi(createPipelineRoute, async (c: Context<PublicAuthContext>) => {
+publicPipelinesRoutes.openapi(createPipelineRoute, async (c): Promise<any> => {
   const logger = new Logger({
     correlationId: c.get('correlationId'),
     requestId: c.get('requestId'),
-    endpoint: '/api/v1/public/pipelines',
-    method: 'POST',
   })
 
   const timer = logger.startTimer()
 
   try {
-    const { companyId: organizationId } = c.get('apiKeyMeta')
+    const apiKeyMeta = c.get('apiKeyMeta') as { companyId: string; tier: string; permissions: string[] }
+    const { companyId: organizationId } = apiKeyMeta
     const userId = c.get('apiKeyOwner')
     const body = c.req.valid('json')
     const config = ConfigService.getInstance()
     const supabase = createClient<Database>(
-      config.get('SUPABASE_URL'),
-      config.get('SUPABASE_SERVICE_ROLE_KEY')
+      config.getConfig().supabaseUrl,
+      config.getConfig().supabaseServiceRoleKey
     )
 
     logger.info('Creating pipeline template', {
@@ -405,11 +400,12 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c: Context<PublicAuthC
           errorCode: updateError.code,
         })
         return c.json({
-          success: false,
+          success: false as const,
           error: {
             code: 'DATABASE_ERROR',
             message: 'Failed to update default pipelines',
           },
+          timestamp: new Date().toISOString(),
           correlationId: c.get('correlationId'),
         }, 400)
       }
@@ -432,11 +428,12 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c: Context<PublicAuthC
           name: body.name,
         })
         return c.json({
-          success: false,
+          success: false as const,
           error: {
             code: 'DUPLICATE_NAME',
             message: 'Pipeline template with this name already exists',
           },
+          timestamp: new Date().toISOString(),
           correlationId: c.get('correlationId'),
         }, 409)
       }
@@ -446,11 +443,12 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c: Context<PublicAuthC
         errorCode: error.code,
       })
       return c.json({
-        success: false,
+        success: false as const,
         error: {
           code: 'DATABASE_ERROR',
           message: 'Failed to create pipeline template',
         },
+        timestamp: new Date().toISOString(),
         correlationId: c.get('correlationId'),
       }, 400)
     }
@@ -463,7 +461,7 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c: Context<PublicAuthC
     })
 
     return c.json({
-      success: true,
+      success: true as const,
       data,
       metadata: {
         processingTimeMs: duration,
@@ -479,11 +477,12 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c: Context<PublicAuthC
     })
     
     return c.json({
-      success: false,
+      success: false as const,
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Internal server error',
       },
+      timestamp: new Date().toISOString(),
       correlationId: c.get('correlationId'),
     }, 500)
   }
