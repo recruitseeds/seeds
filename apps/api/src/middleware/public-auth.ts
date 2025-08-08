@@ -34,13 +34,15 @@ export const publicAuth = () => {
 			);
 		}
 
-		// Check for test API key first
-		if (apiKey === process.env.TEST_API_KEY) {
-			// For test API key, use your actual organization ID
-			c.set("apiKeyOwner", "test-user");
+		// Check for test API key only in development or when explicitly configured
+		if (apiKey === process.env.TEST_API_KEY && process.env.TEST_ORG_ID) {
+			// For test API key, use the configured test organization ID
+			// Use a null UUID for test user or use TEST_USER_ID env var if set
+			const testUserId = process.env.TEST_USER_ID || null;
+			c.set("apiKeyOwner", testUserId);
 			c.set("apiKeyMeta", {
 				tier: "enterprise" as const,
-				companyId: "7255829c-6c65-413e-abcf-9631ad7b40d2", // Seeds org ID
+				companyId: process.env.TEST_ORG_ID, // Set via TEST_ORG_ID env var
 				permissions: ["read", "write"],
 			});
 			return next();

@@ -411,13 +411,19 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c): Promise<any> => {
       }
     }
 
+    const insertData: any = {
+      ...body,
+      organization_id: organizationId,
+    };
+    
+    // Only add created_by if userId is provided and is a valid UUID
+    if (userId && userId !== 'test-user') {
+      insertData.created_by = userId;
+    }
+
     const { data, error } = await supabase
       .from('pipeline_templates')
-      .insert({
-        ...body,
-        organization_id: organizationId,
-        created_by: userId,
-      })
+      .insert(insertData)
       .select('id, name, description, category, is_default, steps, created_at, updated_at')
       .single()
 
