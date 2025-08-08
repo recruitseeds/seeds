@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instanciate createClient with right options
@@ -1774,7 +1780,9 @@ export type Database = {
         Returns: undefined
       }
       mark_rejection_email_sent: {
-        Args: { p_email_id: string; p_service_id: string } | { p_email_id: string; p_service_id?: string }
+        Args:
+          | { p_email_id: string; p_service_id: string }
+          | { p_email_id: string; p_service_id?: string }
         Returns: undefined
       }
       process_uploaded_resume: {
@@ -1821,7 +1829,12 @@ export type Database = {
     }
     Enums: {
       candidate_application_source: 'platform' | 'import' | 'manual'
-      candidate_application_status: 'applied' | 'in-review' | 'interview' | 'rejected' | 'offer'
+      candidate_application_status:
+        | 'applied'
+        | 'in-review'
+        | 'interview'
+        | 'rejected'
+        | 'offer'
       candidate_file_type:
         | 'resume'
         | 'cover_letter'
@@ -1861,8 +1874,10 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1870,7 +1885,9 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1893,7 +1910,9 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1916,7 +1935,9 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1954,7 +1975,13 @@ export const Constants = {
   public: {
     Enums: {
       candidate_application_source: ['platform', 'import', 'manual'],
-      candidate_application_status: ['applied', 'in-review', 'interview', 'rejected', 'offer'],
+      candidate_application_status: [
+        'applied',
+        'in-review',
+        'interview',
+        'rejected',
+        'offer',
+      ],
       candidate_file_type: [
         'resume',
         'cover_letter',

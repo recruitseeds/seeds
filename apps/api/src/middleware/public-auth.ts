@@ -34,6 +34,18 @@ export const publicAuth = () => {
 			);
 		}
 
+		// Check for test API key first
+		if (apiKey === process.env.TEST_API_KEY) {
+			// For test API key, use your actual organization ID
+			c.set("apiKeyOwner", "test-user");
+			c.set("apiKeyMeta", {
+				tier: "enterprise" as const,
+				companyId: "7255829c-6c65-413e-abcf-9631ad7b40d2", // Seeds org ID
+				permissions: ["read", "write"],
+			});
+			return next();
+		}
+
 		try {
 			const unkeyApiKey = process.env.UNKEY_API_KEY;
 			const unkeyAppId = process.env.UNKEY_APP_ID;
