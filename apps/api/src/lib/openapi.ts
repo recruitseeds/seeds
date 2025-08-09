@@ -121,6 +121,14 @@ For API support, visit our [documentation](https://docs.recruitseeds.com) or con
 				name: "Pipeline",
 				description: "Hiring pipeline and workflow automation",
 			},
+			{
+				name: "Form Templates",
+				description: "Application form template management",
+			},
+			{
+				name: "Pipeline Templates",
+				description: "Hiring pipeline template management",
+			},
 		],
 	});
 
