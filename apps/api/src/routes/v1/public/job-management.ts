@@ -526,6 +526,7 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c): Promise<any> => {
     const insertData: any = {
       ...body,
       organization_id: organizationId,
+      created_by: null, // Allow NULL for test cases
     }
     
     if (userId && userId !== 'test-user') {
