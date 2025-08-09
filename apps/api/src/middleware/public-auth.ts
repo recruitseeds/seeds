@@ -36,9 +36,8 @@ export const publicAuth = () => {
 
 		// Check for test API key only in development or when explicitly configured
 		if (apiKey === process.env.TEST_API_KEY && process.env.TEST_ORG_ID) {
-			// For test API key, use the configured test organization ID
-			// For test API key, don't set a userId - let the endpoint handle it
-			const testUserId = "test-user";
+			const TEST_USER_ID = "test-user";
+			const testUserId = TEST_USER_ID;
 			c.set("apiKeyOwner", testUserId);
 			c.set("apiKeyMeta", {
 				tier: "enterprise" as const,
