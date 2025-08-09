@@ -588,6 +588,10 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c): Promise<any> => {
       logger.error('Failed to create job posting', error, {
         organizationId,
         errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details,
+        errorHint: error.hint,
+        insertData: JSON.stringify(insertData),
       })
       return c.json({
         success: false as const,
