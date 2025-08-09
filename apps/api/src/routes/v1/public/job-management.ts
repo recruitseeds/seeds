@@ -353,7 +353,7 @@ const deleteJobRoute = createRoute({
 	},
 });
 
-publicJobManagementRoutes.openapi(listJobsRoute, async (c) => {
+publicJobManagementRoutes.openapi(listJobsRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -493,7 +493,7 @@ publicJobManagementRoutes.openapi(listJobsRoute, async (c) => {
 	}
 });
 
-publicJobManagementRoutes.openapi(getJobRoute, async (c) => {
+publicJobManagementRoutes.openapi(getJobRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -609,7 +609,7 @@ publicJobManagementRoutes.openapi(getJobRoute, async (c) => {
 	}
 });
 
-publicJobManagementRoutes.openapi(createJobRoute, async (c) => {
+publicJobManagementRoutes.openapi(createJobRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -774,7 +774,7 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c) => {
 	}
 });
 
-publicJobManagementRoutes.openapi(updateJobRoute, async (c) => {
+publicJobManagementRoutes.openapi(updateJobRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -897,7 +897,7 @@ publicJobManagementRoutes.openapi(updateJobRoute, async (c) => {
 	}
 });
 
-publicJobManagementRoutes.openapi(deleteJobRoute, async (c) => {
+publicJobManagementRoutes.openapi(deleteJobRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),

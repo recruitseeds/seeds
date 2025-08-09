@@ -7,7 +7,7 @@
 		"dev": "tsx watch --clear-screen=false src/index.ts",
 		"build": "tsc --noCheck || true",
 		"start": "node dist/index.js",
-		"typecheck": "echo 'TypeScript checking temporarily disabled' && exit 0",
+		"typecheck": "tsc --noEmit",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"check": "npm run typecheck && npm run lint",

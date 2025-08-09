@@ -214,7 +214,7 @@ const deleteFormTemplateRoute = createRoute({
 });
 
 // Implementations
-publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
+publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -225,7 +225,18 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
 	try {
 		const body = c.req.valid("json");
 		const apiKeyMeta = c.get("apiKeyMeta");
-		const organizationId = apiKeyMeta.companyId;
+		if (!apiKeyMeta) {
+			return c.json({
+				success: false as const,
+				error: {
+					code: "AUTH_ERROR",
+					message: "Authentication metadata missing",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId: c.get("correlationId"),
+			}, 401);
+		}
+		const organizationId = apiKeyMeta.companyId as string;
 
 		const config = ConfigService.getInstance();
 		const supabase = createClient<Database>(
@@ -247,7 +258,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
 			.insert({
 				...body,
 				organization_id: organizationId,
-				created_by: c.get("apiKeyOwner") || "api",
+				created_by: (c.get("apiKeyOwner") as string) || "api",
 			})
 			.select("*")
 			.single();
@@ -255,7 +266,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
 		if (error) {
 			logger.error("Failed to create form template", { error: JSON.stringify(error, null, 2) });
 			return c.json({
-				success: false,
+				success: false as const,
 				error: {
 					code: "DATABASE_ERROR",
 					message: "Failed to create form template",
@@ -267,7 +278,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
 
 		const duration = timer();
 		return c.json({
-			success: true,
+			success: true as const,
 			data,
 			metadata: {
 				processingTimeMs: duration,
@@ -279,7 +290,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
 		const duration = timer();
 		logger.error("Request failed", error);
 		return c.json({
-			success: false,
+			success: false as const,
 			error: {
 				code: "INTERNAL_ERROR",
 				message: "Internal server error",
@@ -290,7 +301,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c) => {
 	}
 });
 
-publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c) => {
+publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -301,7 +312,18 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c) => {
 	try {
 		const query = c.req.valid("query");
 		const apiKeyMeta = c.get("apiKeyMeta");
-		const organizationId = apiKeyMeta.companyId;
+		if (!apiKeyMeta) {
+			return c.json({
+				success: false as const,
+				error: {
+					code: "AUTH_ERROR",
+					message: "Authentication metadata missing",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId: c.get("correlationId"),
+			}, 401);
+		}
+		const organizationId = apiKeyMeta.companyId as string;
 
 		const config = ConfigService.getInstance();
 		const supabase = createClient<Database>(
@@ -333,7 +355,7 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c) => {
 		if (error) {
 			logger.error("Database error", error);
 			return c.json({
-				success: false,
+				success: false as const,
 				error: {
 					code: "DATABASE_ERROR",
 					message: "Failed to fetch form templates",
@@ -345,7 +367,7 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c) => {
 
 		const duration = timer();
 		return c.json({
-			success: true,
+			success: true as const,
 			data,
 			metadata: {
 				count: data?.length || 0,
@@ -361,7 +383,7 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c) => {
 		const duration = timer();
 		logger.error("Request failed", error);
 		return c.json({
-			success: false,
+			success: false as const,
 			error: {
 				code: "INTERNAL_ERROR",
 				message: "Internal server error",
@@ -372,7 +394,7 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c) => {
 	}
 });
 
-publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
+publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -383,7 +405,18 @@ publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
 	try {
 		const { id } = c.req.valid("param");
 		const apiKeyMeta = c.get("apiKeyMeta");
-		const organizationId = apiKeyMeta.companyId;
+		if (!apiKeyMeta) {
+			return c.json({
+				success: false as const,
+				error: {
+					code: "AUTH_ERROR",
+					message: "Authentication metadata missing",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId: c.get("correlationId"),
+			}, 401);
+		}
+		const organizationId = apiKeyMeta.companyId as string;
 
 		const config = ConfigService.getInstance();
 		const supabase = createClient<Database>(
@@ -401,7 +434,7 @@ publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
 		if (error) {
 			if (error.code === "PGRST116") {
 				return c.json({
-					success: false,
+					success: false as const,
 					error: {
 						code: "FORM_NOT_FOUND",
 						message: "Form template not found",
@@ -413,7 +446,7 @@ publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
 
 			logger.error("Database error", error);
 			return c.json({
-				success: false,
+				success: false as const,
 				error: {
 					code: "DATABASE_ERROR",
 					message: "Failed to fetch form template",
@@ -425,7 +458,7 @@ publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
 
 		const duration = timer();
 		return c.json({
-			success: true,
+			success: true as const,
 			data,
 			metadata: {
 				processingTimeMs: duration,
@@ -437,7 +470,7 @@ publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
 		const duration = timer();
 		logger.error("Request failed", error);
 		return c.json({
-			success: false,
+			success: false as const,
 			error: {
 				code: "INTERNAL_ERROR",
 				message: "Internal server error",
@@ -448,7 +481,7 @@ publicFormTemplatesRoutes.openapi(getFormTemplateRoute, async (c) => {
 	}
 });
 
-publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
+publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -460,7 +493,18 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
 		const { id } = c.req.valid("param");
 		const body = c.req.valid("json");
 		const apiKeyMeta = c.get("apiKeyMeta");
-		const organizationId = apiKeyMeta.companyId;
+		if (!apiKeyMeta) {
+			return c.json({
+				success: false as const,
+				error: {
+					code: "AUTH_ERROR",
+					message: "Authentication metadata missing",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId: c.get("correlationId"),
+			}, 401);
+		}
+		const organizationId = apiKeyMeta.companyId as string;
 
 		const config = ConfigService.getInstance();
 		const supabase = createClient<Database>(
@@ -489,7 +533,7 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
 		if (error) {
 			if (error.code === "PGRST116") {
 				return c.json({
-					success: false,
+					success: false as const,
 					error: {
 						code: "FORM_NOT_FOUND",
 						message: "Form template not found",
@@ -501,7 +545,7 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
 
 			logger.error("Database error", error);
 			return c.json({
-				success: false,
+				success: false as const,
 				error: {
 					code: "DATABASE_ERROR",
 					message: "Failed to update form template",
@@ -513,7 +557,7 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
 
 		const duration = timer();
 		return c.json({
-			success: true,
+			success: true as const,
 			data,
 			metadata: {
 				processingTimeMs: duration,
@@ -525,7 +569,7 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
 		const duration = timer();
 		logger.error("Request failed", error);
 		return c.json({
-			success: false,
+			success: false as const,
 			error: {
 				code: "INTERNAL_ERROR",
 				message: "Internal server error",
@@ -536,7 +580,7 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c) => {
 	}
 });
 
-publicFormTemplatesRoutes.openapi(deleteFormTemplateRoute, async (c) => {
+publicFormTemplatesRoutes.openapi(deleteFormTemplateRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
 		requestId: c.get("requestId"),
@@ -547,7 +591,18 @@ publicFormTemplatesRoutes.openapi(deleteFormTemplateRoute, async (c) => {
 	try {
 		const { id } = c.req.valid("param");
 		const apiKeyMeta = c.get("apiKeyMeta");
-		const organizationId = apiKeyMeta.companyId;
+		if (!apiKeyMeta) {
+			return c.json({
+				success: false as const,
+				error: {
+					code: "AUTH_ERROR",
+					message: "Authentication metadata missing",
+				},
+				timestamp: new Date().toISOString(),
+				correlationId: c.get("correlationId"),
+			}, 401);
+		}
+		const organizationId = apiKeyMeta.companyId as string;
 
 		const config = ConfigService.getInstance();
 		const supabase = createClient<Database>(
@@ -564,7 +619,7 @@ publicFormTemplatesRoutes.openapi(deleteFormTemplateRoute, async (c) => {
 		if (error) {
 			logger.error("Database error", error);
 			return c.json({
-				success: false,
+				success: false as const,
 				error: {
 					code: "DATABASE_ERROR",
 					message: "Failed to delete form template",
@@ -576,7 +631,7 @@ publicFormTemplatesRoutes.openapi(deleteFormTemplateRoute, async (c) => {
 
 		const duration = timer();
 		return c.json({
-			success: true,
+			success: true as const,
 			message: "Form template deleted successfully",
 			metadata: {
 				processingTimeMs: duration,
@@ -588,7 +643,7 @@ publicFormTemplatesRoutes.openapi(deleteFormTemplateRoute, async (c) => {
 		const duration = timer();
 		logger.error("Request failed", error);
 		return c.json({
-			success: false,
+			success: false as const,
 			error: {
 				code: "INTERNAL_ERROR",
 				message: "Internal server error",
