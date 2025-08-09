@@ -9,7 +9,7 @@ const publicRoutes = createOpenAPIApp();
 
 publicRoutes.route("/candidates", publicCandidatesRoutes);
 publicRoutes.route("/jobs", publicJobsRoutes);
-publicRoutes.route("/", publicJobManagementRoutes);
+publicRoutes.route("/manage", publicJobManagementRoutes);
 publicRoutes.route("/notifications", publicNotificationsRoutes);
 publicRoutes.route("/", publicPipelinesRoutes);
 
