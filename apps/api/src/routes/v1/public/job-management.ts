@@ -803,12 +803,20 @@ publicJobManagementRoutes.openapi(updateJobRoute, async (c: any) => {
 			updates: Object.keys(body),
 		});
 
+		// Prepare update data
+		const updateData: any = {
+			...body,
+			updated_at: new Date().toISOString(),
+		};
+
+		// If status is being changed to "published", set published_at
+		if (body.status === "published") {
+			updateData.published_at = new Date().toISOString();
+		}
+
 		const { data, error } = await supabase
 			.from("job_postings")
-			.update({
-				...body,
-				updated_at: new Date().toISOString(),
-			})
+			.update(updateData)
 			.eq("id", id)
 			.eq("organization_id", organizationId)
 			.select(`
