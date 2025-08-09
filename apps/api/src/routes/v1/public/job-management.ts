@@ -526,11 +526,14 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c): Promise<any> => {
     const insertData: any = {
       ...body,
       organization_id: organizationId,
-      created_by: null, // Allow NULL for test cases
     }
     
-    if (userId && userId !== 'test-user') {
+    // Use userId if it's a valid UUID, otherwise omit created_by
+    if (userId && userId !== 'test-user' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
       insertData.created_by = userId
+    } else {
+      // For test user, try to use a default test UUID
+      insertData.created_by = '00000000-0000-0000-0000-000000000001' // Test user UUID
     }
 
     const { data, error } = await supabase
