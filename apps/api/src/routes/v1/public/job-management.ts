@@ -528,12 +528,48 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c): Promise<any> => {
       organization_id: organizationId,
     }
     
-    // Use userId if it's a valid UUID, otherwise omit created_by
+    // Use userId if it's a valid UUID, otherwise use a fallback
     if (userId && userId !== 'test-user' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
       insertData.created_by = userId
     } else {
-      // For test user, try to use a default test UUID
-      insertData.created_by = '00000000-0000-0000-0000-000000000001' // Test user UUID
+      // For test user, we need to get a valid organization_user ID
+      // First, try to find an existing organization_user for this organization
+      const { data: existingUser } = await supabase
+        .from('organization_users')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .limit(1)
+        .single()
+      
+      if (existingUser) {
+        insertData.created_by = existingUser.id
+      } else {
+        // If no user exists, try to get created_by from an existing job
+        const { data: existingJob } = await supabase
+          .from('job_postings')
+          .select('created_by')
+          .eq('organization_id', organizationId)
+          .not('created_by', 'is', null)
+          .limit(1)
+          .single()
+        
+        if (existingJob) {
+          insertData.created_by = existingJob.created_by
+        } else {
+          logger.error('No valid organization_user found for job creation', {
+            organizationId,
+          })
+          return c.json({
+            success: false as const,
+            error: {
+              code: 'NO_ORGANIZATION_USER',
+              message: 'No organization user found. Please create an organization user first.',
+            },
+            timestamp: new Date().toISOString(),
+            correlationId: c.get('correlationId'),
+          }, 400)
+        }
+      }
     }
 
     const { data, error } = await supabase
