@@ -51,7 +51,7 @@ const createJobSchema = z.object({
   remote_allowed: z.boolean().optional().describe('Whether remote work is allowed'),
   salary_min: z.number().positive().optional().describe('Minimum salary'),
   salary_max: z.number().positive().optional().describe('Maximum salary'),
-  salary_type: z.enum(['hourly', 'daily', 'annual']).optional().describe('Salary payment frequency'),
+  salary_type: z.enum(['hourly', 'daily', 'salary']).optional().describe('Salary payment frequency'),
   pipeline_template_id: z.string().uuid().optional().describe('Pipeline template to use for this job'),
   form_template_id: z.string().uuid().optional().describe('Application form template to use'),
 })
