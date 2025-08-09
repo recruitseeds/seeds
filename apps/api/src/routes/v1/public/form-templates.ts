@@ -258,7 +258,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c: any) => {
 			.insert({
 				...body,
 				organization_id: organizationId,
-				created_by: (c.get("apiKeyOwner") as string) || "api",
+				created_by: null, // Set to null for now, can be enhanced later to lookup actual user
 			})
 			.select("*")
 			.single();
