@@ -1,0 +1,83 @@
+
+> dev
+> turbo dev
+
+turbo 2.5.5
+
+• Packages in scope: @seeds/api, @seeds/editor, @seeds/supabase, @seeds/tailwind, @seeds/tsconfig, @seeds/ui, jobs, web
+• Running dev in 8 packages
+• Remote caching disabled
+web:dev: cache bypass, force executing 2f1f96702bf6d46a
+@seeds/api:dev: cache bypass, force executing fa8d2b583d83c46e
+jobs:dev: cache bypass, force executing 4ebc5905c47f967e
+@seeds/ui:dev: cache bypass, force executing 99a031bb8bae6a4a
+jobs:dev: 
+jobs:dev: > jobs@0.1.0 dev
+jobs:dev: > next dev --port 3002
+jobs:dev: 
+@seeds/api:dev: 
+@seeds/api:dev: > @seeds/api@0.1.0 dev
+@seeds/api:dev: > tsx watch --clear-screen=false src/index.ts
+@seeds/api:dev: 
+web:dev: 
+web:dev: > web@0.1.0 dev
+web:dev: > next dev --turbopack
+web:dev: 
+@seeds/ui:dev: 
+@seeds/ui:dev: > @seeds/ui@0.1.0 dev
+@seeds/ui:dev: > tailwindcss -i ./styles.css -o ./dist/styles.css --watch
+@seeds/ui:dev: 
+@seeds/ui:dev: ≈ tailwindcss v4.1.11
+@seeds/ui:dev: 
+@seeds/ui:dev: Done in 254ms
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:45.134Z","level":"INFO","message":"Starting API server","metadata":{"port":3001,"environment":"development","apiVersion":"v1"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:45.138Z","level":"INFO","message":"🚀 API server running","metadata":{"url":"http://localhost:3001","healthCheckUrl":"http://localhost:3001/api/v1/health","docsUrl":"http://localhost:3001/docs","openApiSpecUrl":"http://localhost:3001/openapi.json"}}
+web:dev:    ▲ Next.js 15.2.0-canary.74 (Turbopack)
+web:dev:    - Local:        http://localhost:3000
+web:dev:    - Network:      http://192.168.4.24:3000
+web:dev:    - Environments: .env
+web:dev: 
+web:dev:  ✓ Starting...
+jobs:dev:    ▲ Next.js 15.2.0-canary.74
+jobs:dev:    - Local:        http://localhost:3002
+jobs:dev:    - Network:      http://192.168.4.24:3002
+jobs:dev:    - Environments: .env
+jobs:dev: 
+jobs:dev:  ✓ Starting...
+jobs:dev: 🔧 Next.js Client Environment Check: {
+jobs:dev:   NEXT_PUBLIC_USE_TEST_ENDPOINTS: 'true',
+jobs:dev:   NEXT_PUBLIC_API_URL: 'http://localhost:3001',
+jobs:dev:   NODE_ENV: 'development'
+jobs:dev: }
+web:dev:  ✓ Ready in 958ms
+jobs:dev:  ✓ Ready in 1519ms
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:48.660Z","level":"INFO","message":"Request started","correlationId":"e31b1f00-e50d-4ce6-b851-a227edd79e76","requestId":"520f2a6b-f767-47a1-abf3-808ebc604243","metadata":{"method":"POST","path":"/api/v1/internal/forms","userAgent":"curl/8.7.1","ip":"unknown"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:48.666Z","level":"INFO","message":"Creating form template","correlationId":"e31b1f00-e50d-4ce6-b851-a227edd79e76","requestId":"520f2a6b-f767-47a1-abf3-808ebc604243","metadata":{"organizationId":"7255829c-6c65-413e-abcf-9631ad7b40d2","name":"Test Form Template"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:48.930Z","level":"ERROR","message":"Failed to create form template","correlationId":"e31b1f00-e50d-4ce6-b851-a227edd79e76","requestId":"520f2a6b-f767-47a1-abf3-808ebc604243","error":{"name":"Unknown","message":"[object Object]"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:48.931Z","level":"INFO","message":"Request completed","correlationId":"e31b1f00-e50d-4ce6-b851-a227edd79e76","requestId":"520f2a6b-f767-47a1-abf3-808ebc604243","metadata":{"method":"POST","path":"/api/v1/internal/forms","status":400,"duration":271,"success":false}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:57.667Z","level":"INFO","message":"Request started","correlationId":"969792c6-df35-44e4-8984-b355152c5086","requestId":"5c1da545-e798-4051-98ae-91f5a5decc89","metadata":{"method":"GET","path":"/api/v1/internal/forms","userAgent":"curl/8.7.1","ip":"unknown"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:45:57.925Z","level":"INFO","message":"Request completed","correlationId":"969792c6-df35-44e4-8984-b355152c5086","requestId":"5c1da545-e798-4051-98ae-91f5a5decc89","metadata":{"method":"GET","path":"/api/v1/internal/forms","status":200,"duration":258,"success":true}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:15.840Z","level":"INFO","message":"Request started","correlationId":"0abc4342-fdf8-4932-807a-ab822ac7914e","requestId":"c36b9151-f096-48b0-9fa8-a28ec39237d9","metadata":{"method":"GET","path":"/api/v1/internal/forms","userAgent":"curl/8.7.1","ip":"unknown"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:16.060Z","level":"INFO","message":"Request completed","correlationId":"0abc4342-fdf8-4932-807a-ab822ac7914e","requestId":"c36b9151-f096-48b0-9fa8-a28ec39237d9","metadata":{"method":"GET","path":"/api/v1/internal/forms","status":200,"duration":220,"success":true}}
+@seeds/api:dev: 11:46:22 PM [tsx] change in ./src/routes/v1/internal/forms.ts Restarting...
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:22.482Z","level":"INFO","message":"Starting API server","metadata":{"port":3001,"environment":"development","apiVersion":"v1"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:22.484Z","level":"INFO","message":"🚀 API server running","metadata":{"url":"http://localhost:3001","healthCheckUrl":"http://localhost:3001/api/v1/health","docsUrl":"http://localhost:3001/docs","openApiSpecUrl":"http://localhost:3001/openapi.json"}}
+@seeds/api:dev: 11:46:27 PM [tsx] change in ./src/routes/v1/internal/forms.ts Restarting...
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:27.809Z","level":"INFO","message":"Starting API server","metadata":{"port":3001,"environment":"development","apiVersion":"v1"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:27.811Z","level":"INFO","message":"🚀 API server running","metadata":{"url":"http://localhost:3001","healthCheckUrl":"http://localhost:3001/api/v1/health","docsUrl":"http://localhost:3001/docs","openApiSpecUrl":"http://localhost:3001/openapi.json"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:34.653Z","level":"INFO","message":"Request started","correlationId":"b9661881-2d5c-4f99-9e11-423b1cb13e29","requestId":"e9eec0b0-b3a5-458a-959e-72e9e15b3df9","metadata":{"method":"POST","path":"/api/v1/internal/forms","userAgent":"curl/8.7.1","ip":"unknown"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:34.657Z","level":"INFO","message":"Creating form template","correlationId":"b9661881-2d5c-4f99-9e11-423b1cb13e29","requestId":"e9eec0b0-b3a5-458a-959e-72e9e15b3df9","metadata":{"organizationId":"7255829c-6c65-413e-abcf-9631ad7b40d2","name":"Test Form Template"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:34.783Z","level":"ERROR","message":"Failed to create form template","correlationId":"b9661881-2d5c-4f99-9e11-423b1cb13e29","requestId":"e9eec0b0-b3a5-458a-959e-72e9e15b3df9","error":{"name":"Unknown","message":"[object Object]"}}
+@seeds/api:dev: {"timestamp":"2025-08-09T03:46:34.784Z","level":"INFO","message":"Request completed","correlationId":"b9661881-2d5c-4f99-9e11-423b1cb13e29","requestId":"e9eec0b0-b3a5-458a-959e-72e9e15b3df9","metadata":{"method":"POST","path":"/api/v1/internal/forms","status":400,"duration":131,"success":false}}
+@seeds/api:dev: 11:46:44 PM [tsx] Previous process hasn't exited yet. Force killing...
+@seeds/api:dev: npm error Lifecycle script `dev` failed with error:
+@seeds/api:dev: npm error code 143
+@seeds/api:dev: npm error path /Users/whitmore/recruit-seeds/apps/api
+@seeds/api:dev: npm error workspace @seeds/api@0.1.0
+@seeds/api:dev: npm error location /Users/whitmore/recruit-seeds/apps/api
+@seeds/api:dev: npm error command failed
+@seeds/api:dev: npm error command sh -c tsx watch --clear-screen=false src/index.ts
+web:dev: [?25h
+jobs:dev: [?25h
+  x Internal errors encountered: external process killed a task
+

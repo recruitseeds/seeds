@@ -22,9 +22,9 @@ const CreateFormSchema = z.object({
 		type: z.enum(["text", "number", "email", "tel", "url", "file", "date", "select", "checkbox", "radio", "textarea"]),
 		required: z.boolean(),
 		order: z.number(),
-		placeholder: z.string().optional(),
+		placeholder: z.string().default(""),
 		helpText: z.string().optional(),
-		validation: z.record(z.any()).optional(),
+		validation: z.record(z.any()).default({}),
 		options: z.array(z.string()).optional(),
 	})).min(1),
 });
@@ -86,7 +86,9 @@ internalFormsRoutes.post("/", async (c) => {
 			.single();
 
 		if (error) {
-			logger.error("Failed to create form template", error);
+			logger.error("Failed to create form template", { 
+				error: JSON.stringify(error, null, 2)
+			});
 			return c.json({
 				success: false,
 				error: {
