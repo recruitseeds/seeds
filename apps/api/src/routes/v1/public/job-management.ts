@@ -43,7 +43,7 @@ const createJobSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long').describe('Job title'),
   content: z.record(z.any()).describe('Job posting content (description, requirements, benefits, etc.)'),
   status: z.enum(['draft', 'published', 'closed', 'archived']).default('draft').describe('Job posting status'),
-  job_type: z.enum(['full-time', 'part-time', 'contract', 'internship', 'temporary']).describe('Employment type'),
+  job_type: z.enum(['full_time', 'part_time', 'contract', 'internship', 'temporary']).describe('Employment type'),
   department: z.string().max(100, 'Department name too long').optional().describe('Department or team'),
   experience_level: z.enum(['entry', 'junior', 'mid', 'senior', 'staff', 'principal', 'executive']).optional().describe('Required experience level'),
   location_display: z.string().max(200, 'Location too long').optional().describe('Location as displayed to candidates'),
@@ -86,7 +86,7 @@ const listJobsRoute = createRoute({
     query: z.object({
       status: z.enum(['draft', 'published', 'closed', 'archived']).optional().describe('Filter by status'),
       department: z.string().optional().describe('Filter by department'),
-      job_type: z.enum(['full-time', 'part-time', 'contract', 'internship', 'temporary']).optional().describe('Filter by job type'),
+      job_type: z.enum(['full_time', 'part_time', 'contract', 'internship', 'temporary']).optional().describe('Filter by job type'),
       location_type: z.enum(['remote', 'office', 'hybrid']).optional().describe('Filter by location type'),
       page: z.coerce.number().int().positive().default(1).describe('Page number for pagination'),
       limit: z.coerce.number().int().positive().max(100).default(20).describe('Items per page (max 100)'),
