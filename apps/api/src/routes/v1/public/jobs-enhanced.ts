@@ -307,7 +307,7 @@ publicJobsEnhancedRoutes.openapi(
 			}
 
 			// Step 3: Check for duplicate application
-			const candidateEmail = formData.email || formData.field_3 || formData.field_4;
+			const candidateEmail = formData.email || formData.field_4 || formData.field_3;
 			if (!candidateEmail) {
 				return c.json(
 					{
@@ -356,7 +356,7 @@ publicJobsEnhancedRoutes.openapi(
 
 			// Extract candidate data from form fields
 			const candidateName = formData.name || formData.field_2 || formData.field_3 || "Candidate";
-			const candidatePhone = formData.phone || formData.field_4 || formData.field_5 || null;
+			const candidatePhone = formData.phone || formData.field_5 || formData.field_4 || null;
 
 			const application = await applicationService.createApplication({
 				jobPostingId: jobId,
