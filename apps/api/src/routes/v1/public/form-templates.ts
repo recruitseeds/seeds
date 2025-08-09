@@ -264,12 +264,18 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c: any) => {
 			.single();
 
 		if (error) {
-			logger.error("Failed to create form template", { error: JSON.stringify(error, null, 2) });
+			logger.error("Failed to create form template", { 
+				error: error.message || "Unknown database error",
+				code: error.code,
+				details: error.details,
+				hint: error.hint,
+			});
 			return c.json({
 				success: false as const,
 				error: {
 					code: "DATABASE_ERROR",
 					message: "Failed to create form template",
+					details: error.message || "Unknown database error",
 				},
 				timestamp: new Date().toISOString(),
 				correlationId: c.get("correlationId"),
