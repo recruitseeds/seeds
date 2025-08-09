@@ -2,11 +2,11 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { Database } from "@seeds/supabase/types/db";
 import { createClient } from "@supabase/supabase-js";
-import { internalAuth } from "../../../middleware/internal-auth.js";
+import { type InternalAuthContext, internalAuth } from "../../../middleware/internal-auth.js";
 import { ConfigService } from "../../../services/config.js";
 import { Logger } from "../../../services/logger.js";
 
-const internalFormsRoutes = new Hono();
+const internalFormsRoutes = new Hono<InternalAuthContext>();
 internalFormsRoutes.use("*", internalAuth());
 
 // Validation schemas
@@ -43,7 +43,7 @@ const ListFormsQuerySchema = z.object({
 	limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
-// POST /forms
+// POST /forms - Create form template
 internalFormsRoutes.post("/", async (c) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId") as string,
@@ -67,6 +67,7 @@ internalFormsRoutes.post("/", async (c) => {
 			name: body.name,
 		});
 
+		// Handle default template logic
 		if (body.is_default) {
 			await supabase
 				.from("application_form_templates")
@@ -79,7 +80,7 @@ internalFormsRoutes.post("/", async (c) => {
 			.from("application_form_templates")
 			.insert({
 				...body,
-				created_by: "system",
+				created_by: c.get("userId") || "system",
 			})
 			.select("*")
 			.single();
@@ -131,12 +132,12 @@ internalFormsRoutes.post("/", async (c) => {
 				message: "Internal server error",
 			},
 			timestamp: new Date().toISOString(),
-			correlationId: c.get("correlationId"),
+			correlationId: c.get("correlationId") as string,
 		}, 500);
 	}
 });
 
-// GET /forms/:id
+// GET /forms/:id - Get form template by ID
 internalFormsRoutes.get("/:id", async (c) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId") as string,
@@ -223,12 +224,12 @@ internalFormsRoutes.get("/:id", async (c) => {
 				message: "Internal server error",
 			},
 			timestamp: new Date().toISOString(),
-			correlationId: c.get("correlationId"),
+			correlationId: c.get("correlationId") as string,
 		}, 500);
 	}
 });
 
-// GET /forms
+// GET /forms - List form templates for organization
 internalFormsRoutes.get("/", async (c) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId") as string,
@@ -316,7 +317,7 @@ internalFormsRoutes.get("/", async (c) => {
 				message: "Internal server error",
 			},
 			timestamp: new Date().toISOString(),
-			correlationId: c.get("correlationId"),
+			correlationId: c.get("correlationId") as string,
 		}, 500);
 	}
 });
