@@ -1,0 +1,19 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "echo '@tiptap-pro:registry=https://registry.tiptap.dev/' > .npmrc && echo '//registry.tiptap.dev/:_authToken='$NPM_TOKEN >> .npmrc && npm ci && npm run build --filter=jobs",
+    "watchPatterns": [
+      "/apps/jobs/**"
+    ]
+  },
+  "deploy": {
+    "runtime": "V2",
+    "numReplicas": 1,
+    "startCommand": "npm run start --workspace=jobs",
+    "sleepApplication": false,
+    "useLegacyStacker": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}

@@ -2,7 +2,6 @@
   "name": "recruit-seeds",
   "private": true,
   "scripts": {
-    "preinstall": "node setup-npmrc.js",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
