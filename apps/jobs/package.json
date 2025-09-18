@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prebuild": "echo '@tiptap-pro:registry=https://registry.tiptap.dev/' > .npmrc && echo '//registry.tiptap.dev/:_authToken='$NPM_TOKEN >> .npmrc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
