@@ -25,20 +25,36 @@ if (!fs.existsSync(backupPath)) {
   return;
 }
 
-const originalDeps = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+const allOriginalDeps = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
 
-// Read and restore web package.json
-const webPackagePath = path.join(__dirname, '../apps/web/package.json');
-const webPackage = JSON.parse(fs.readFileSync(webPackagePath, 'utf8'));
+// Package paths for restoration
+const packagePaths = [
+  { path: path.join(__dirname, '../apps/web/package.json'), name: 'web' },
+  { path: path.join(__dirname, '../packages/editor/package.json'), name: 'editor' }
+];
 
-// Restore dependencies
-Object.entries(originalDeps).forEach(([pkg, version]) => {
-  webPackage.dependencies[pkg] = version;
+// Restore dependencies for each package
+packagePaths.forEach(({ path: packagePath, name }) => {
+  if (!allOriginalDeps[name] || !fs.existsSync(packagePath)) {
+    console.log(`ℹ️  No Tiptap Pro dependencies to restore for ${name}`);
+    return;
+  }
+
+  const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+  const originalDeps = allOriginalDeps[name];
+
+  // Restore dependencies
+  Object.entries(originalDeps).forEach(([pkg, version]) => {
+    if (!packageJson.dependencies) {
+      packageJson.dependencies = {};
+    }
+    packageJson.dependencies[pkg] = version;
+  });
+
+  // Save restored package.json
+  fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
+  console.log(`📦 Tiptap Pro packages restored to ${name}`);
 });
-
-// Save restored package.json
-fs.writeFileSync(webPackagePath, JSON.stringify(webPackage, null, 2));
-console.log('📦 Tiptap Pro packages restored to package.json');
 
 // Install the Tiptap Pro packages
 console.log('📥 Installing Tiptap Pro packages...');

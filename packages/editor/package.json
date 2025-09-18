@@ -9,13 +9,6 @@
   },
   "dependencies": {
     "@seeds/ui": "*",
-    "@tiptap-pro/extension-details": "^2.17.4",
-    "@tiptap-pro/extension-details-content": "^2.17.4",
-    "@tiptap-pro/extension-details-summary": "^2.17.4",
-    "@tiptap-pro/extension-drag-handle-react": "^2.17.5",
-    "@tiptap-pro/extension-emoji": "^2.17.5",
-    "@tiptap-pro/extension-file-handler": "^2.17.5",
-    "@tiptap-pro/extension-unique-id": "^2.17.5",
     "@tiptap/extension-blockquote": "^2.11.5",
     "@tiptap/extension-bold": "^2.11.5",
     "@tiptap/extension-bullet-list": "^2.11.5",
