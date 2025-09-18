@@ -17,16 +17,16 @@ export function FontSwitcher() {
       const appearance = settings.appearance as Record<string, unknown>
       const selectedFont = appearance?.font as string || 'inter'
       
-      // Update localStorage for next page load
+      
       localStorage.setItem('font-preference', selectedFont)
       
-      // Apply font immediately for real-time preview
+      
       const fontClass = getFontClassName(selectedFont)
       
-      // Remove old font classes and add new one
+      
       document.body.className = document.body.className
-        .replace(/font-\w+/g, '') // Remove existing font classes
-        .replace(/\s+/g, ' ') // Clean up spaces
+        .replace(/font-\w+/g, '') 
+        .replace(/\s+/g, ' ') 
         .trim()
       
       document.body.classList.add(fontClass)

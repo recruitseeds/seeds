@@ -267,7 +267,7 @@ publicCandidatesRoutes.openapi(
 			const validatedData = ParseResumeRequestSchema.parse({ body, params });
 			c.set("validatedData", validatedData);
 
-			// Business validation
+			
 			const { candidateId } = validatedData.body;
 			const { companyId } = c.get("apiKeyMeta") || {};
 
@@ -602,7 +602,7 @@ publicCandidatesRoutes.openapi(
 			const validatedData = GetScoreRequestSchema.parse({ params, query });
 			c.set("validatedData", validatedData);
 
-			// Business validation
+			
 			const { id: candidateId } = validatedData.params;
 			const { jobId } = validatedData.query;
 			const { companyId, permissions } = c.get("apiKeyMeta") || {

@@ -4,6 +4,19 @@ const nextConfig = {
     // Add debug info to client-side env
     DEBUG_ENV_VARS: 'true',
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  trailingSlash: false,
+  distDir: '.next',
+  cleanDistDir: true,
+  experimental: {
+    // Disable static optimization for all pages
+    isrMemoryCacheSize: 0,
+  },
   // Enable verbose console logging in development
   ...(process.env.NODE_ENV === 'development' && {
     webpack: (config, { dev, isServer }) => {

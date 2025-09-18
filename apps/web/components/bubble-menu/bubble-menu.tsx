@@ -64,7 +64,7 @@ interface Props {
   enableBlockquote?: boolean
   enableUnderline?: boolean
   enableCodeBlock?: boolean
-  // BubbleMenu uses Tippy under the hood. Use this to append to a different element other than the editor's parent
+  
   tippyAppendTo?: () => HTMLElement | null
 }
 
@@ -79,7 +79,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
   const [linkEditorOpen, setLinkEditorOpen] = useState(false)
   const [url, setUrl] = useState(editor?.getAttributes('link').href ?? '')
 
-  // force rerender when the menu is opened/closed to respond to TipTap and tippy.js changes
+  
   const forceUpdate = useForceUpdate()
 
   const openLinkEditor = useCallback(
@@ -98,7 +98,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
 
   function saveLink() {
     if (url) {
-      const href = url.includes('://') ? url : `https://${url}`
+      const href = url.includes(':
 
       editor?.chain().focus().extendMarkRange('link').setLink({ href }).run()
     } else {
@@ -115,12 +115,12 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
   }
 
   function blurEditor() {
-    // blur editor on mobile in order to hide the keyboard and show mobile dropdown
+    
     if (isMobile && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur()
     }
   }
-  // Show LinkEditor when text highlighted on cmd+k
+  
   useEffect(() => {
     const container = editor?.view.dom
 
@@ -239,8 +239,8 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
           maxWidth: 'auto',
           appendTo: parentContainer,
           popperOptions: {
-            // prefer top; allow flipping to the bottom to avoid getting clipped.
-            // if the popover is completely off-screen it will be hidden by CSS in editor.css.
+            
+            
             placement: 'top',
             modifiers: [
               {
@@ -255,9 +255,9 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
         }}
         updateDelay={50}
         shouldShow={({ editor, view, state, from, to }) => {
-          // Reworked from the default, because we only want the selection
-          // menu for text selections where a mark change will be visible.
-          // https://github.com/ueberdosis/tiptap/blob/063ced27ca55f331960b01ee6aea5623eee0ba49/packages/extension-bubble-menu/src/bubble-menu-plugin.ts#L43
+          
+          
+          
           if (!view.hasFocus() && !canComment) {
             return false
           }
@@ -402,7 +402,7 @@ export const EditorBubbleMenu = memo(function EditorBubbleMemo({
           appendTo: parentContainer,
         }}
         shouldShow={({ editor, from, to }) => {
-          // only show the bubble menu for links.
+          
           return from === to && editor.isActive('link')
         }}>
         <div className='text-foreground flex gap-1 rounded-lg bg-background p-1 items-center shadow-lg dark:shadow-[inset_0px_1px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_1px_2px_rgb(0_0_0_/_0.4),_0px_2px_4px_rgb(0_0_0_/_0.08),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]'>

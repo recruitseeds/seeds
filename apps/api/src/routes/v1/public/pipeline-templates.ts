@@ -13,7 +13,7 @@ import { Logger } from "../../../services/logger.js";
 const publicPipelineTemplatesRoutes = createOpenAPIApp();
 publicPipelineTemplatesRoutes.use("*", publicAuth());
 
-// Pipeline step schemas
+
 const PipelineStepSchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -46,7 +46,7 @@ const PipelineTemplateResponseSchema = z.object({
 		description: z.string().nullable(),
 		category: z.string().nullable(),
 		is_default: z.boolean().nullable(),
-		steps: z.any(), // JSON field
+		steps: z.any(), 
 		organization_id: z.string(),
 		created_by: z.string().nullable(),
 		created_at: z.string().nullable(),
@@ -77,7 +77,7 @@ const PipelineTemplateListResponseSchema = z.object({
 	}),
 });
 
-// Routes
+
 const createPipelineTemplateRoute = createRoute({
 	method: "post",
 	path: "/",
@@ -209,7 +209,7 @@ const deletePipelineTemplateRoute = createRoute({
 	},
 });
 
-// Implementations
+
 publicPipelineTemplatesRoutes.openapi(createPipelineTemplateRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
@@ -240,7 +240,7 @@ publicPipelineTemplatesRoutes.openapi(createPipelineTemplateRoute, async (c: any
 			config.getConfig().supabaseServiceRoleKey,
 		);
 
-		// Handle default template logic
+		
 		if (body.is_default) {
 			await supabase
 				.from("pipeline_templates")
@@ -254,7 +254,7 @@ publicPipelineTemplatesRoutes.openapi(createPipelineTemplateRoute, async (c: any
 			.insert({
 				...body,
 				organization_id: organizationId,
-				created_by: null, // Set to null for now, can be enhanced later to lookup actual user
+				created_by: null, 
 			})
 			.select("*")
 			.single();
@@ -333,7 +333,7 @@ publicPipelineTemplatesRoutes.openapi(listPipelineTemplatesRoute, async (c: any)
 			config.getConfig().supabaseServiceRoleKey,
 		);
 
-		// Build query
+		
 		let dbQuery = supabase
 			.from("pipeline_templates")
 			.select("*", { count: "exact" })
@@ -344,13 +344,13 @@ publicPipelineTemplatesRoutes.openapi(listPipelineTemplatesRoute, async (c: any)
 			dbQuery = dbQuery.eq("category", query.category);
 		}
 
-		// Get total count
+		
 		const { count } = await supabase
 			.from("pipeline_templates")
 			.select("*", { count: "exact", head: true })
 			.eq("organization_id", organizationId);
 
-		// Get paginated data
+		
 		const offset = (query.page - 1) * query.limit;
 		const { data, error } = await dbQuery.range(offset, offset + query.limit - 1);
 
@@ -514,14 +514,14 @@ publicPipelineTemplatesRoutes.openapi(updatePipelineTemplateRoute, async (c: any
 			config.getConfig().supabaseServiceRoleKey,
 		);
 
-		// Handle default template logic
+		
 		if (body.is_default) {
 			await supabase
 				.from("pipeline_templates")
 				.update({ is_default: false })
 				.eq("organization_id", organizationId)
 				.eq("is_default", true)
-				.neq("id", id); // Don't update the current template
+				.neq("id", id); 
 		}
 
 		const { data, error } = await supabase

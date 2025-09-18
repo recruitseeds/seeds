@@ -13,7 +13,7 @@ import ReactTextareaAutosize, {
 
   This is a thin wrapper that re-renders the textarea after the first render.
 
-  See https://github.com/Andarist/react-textarea-autosize/issues/337#issuecomment-1024980737
+  See https://github.com/Andarist/react-textarea-autosize/issues/337
   for more details.
 */
 

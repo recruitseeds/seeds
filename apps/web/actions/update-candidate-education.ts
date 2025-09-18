@@ -1,4 +1,4 @@
-// src/actions/update-candidate-education.ts
+
 'use server'
 
 import { updateCandidateEducation } from '@seeds/supabase/mutations'
@@ -24,10 +24,10 @@ export const updateCandidateEducationAction = authActionClient
       const { user, supabase } = ctx
       const { id, ...updateFields } = parsedInput
 
-      // Format dates properly
+      
       const formattedFields = { ...updateFields }
 
-      // Format start_date if it exists and is in YYYY-MM format
+      
       if (
         formattedFields.start_date &&
         formattedFields.start_date.length === 7
@@ -35,21 +35,21 @@ export const updateCandidateEducationAction = authActionClient
         formattedFields.start_date = `${formattedFields.start_date}-01`
       }
 
-      // Format end_date if it exists and is in YYYY-MM format
+      
       if (formattedFields.end_date && formattedFields.end_date.length === 7) {
         formattedFields.end_date = `${formattedFields.end_date}-01`
       }
 
-      // Handle description - convert to JSON if needed
+      
       if (
         typeof formattedFields.description === 'string' &&
         formattedFields.description.trim() !== ''
       ) {
         try {
-          // First try to parse it as JSON in case it's already a JSON string
+          
           JSON.parse(formattedFields.description)
         } catch {
-          // If it's not valid JSON, store it as a text property
+          
           formattedFields.description = { text: formattedFields.description }
         }
       }

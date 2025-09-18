@@ -51,12 +51,12 @@ export const createRateLimiter = (tier: keyof typeof RATE_LIMITS = "free") => {
 	});
 };
 
-// Specific rate limiters for different use cases
+
 export const defaultRateLimit = createRateLimiter("free");
 export const proRateLimit = createRateLimiter("pro");
 export const enterpriseRateLimit = createRateLimiter("enterprise");
 
-// Adaptive rate limiter that checks API key tier
+
 export const adaptiveRateLimit = () => {
 	return async (c: Context, next: Next) => {
 		const apiKeyMeta = c.get("apiKeyMeta") as { tier?: string } | undefined;

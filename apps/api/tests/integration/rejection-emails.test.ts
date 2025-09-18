@@ -286,7 +286,7 @@ describe("Rejection Email System", () => {
 
 		it("should handle database errors gracefully", async () => {
 			const invalidSupabase = createClient<Database>(
-				"https://invalid-url.supabase.co",
+				"https:
 				"invalid-key",
 			);
 

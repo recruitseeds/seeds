@@ -7,7 +7,7 @@ export async function getUserFont(): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      return 'inter' // Default font for non-authenticated users
+      return 'inter' 
     }
 
     const { data, error } = await supabase
@@ -17,7 +17,7 @@ export async function getUserFont(): Promise<string> {
       .single()
 
     if (error || !data?.settings) {
-      return 'inter' // Default font if no settings found
+      return 'inter' 
     }
 
     const settings = data.settings as Record<string, unknown>
@@ -26,11 +26,11 @@ export async function getUserFont(): Promise<string> {
     return appearance?.font as string || 'inter'
   } catch (error) {
     console.error('Error fetching user font preference:', error)
-    return 'inter' // Default font on error
+    return 'inter' 
   }
 }
 
-// Client-side fallback for when server-side fails
+
 export function getUserFontFromClient(): string {
   if (typeof window === 'undefined') return 'inter'
   return localStorage.getItem('font-preference') || 'inter'

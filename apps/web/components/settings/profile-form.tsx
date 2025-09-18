@@ -42,10 +42,10 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 
-// This can come from your database or API.
+
 const defaultValues: Partial<ProfileFormValues> = {
-  username: '', // Fix uncontrolled input error
-  email: '', // Fix uncontrolled input error
+  username: '', 
+  email: '', 
   bio: '',
   urls: [],
 }
@@ -66,7 +66,7 @@ export function ProfileForm() {
   const { data: settings, isLoading } = useQuery(trpc.organization.getUserSettings.queryOptions())
   const updateSettings = useMutation(trpc.organization.updateUserSettingsPartial.mutationOptions())
 
-  // Load current settings
+  
   useEffect(() => {
     if (settings) {
       const profile = settings.profile as Record<string, unknown>

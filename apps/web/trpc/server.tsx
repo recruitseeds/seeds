@@ -19,7 +19,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
         url: 'http://localhost:3000/api/trpc',
         transformer: superjson,
         async headers() {
-          // Add any headers you need
+          
           return {}
         },
       }),

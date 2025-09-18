@@ -32,9 +32,9 @@ Return a JSON object with the following structure:
     "email": "email@example.com",
     "phone": "+1-555-0123",
     "location": "City, State",
-    "linkedinUrl": "https://linkedin.com/in/username",
-    "githubUrl": "https://github.com/username",
-    "portfolioUrl": "https://portfolio.com"
+    "linkedinUrl": "https:
+    "githubUrl": "https:
+    "portfolioUrl": "https:
   },
   "summary": "Professional summary",
   "experience": [
@@ -63,8 +63,8 @@ Return a JSON object with the following structure:
       "name": "Project Name",
       "description": "Project description",
       "technologies": ["React", "Node.js"],
-      "url": "https://project.com",
-      "githubUrl": "https://github.com/user/project"
+      "url": "https:
+      "githubUrl": "https:
     }
   ],
   "certifications": [

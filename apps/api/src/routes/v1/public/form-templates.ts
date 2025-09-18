@@ -13,7 +13,7 @@ import { Logger } from "../../../services/logger.js";
 const publicFormTemplatesRoutes = createOpenAPIApp();
 publicFormTemplatesRoutes.use("*", publicAuth());
 
-// Form template schemas
+
 const FormFieldSchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -24,6 +24,8 @@ const FormFieldSchema = z.object({
 	helpText: z.string().optional(),
 	validation: z.record(z.any()).default({}),
 	options: z.array(z.string()).optional(),
+	groupWithNext: z.boolean().optional(), 
+	width: z.enum(["full", "half", "third", "two-thirds"]).optional(), 
 });
 
 const CreateFormTemplateSchema = z.object({
@@ -50,7 +52,7 @@ const FormTemplateResponseSchema = z.object({
 		description: z.string().nullable(),
 		category: z.string().nullable(),
 		is_default: z.boolean().nullable(),
-		fields: z.any(), // JSON field
+		fields: z.any(), 
 		organization_id: z.string(),
 		created_by: z.string().nullable(),
 		created_at: z.string().nullable(),
@@ -81,7 +83,7 @@ const FormTemplateListResponseSchema = z.object({
 	}),
 });
 
-// Routes
+
 const createFormTemplateRoute = createRoute({
 	method: "post",
 	path: "/",
@@ -213,7 +215,7 @@ const deleteFormTemplateRoute = createRoute({
 	},
 });
 
-// Implementations
+
 publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c: any) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId"),
@@ -244,7 +246,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c: any) => {
 			config.getConfig().supabaseServiceRoleKey,
 		);
 
-		// Handle default template logic
+		
 		if (body.is_default) {
 			await supabase
 				.from("application_form_templates")
@@ -258,7 +260,7 @@ publicFormTemplatesRoutes.openapi(createFormTemplateRoute, async (c: any) => {
 			.insert({
 				...body,
 				organization_id: organizationId,
-				created_by: null, // Set to null for now, can be enhanced later to lookup actual user
+				created_by: null, 
 			})
 			.select("*")
 			.single();
@@ -337,7 +339,7 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c: any) => {
 			config.getConfig().supabaseServiceRoleKey,
 		);
 
-		// Build query
+		
 		let dbQuery = supabase
 			.from("application_form_templates")
 			.select("*", { count: "exact" })
@@ -348,13 +350,13 @@ publicFormTemplatesRoutes.openapi(listFormTemplatesRoute, async (c: any) => {
 			dbQuery = dbQuery.eq("category", query.category);
 		}
 
-		// Get total count
+		
 		const { count } = await supabase
 			.from("application_form_templates")
 			.select("*", { count: "exact", head: true })
 			.eq("organization_id", organizationId);
 
-		// Get paginated data
+		
 		const offset = (query.page - 1) * query.limit;
 		const { data, error } = await dbQuery.range(offset, offset + query.limit - 1);
 
@@ -518,14 +520,14 @@ publicFormTemplatesRoutes.openapi(updateFormTemplateRoute, async (c: any) => {
 			config.getConfig().supabaseServiceRoleKey,
 		);
 
-		// Handle default template logic
+		
 		if (body.is_default) {
 			await supabase
 				.from("application_form_templates")
 				.update({ is_default: false })
 				.eq("organization_id", organizationId)
 				.eq("is_default", true)
-				.neq("id", id); // Don't update the current template
+				.neq("id", id); 
 		}
 
 		const { data, error } = await supabase

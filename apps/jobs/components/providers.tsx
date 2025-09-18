@@ -1,13 +1,13 @@
 'use client'
 
-import { QueryClient, QueryClientProvider, HydrationBoundary } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, HydrationBoundary, DehydratedState } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState, type ReactNode } from 'react'
 import { getBrowserQueryClient } from '../lib/query-client'
 
 interface ProvidersProps {
   children: ReactNode
-  dehydratedState?: unknown
+  dehydratedState?: DehydratedState | null
 }
 
 /**

@@ -92,7 +92,7 @@ export const parseAndStoreResumeAction = authActionClient
       if (!(formData instanceof FormData)) {
         const errorMsg = 'Invalid input type, expected FormData.'
         console.error(
-          `[Action: parseAndStore] ${errorMsg} User ID: ${authUserId}.`
+          `[Action]: ${errorMsg} User ID: ${authUserId}.`
         )
         return {
           success: false,

@@ -39,19 +39,19 @@ const PersonalInfoSchema = z
 			.url()
 			.optional()
 			.describe("LinkedIn profile URL")
-			.openapi({ example: "https://linkedin.com/in/sarahjohnson" }),
+			.openapi({ example: "https://linkedin.com/in/john-doe" }),
 		githubUrl: z
 			.string()
 			.url()
 			.optional()
 			.describe("GitHub profile URL")
-			.openapi({ example: "https://github.com/sarahjohnson" }),
+			.openapi({ example: "https://github.com/john-doe" }),
 		portfolioUrl: z
 			.string()
 			.url()
 			.optional()
 			.describe("Personal portfolio website")
-			.openapi({ example: "https://sarahjohnson.dev" }),
+			.openapi({ example: "https://johndoe.dev" }),
 	})
 	.describe("Personal information extracted from resume");
 
@@ -140,14 +140,14 @@ const ProjectSchema = z
 			.url()
 			.optional()
 			.describe("Live project URL")
-			.openapi({ example: "https://analytics.example.com" }),
+			.openapi({ example: "https://myproject.com" }),
 		githubUrl: z
 			.string()
 			.url()
 			.optional()
 			.describe("GitHub repository URL")
 			.openapi({
-				example: "https://github.com/sarahjohnson/analytics-dashboard",
+				example: "https://github.com/john-doe/project-name",
 			}),
 	})
 	.describe("Project entry");
@@ -182,7 +182,7 @@ const CertificationSchema = z
 			.url()
 			.optional()
 			.describe("Verification URL")
-			.openapi({ example: "https://aws.amazon.com/verification/123456" }),
+			.openapi({ example: "https://certifications.com/verify/12345" }),
 	})
 	.describe("Professional certification");
 

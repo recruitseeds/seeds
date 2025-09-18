@@ -6,7 +6,7 @@ import { ImageUpload } from '@/editor/extensions/image-upload'
 import { Link } from '@/editor/extensions/link'
 import { Editor } from '@tiptap/react'
 
-// import { TableOfContentsNode } from '@/extensions/TableOfContentsNode'
+
 
 export const isTableGripSelected = (node: HTMLElement) => {
   let container = node
@@ -40,7 +40,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     ImageBlock.name,
     Link.name,
     Figcaption.name,
-    // TableOfContentsNode.name,
+    
   ]
 
   return (

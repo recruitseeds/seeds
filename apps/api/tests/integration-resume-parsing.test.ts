@@ -8,7 +8,7 @@ describe("Resume Parsing Integration", () => {
 	let testCandidateId: string;
 
 	beforeAll(async () => {
-		// Setup database connection
+		
 		const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -18,7 +18,7 @@ describe("Resume Parsing Integration", () => {
 
 		supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-		// Check if we have test data available
+		
 		const { data: jobs } = await supabase
 			.from("job_postings")
 			.select("id")
@@ -31,7 +31,7 @@ describe("Resume Parsing Integration", () => {
 
 		testJobId = jobs[0].id;
 
-		// Create a test candidate profile for testing
+		
 		const { data: candidate, error } = await supabase
 			.from("candidate_profiles")
 			.insert({
@@ -53,7 +53,7 @@ describe("Resume Parsing Integration", () => {
 	});
 
 	it("should handle complete resume parsing workflow", async () => {
-		// Skip if we don't have test data
+		
 		if (!testJobId || !testCandidateId) {
 			console.log("⚠️ Skipping integration test - missing test data");
 			return;
@@ -65,7 +65,7 @@ Senior Software Engineer
 Email: sarah.johnson@email.com
 Phone: +1-555-0123
 Location: San Francisco, CA
-GitHub: https://github.com/sarahjohnson
+GitHub: https:
 
 EXPERIENCE
 Tech Unicorn Inc - Senior Software Engineer (2021-03 to 2024-01)
@@ -95,21 +95,21 @@ PROJECTS
 E-commerce Analytics Dashboard
 • Real-time analytics dashboard for e-commerce platforms
 • Built with TypeScript, D3.js, Express.js, and Redis
-• GitHub: https://github.com/sarahjohnson/analytics-dashboard
+• GitHub: https:
 
 CERTIFICATIONS
 AWS Solutions Architect Associate (2023-05 to 2026-05)
 Credential ID: AWS-ASA-123456
     `.trim();
 
-		// Test the parsing by calling the API endpoint directly
+		
 		const response = await fetch(
-			`http://localhost:3001/api/v1/candidates/${testCandidateId}/parse-resume`,
+			`http:
 			{
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${process.env.UNKEY_API_KEY}`, // Use the test API key
+					Authorization: `Bearer ${process.env.UNKEY_API_KEY}`, 
 				},
 				body: JSON.stringify({
 					candidateId: testCandidateId,
@@ -120,7 +120,7 @@ Credential ID: AWS-ASA-123456
 			},
 		);
 
-		// Check if server is running
+		
 		if (!response.ok) {
 			if (response.status === 0 || response.status >= 500) {
 				console.log("⚠️ Server not running - skipping API integration test");
@@ -136,14 +136,14 @@ Credential ID: AWS-ASA-123456
 
 		const result = await response.json();
 
-		// Verify the response structure
+		
 		expect(result).toHaveProperty("success", true);
 		expect(result).toHaveProperty("data");
 		expect(result.data).toHaveProperty("parsedData");
 		expect(result.data).toHaveProperty("score");
 		expect(result).toHaveProperty("metadata");
 
-		// Verify parsed data structure
+		
 		const parsedData = result.data.parsedData;
 		expect(parsedData).toHaveProperty("personalInfo");
 		expect(parsedData.personalInfo).toHaveProperty("name");
@@ -155,7 +155,7 @@ Credential ID: AWS-ASA-123456
 		expect(parsedData).toHaveProperty("projects");
 		expect(parsedData).toHaveProperty("certifications");
 
-		// Verify scoring structure
+		
 		const score = result.data.score;
 		expect(score).toHaveProperty("candidateId", testCandidateId);
 		expect(score).toHaveProperty("jobId", testJobId);
@@ -167,18 +167,18 @@ Credential ID: AWS-ASA-123456
 		expect(score).toHaveProperty("missingRequiredSkills");
 		expect(score).toHaveProperty("recommendations");
 
-		// Verify scores are within valid ranges
+		
 		expect(score.overallScore).toBeGreaterThanOrEqual(0);
 		expect(score.overallScore).toBeLessThanOrEqual(100);
 		expect(score.requiredSkillsScore).toBeGreaterThanOrEqual(0);
 		expect(score.requiredSkillsScore).toBeLessThanOrEqual(100);
 
-		// Verify arrays are properly structured
+		
 		expect(Array.isArray(score.skillMatches)).toBe(true);
 		expect(Array.isArray(score.missingRequiredSkills)).toBe(true);
 		expect(Array.isArray(score.recommendations)).toBe(true);
 
-		// Verify metadata
+		
 		expect(result.metadata).toHaveProperty("processingTimeMs");
 		expect(result.metadata).toHaveProperty("correlationId");
 		expect(result.metadata).toHaveProperty("timestamp");
@@ -189,7 +189,7 @@ Credential ID: AWS-ASA-123456
 		console.log(`   Missing Skills: ${score.missingRequiredSkills.length}`);
 		console.log(`   Recommendations: ${score.recommendations.length}`);
 
-		// Verify the score was persisted to database
+		
 		const { data: savedScore, error: scoreError } = await supabase
 			.from("candidate_skill_scores")
 			.select("*")
@@ -211,7 +211,7 @@ Credential ID: AWS-ASA-123456
 			expect(savedScore.recommendations).toBeDefined();
 			console.log("✅ Score successfully persisted to database");
 		}
-	}, 60000); // 60 second timeout for AI processing
+	}, 60000); 
 
 	it("should handle authentication errors", async () => {
 		if (!testJobId || !testCandidateId) {
@@ -220,7 +220,7 @@ Credential ID: AWS-ASA-123456
 		}
 
 		const response = await fetch(
-			`http://localhost:3001/api/v1/candidates/${testCandidateId}/parse-resume`,
+			`http:
 			{
 				method: "POST",
 				headers: {

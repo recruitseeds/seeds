@@ -60,17 +60,17 @@ export function PipelineCreationForm({ open, onOpenChange, department }: Pipelin
   const createPipelineMutation = useMutation(
     trpc.organization.createPipeline.mutationOptions({
       onMutate: async (newPipeline) => {
-        // Cancel any outgoing refetches
+        
         await queryClient.cancelQueries(
           trpc.organization.listPipelines.queryOptions()
         )
 
-        // Snapshot the previous value
+        
         const previousPipelines = queryClient.getQueryData(
           trpc.organization.listPipelines.queryOptions().queryKey
         )
 
-        // Optimistically update the pipelines list
+        
         if (previousPipelines) {
           const tempPipeline = {
             id: `temp-${Date.now()}`,
@@ -91,7 +91,7 @@ export function PipelineCreationForm({ open, onOpenChange, department }: Pipelin
         return { previousPipelines }
       },
       onError: (error, newPipeline, context) => {
-        // Rollback on error
+        
         if (context?.previousPipelines) {
           queryClient.setQueryData(
             trpc.organization.listPipelines.queryOptions().queryKey,
@@ -101,22 +101,22 @@ export function PipelineCreationForm({ open, onOpenChange, department }: Pipelin
         console.error('Failed to create pipeline:', error.message)
       },
       onSuccess: (data) => {
-        // Replace the temp pipeline with the real data
+        
         queryClient.setQueryData(
           trpc.organization.listPipelines.queryOptions().queryKey,
           (oldData: any) => {
             if (!oldData) return oldData
 
-            // Remove temp pipeline and add real pipeline
+            
             const filteredData = (oldData as any[]).filter(p => !p.id.startsWith('temp-'))
             return [data, ...filteredData]
           }
         )
 
-        // Pipeline created successfully
+        
         form.reset()
         onOpenChange(false)
-        // Navigate to the pipeline editor
+        
         router.push(`/jobs/pipelines/edit/${data.id}`)
       },
     })
@@ -128,7 +128,7 @@ export function PipelineCreationForm({ open, onOpenChange, department }: Pipelin
       await createPipelineMutation.mutateAsync({
         name: data.name,
         description: data.description || null,
-        category_id: null, // We'll implement categories later
+        category_id: null, 
       })
     } finally {
       setIsLoading(false)

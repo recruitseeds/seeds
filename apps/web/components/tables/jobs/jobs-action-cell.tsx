@@ -177,7 +177,7 @@ export function JobActionsCell({ job }: JobActionsCellProps) {
     trpc.organization.duplicateJobPosting.mutationOptions({
       onSuccess: (newJob) => {
         setDropdownOpen(false);
-        // Navigate and scroll to top
+        
         window.scrollTo(0, 0);
         router.push(`/jobs/create/${newJob.id}`);
       },
@@ -193,7 +193,7 @@ export function JobActionsCell({ job }: JobActionsCellProps) {
   );
 
   const handleEdit = useCallback(() => {
-    // Scroll to top before navigation
+    
     window.scrollTo(0, 0);
     router.push(`/jobs/create/${job.id}`);
   }, [router, job.id]);

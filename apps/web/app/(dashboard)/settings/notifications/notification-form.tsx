@@ -23,22 +23,22 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 const notificationsFormSchema = z.object({
-  // Application activity notifications
+  
   new_application: z.boolean().default(true),
   application_status_change: z.boolean().default(true),
   application_reminders: z.boolean().default(true),
   
-  // Team collaboration notifications
+  
   team_mentions: z.boolean().default(true),
   new_comments: z.boolean().default(true),
   assigned_to_application: z.boolean().default(true),
   
-  // System notifications
+  
   pipeline_updates: z.boolean().default(false),
   job_posting_expiry: z.boolean().default(true),
   weekly_summary: z.boolean().default(false),
   
-  // Critical notifications (always on)
+  
   security_alerts: z.boolean().default(true),
 })
 
@@ -68,7 +68,7 @@ export function NotificationsForm({ initialSettings }: NotificationsFormProps) {
   const trpc = useTRPC()
   const updateSettings = useMutation(trpc.organization.updateUserSettingsPartial.mutationOptions())
 
-  // Load saved notification preferences
+  
   useEffect(() => {
     if (initialSettings) {
       const notifications = initialSettings.notifications as Record<string, boolean>

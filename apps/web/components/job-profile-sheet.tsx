@@ -203,7 +203,7 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData, isEditing = 
   const trpcClient = useTRPC()
   const { data: hiringManagers = [] } = useQuery(trpcClient.organization.getOrganizationUsers.queryOptions())
 
-  // Initialize form data when jobData changes (for editing)
+  
   useEffect(() => {
     if (jobData && !isInitialized) {
       const transformedFormData = {
@@ -221,7 +221,7 @@ export function JobProfileSheet({ editor, onJobDataChange, jobData, isEditing = 
     }
   }, [jobData, isInitialized])
 
-  // Reset initialization when jobData becomes null (for new jobs)
+  
   useEffect(() => {
     if (!jobData) {
       setIsInitialized(false)

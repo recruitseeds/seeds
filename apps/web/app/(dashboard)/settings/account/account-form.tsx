@@ -63,7 +63,7 @@ interface AccountFormProps {
 }
 
 export function AccountForm({ initialSettings }: AccountFormProps) {
-  // Use server-provided data from profile instead of account
+  
   const profile = initialSettings?.profile as Record<string, unknown> || {}
   
   const defaultValues: Partial<AccountFormValues> = {
@@ -80,17 +80,17 @@ export function AccountForm({ initialSettings }: AccountFormProps) {
 
   async function onSubmit(data: AccountFormValues) {
     try {
-      // Get current profile data to merge with
+      
       const currentProfile = initialSettings?.profile as Record<string, unknown> || {}
       
-      // Merge account data with existing profile data
+      
       const updatedProfile = {
         ...currentProfile,
         dob: data.dob.toISOString(),
         language: data.language,
       }
       
-      // Save all profile data together
+      
       await updateSettings.mutateAsync({
         path: 'profile',
         value: updatedProfile,

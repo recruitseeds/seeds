@@ -48,7 +48,7 @@ export function DataTableHeader({ table, tableScroll, getStickyStyle, getStickyC
                 className={cn(
                   'px-3 md:px-4 py-2',
                   getStickyClassName(columnId),
-                  // Add gradient shadow for sticky columns
+                  
                   getStickyClassName(columnId) && [
                     'before:absolute before:right-0 before:top-0 before:bottom-0 before:w-px before:bg-border',
                     'after:absolute after:right-[-24px] after:top-0 after:bottom-0 after:w-6 after:bg-gradient-to-l after:from-transparent after:to-background after:z-[-1]',

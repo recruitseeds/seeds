@@ -445,9 +445,9 @@ export const invitationRouter = createTRPCRouter({
 			}
 		}),
 
-	// trpc/routers/invitation.ts - Fix for the acceptInvitation mutation
+	
 
-	// trpc/routers/invitation.ts - Add detailed logging to debug the issue
+	
 
 	acceptInvitation: protectedProcedure
 		.input(acceptInvitationSchema)
@@ -476,7 +476,7 @@ export const invitationRouter = createTRPCRouter({
 
 				const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
-				// 🔍 DEBUG: Check organization_users count BEFORE signup
+				
 				const { count: beforeCount } = await ctx.supabase
 					.from("organization_users")
 					.select("*", { count: "exact", head: true })
@@ -487,7 +487,7 @@ export const invitationRouter = createTRPCRouter({
 					beforeCount,
 				);
 
-				// 🔍 DEBUG: Check organizations BEFORE signup
+				
 				const { data: orgsBefore } = await ctx.supabase
 					.from("organizations")
 					.select("id, name");
@@ -531,7 +531,7 @@ export const invitationRouter = createTRPCRouter({
 					signUpData.user.user_metadata,
 				);
 
-				// 🔍 DEBUG: Check organization_users count AFTER signup but BEFORE our manual insertion
+				
 				const { count: afterSignupCount } = await ctx.supabase
 					.from("organization_users")
 					.select("*", { count: "exact", head: true })
@@ -542,13 +542,13 @@ export const invitationRouter = createTRPCRouter({
 					afterSignupCount,
 				);
 
-				// 🔍 DEBUG: Check organizations AFTER signup
+				
 				const { data: orgsAfter } = await ctx.supabase
 					.from("organizations")
 					.select("id, name");
 				console.log("🏢 AFTER SIGNUP - all organizations:", orgsAfter);
 
-				// Check if a new organization was created
+				
 				const newOrgs = orgsAfter?.filter(
 					(org) => !orgsBefore?.some((beforeOrg) => beforeOrg.id === org.id),
 				);
@@ -556,11 +556,11 @@ export const invitationRouter = createTRPCRouter({
 					console.log("🚨 NEW ORGANIZATIONS CREATED BY TRIGGER:", newOrgs);
 				}
 
-				// Check if organization_users record was created by trigger
+				
 				if (afterSignupCount && beforeCount && afterSignupCount > beforeCount) {
 					console.log("🚨 ORGANIZATION_USERS RECORD(S) CREATED BY TRIGGER!");
 
-					// Find which records were created
+					
 					const { data: newOrgUsers } = await ctx.supabase
 						.from("organization_users")
 						.select("*")
@@ -596,7 +596,7 @@ export const invitationRouter = createTRPCRouter({
 
 				console.log("✅ Organization setup completed successfully");
 
-				// 🔍 DEBUG: Check organization_users count AFTER our insertion
+				
 				const { count: finalCount } = await ctx.supabase
 					.from("organization_users")
 					.select("*", { count: "exact", head: true })

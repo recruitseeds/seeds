@@ -325,7 +325,7 @@ export function EditExperienceDialog({ application, triggerButton }: EditExperie
                     id='application_url'
                     value={formData.application_url}
                     onChange={(e) => handleInputChange('application_url', e.target.value)}
-                    placeholder='https://company.com/jobs/123'
+                    placeholder='https://example.com/apply'
                   />
                 </div>
 

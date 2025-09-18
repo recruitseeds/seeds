@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3001"
 const INTERNAL_TOKEN = process.env.INTERNAL_API_SECRET || "test-secret";
 
 describe("Rejection Email System - End-to-End", () => {

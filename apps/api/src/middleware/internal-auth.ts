@@ -47,7 +47,7 @@ export const internalAuth = () => {
 				);
 			}
 
-			// Remove debug logging after fix
+			
 
 			if (token === internalSecret) {
 				c.set("userId", "system");

@@ -1,4 +1,4 @@
-// components/ui/location-combobox.tsx
+
 'use client'
 
 import { Button } from '@/components/ui/button'
@@ -22,7 +22,7 @@ export function LocationCombobox({ onSelect, placeholder, className }: LocationC
   const [locations, setLocations] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Debounce the search query
+  
   const [debouncedQuery] = useDebounce(inputValue, 300)
 
   useEffect(() => {

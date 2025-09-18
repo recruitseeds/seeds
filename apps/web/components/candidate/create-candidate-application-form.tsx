@@ -148,7 +148,7 @@ export function CreateCandidateApplicationForm({ onApplicationCreated, onClose }
               <FormItem>
                 <FormLabel>Application URL</FormLabel>
                 <FormControl>
-                  <Input placeholder='https://example.com/jobs/123' {...field} value={field.value || ''} />
+                  <Input placeholder='https://example.com/apply' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

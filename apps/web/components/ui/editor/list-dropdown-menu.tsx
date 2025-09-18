@@ -164,7 +164,7 @@ export function ListDropdownMenu({
                 text={option.label}
                 variant='ghost'
                 hideWhenUnavailable={hideWhenUnavailable}
-                // @ts-expect-error - We don't want to display a tooltip for the list button
+                
                 tooltip={''}
                 unstyled={true}
                 showShortcut={true}

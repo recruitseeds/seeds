@@ -146,7 +146,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [stepToDelete, setStepToDelete] = useState<string | null>(null)
 
-  // Use refs to track operation state without causing re-renders
+  
   const isShiftingSteps = useRef(false)
   const isMovingStep = useRef(false)
 
@@ -169,19 +169,19 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
   const createStepMutation = useMutation(
     trpc.organization.createPipelineStep.mutationOptions({
       onMutate: async (newStep) => {
-        // Cancel any outgoing refetches
+        
         await queryClient.cancelQueries(trpc.organization.getPipeline.queryOptions({ id: pipelineId }))
 
-        // Snapshot the previous value
+        
         const previousPipeline = queryClient.getQueryData(
           trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey
         )
 
-        // Optimistically update
+        
         if (previousPipeline && (previousPipeline as any)?.pipeline_steps) {
           const currentSteps = [...(previousPipeline as any).pipeline_steps]
 
-          // Create temporary step with task_owner populated
+          
           const tempStep = {
             id: `temp-${Date.now()}`,
             name: newStep.name,
@@ -196,7 +196,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
 
           currentSteps.push(tempStep)
 
-          // Sort by step_order
+          
           const updatedSteps = currentSteps.sort((a, b) => a.step_order - b.step_order)
 
           queryClient.setQueryData(trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey, {
@@ -208,7 +208,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         return { previousPipeline }
       },
       onError: (error, newStep, context) => {
-        // Rollback on error
+        
         if (context?.previousPipeline) {
           queryClient.setQueryData(
             trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey,
@@ -218,7 +218,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         console.error('Failed to create step:', error.message)
       },
       onSuccess: (data) => {
-        // Replace the temp step with the real data
+        
         queryClient.setQueryData(
           trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey,
           (oldData: any) => {
@@ -236,7 +236,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
           }
         )
 
-        // Step created successfully
+        
         setShowStepDialog(false)
         setInsertAfterOrder(null)
         form.reset()
@@ -247,15 +247,15 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
   const updateStepMutation = useMutation(
     trpc.organization.updatePipelineStep.mutationOptions({
       onMutate: async (updatedStep) => {
-        // Cancel any outgoing refetches
+        
         await queryClient.cancelQueries(trpc.organization.getPipeline.queryOptions({ id: pipelineId }))
 
-        // Snapshot the previous value
+        
         const previousPipeline = queryClient.getQueryData(
           trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey
         )
 
-        // Optimistically update
+        
         if (previousPipeline && (previousPipeline as any)?.pipeline_steps) {
           const updatedSteps = (previousPipeline as any).pipeline_steps
             .map((step: any) => {
@@ -263,7 +263,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
                 return {
                   ...step,
                   ...updatedStep,
-                  // Update task_owner if task_owner_id changed
+                  
                   task_owner:
                     updatedStep.task_owner_id !== undefined
                       ? updatedStep.task_owner_id
@@ -285,7 +285,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         return { previousPipeline }
       },
       onError: (error, updatedStep, context) => {
-        // Rollback on error
+        
         if (context?.previousPipeline) {
           queryClient.setQueryData(
             trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey,
@@ -295,7 +295,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         console.error('Failed to update step:', error.message)
       },
       onSuccess: (data) => {
-        // Update with server data
+        
         queryClient.setQueryData(
           trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey,
           (oldData: any) => {
@@ -312,9 +312,9 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
           }
         )
 
-        // Only show toast if not part of a batch operation
+        
         if (!isShiftingSteps.current && !isMovingStep.current) {
-          // Step updated successfully
+          
         }
 
         setShowStepDialog(false)
@@ -327,17 +327,17 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
   const deleteStepMutation = useMutation(
     trpc.organization.deletePipelineStep.mutationOptions({
       onMutate: async (variables) => {
-        // Cancel any outgoing refetches
+        
         await queryClient.cancelQueries(trpc.organization.getPipeline.queryOptions({ id: pipelineId }))
 
-        // Snapshot the previous value
+        
         const previousPipeline = queryClient.getQueryData(
           trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey
         )
 
-        // Optimistically update to the new value
+        
         if (previousPipeline && (previousPipeline as any)?.pipeline_steps) {
-          // Remove the step and normalize remaining steps
+          
           const updatedSteps = (previousPipeline as any).pipeline_steps
             .filter((step: any) => step.id !== variables.id)
             .sort((a: any, b: any) => a.step_order - b.step_order)
@@ -352,7 +352,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         return { previousPipeline }
       },
       onError: (error, variables, context) => {
-        // Rollback on error
+        
         if (context?.previousPipeline) {
           queryClient.setQueryData(
             trpc.organization.getPipeline.queryOptions({ id: pipelineId }).queryKey,
@@ -362,7 +362,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         console.error('Failed to delete step:', error.message)
       },
       onSuccess: () => {
-        // Step deleted successfully
+        
         setShowDeleteDialog(false)
         setStepToDelete(null)
       },
@@ -426,7 +426,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
     isMovingStep.current = true
 
     try {
-      // Update both steps with swapped orders
+      
       await Promise.all([
         updateStepMutation.mutateAsync({
           id: step.id,
@@ -438,8 +438,8 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         }),
       ])
 
-      // Show single toast for the move operation
-      // Moved step successfully
+      
+      
     } catch (error) {
       console.error('Failed to move step:', error)
     } finally {
@@ -461,7 +461,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
     } else {
       const newOrder = insertAfterOrder !== null ? insertAfterOrder + 1 : steps.length + 1
 
-      // First, shift existing steps if inserting in the middle
+      
       if (insertAfterOrder !== null) {
         const stepsToShift = steps.filter((s: any) => s.step_order > insertAfterOrder)
 
@@ -469,7 +469,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
           isShiftingSteps.current = true
 
           try {
-            // Update all steps that need to be shifted
+            
             await Promise.all(
               stepsToShift.map((step: any) =>
                 updateStepMutation.mutateAsync({
@@ -484,7 +484,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
         }
       }
 
-      // Then create the new step
+      
       await createStepMutation.mutateAsync({
         pipeline_id: pipelineId,
         name: data.name,
@@ -762,7 +762,7 @@ export function PipelineEditor({ pipelineId, initialPipeline, initialOrganizatio
                           }
                         }}
                         onKeyDown={(e) => {
-                          // Prevent minus key
+                          
                           if (e.key === '-' || e.key === 'e' || e.key === 'E') {
                             e.preventDefault()
                           }

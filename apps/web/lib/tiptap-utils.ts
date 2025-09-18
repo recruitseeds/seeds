@@ -1,7 +1,7 @@
 import type { Attrs, Node } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/react'
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+export const MAX_FILE_SIZE = 5 * 1024 * 1024 
 
 /**
  * Checks if a mark exists in the editor schema
@@ -76,7 +76,7 @@ export function findNodePosition(props: {
 
   if (!editor || !editor.state?.doc) return null
 
-  // Zero is valid position
+  
   const hasValidNode = node !== undefined && node !== null
   const hasValidPos = nodePos !== undefined && nodePos !== null
 
@@ -96,13 +96,13 @@ export function findNodePosition(props: {
     }
   }
 
-  // Otherwise search for the node in the document
+  
   let foundPos = -1
   let foundNode: Node | null = null
 
   editor.state.doc.descendants((currentNode, pos) => {
-    // TODO: Needed?
-    // if (currentNode.type && currentNode.type.name === node!.type.name) {
+    
+    
     if (currentNode === node) {
       foundPos = pos
       foundNode = currentNode
@@ -126,7 +126,7 @@ export const handleImageUpload = async (
   onProgress?: (event: { progress: number }) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
-  // Validate file
+  
   if (!file) {
     throw new Error('No file provided')
   }
@@ -135,7 +135,7 @@ export const handleImageUpload = async (
     throw new Error(`File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`)
   }
 
-  // For demo/testing: Simulate upload progress
+  
   for (let progress = 0; progress <= 100; progress += 10) {
     if (abortSignal?.aborted) {
       throw new Error('Upload cancelled')
@@ -146,8 +146,8 @@ export const handleImageUpload = async (
 
   return '/images/placeholder-image.png'
 
-  // Uncomment for production use:
-  // return convertFileToBase64(file, abortSignal);
+  
+  
 }
 
 /**
@@ -210,7 +210,7 @@ type ProtocolOptions = {
 type ProtocolConfig = Array<ProtocolOptions | string>
 
 const ATTR_WHITESPACE =
-  // eslint-disable-next-line no-control-regex
+  
   /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g
 
 export function isAllowedUri(uri: string | undefined, protocols?: ProtocolConfig) {
@@ -230,7 +230,7 @@ export function isAllowedUri(uri: string | undefined, protocols?: ProtocolConfig
     !uri ||
     uri.replace(ATTR_WHITESPACE, '').match(
       new RegExp(
-        // eslint-disable-next-line no-useless-escape
+        
         `^(?:(?:${allowedProtocols.join('|')}):|[^a-z]|[a-z0-9+.\-]+(?:[^a-z+.\-:]|$))`,
         'i'
       )
@@ -246,7 +246,7 @@ export function sanitizeUrl(inputUrl: string, baseUrl: string, protocols?: Proto
       return url.href
     }
   } catch {
-    // If URL creation fails, it's considered invalid
+    
   }
   return '#'
 }

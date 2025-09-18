@@ -12,7 +12,7 @@ export function LimitIndicator({
 }: Props) {
   const radius = 5
   const strokeWidth = 2
-  const indicatorTreshold = charThreshold ? charThreshold : maxLength * 0.2 // the number of characters left when indicator is shown
+  const indicatorTreshold = charThreshold ? charThreshold : maxLength * 0.2 
   const circumference = strokeWidth * Math.PI * radius
   const remainingChars = maxLength - currentLength
   const percent =

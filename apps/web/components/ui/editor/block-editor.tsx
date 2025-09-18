@@ -79,7 +79,7 @@ const MobileToolbarContent = ({ type, onBack, editor, savedSelection }: {
       <ColorHighlightPopoverContent 
         editor={editor} 
         savedSelection={savedSelection}
-        onClose={onBack} // Go back to main view after applying highlight
+        onClose={onBack} 
       />
     ) : (
       <LinkContent />
@@ -417,7 +417,7 @@ export function BlockEditor({
                         <ColorHighlightPopover />
                       ) : (
                         <ColorHighlightPopoverButton onClick={() => {
-                          // Save current selection before switching view
+                          
                           if (editor && !editor.state.selection.empty) {
                             setMobileSavedSelection({
                               from: editor.state.selection.from,
@@ -452,7 +452,7 @@ export function BlockEditor({
                     type={mobileView === 'highlighter' ? 'highlighter' : 'link'}
                     onBack={() => {
                       setMobileView('main')
-                      setMobileSavedSelection(null) // Clear saved selection when going back
+                      setMobileSavedSelection(null) 
                     }}
                     editor={editor}
                     savedSelection={mobileSavedSelection}

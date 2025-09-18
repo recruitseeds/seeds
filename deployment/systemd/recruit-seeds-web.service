@@ -1,0 +1,20 @@
+[Unit]
+Description=Recruit Seeds Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/recruit-seeds/apps/web
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=recruit-seeds-web
+
+[Install]
+WantedBy=multi-user.target

@@ -1,20 +1,20 @@
 'use server'
 
-import type { CandidateProfile } from '@seeds/supabase/mutations' // Import CandidateProfile type
+import type { CandidateProfile } from '@seeds/supabase/mutations' 
 import { updateCandidateProfile } from '@seeds/supabase/mutations'
 import { revalidateTag } from 'next/cache'
-// import { redirect } from 'next/navigation' // No longer redirecting from action
-import { z } from 'zod' // Import Zod
-// import type { ActionResponse } from './actions' // Removed potentially problematic import
+
+import { z } from 'zod' 
+
 import { authActionClient } from './safe-action'
 
-// Define the input schema
+
 const schema = z.object({
   isOnboarded: z.boolean(),
 })
 
 export const updateCandidateOnboardingStatusAction = authActionClient
-  .schema(schema) // Use the schema
+  .schema(schema) 
   .metadata({
     name: 'update-candidate-onboarding-status',
   })
@@ -23,13 +23,13 @@ export const updateCandidateOnboardingStatusAction = authActionClient
       ctx,
       parsedInput,
     }): Promise<{
-      // Define return type explicitly
+      
       success: boolean
       data?: CandidateProfile
       error?: { code: string; message: string }
     }> => {
       const { user, supabase } = ctx
-      const { isOnboarded } = parsedInput // Get isOnboarded from parsedInput
+      const { isOnboarded } = parsedInput 
 
       console.log(
         `[Action: update-onboarding-status] User ID: ${user.id}, isOnboarded: ${isOnboarded}`
@@ -38,7 +38,7 @@ export const updateCandidateOnboardingStatusAction = authActionClient
       try {
         const updatedProfile = await updateCandidateProfile(supabase, {
           id: user.id,
-          is_onboarded: isOnboarded, // Use the input value
+          is_onboarded: isOnboarded, 
         })
 
         console.log(
@@ -47,7 +47,7 @@ export const updateCandidateOnboardingStatusAction = authActionClient
         )
 
         revalidateTag(`candidate_profile_${user.id}`)
-        return { success: true, data: updatedProfile } // Return success
+        return { success: true, data: updatedProfile } 
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
@@ -55,13 +55,13 @@ export const updateCandidateOnboardingStatusAction = authActionClient
           '[Action: update-onboarding-status] Failed to update status:',
           errorMessage
         )
-        // Instead of throwing, return an error object
+        
         return {
           success: false,
           error: { code: 'UPDATE_FAILED', message: errorMessage },
         }
       }
 
-      // redirect('/candidate/profile') // Remove redirect
+      
     }
   )

@@ -210,7 +210,7 @@ export function ContactInfoForm({ initialData }: ContactInfoFormProps) {
                         <Globe className='h-4 w-4 text-muted-foreground' />
                       </div>
                       <Input
-                        placeholder='https://yourwebsite.com'
+                        placeholder='https://example.com'
                         className='rounded-l-none'
                         {...field}
                         value={field.value || ''}
@@ -234,7 +234,7 @@ export function ContactInfoForm({ initialData }: ContactInfoFormProps) {
                         <Linkedin className='h-4 w-4 text-muted-foreground' />
                       </div>
                       <Input
-                        placeholder='https://linkedin.com/in/username'
+                        placeholder='https://example.com'
                         className='rounded-l-none'
                         {...field}
                         value={field.value || ''}
@@ -258,7 +258,7 @@ export function ContactInfoForm({ initialData }: ContactInfoFormProps) {
                         <Github className='h-4 w-4 text-muted-foreground' />
                       </div>
                       <Input
-                        placeholder='https://github.com/username'
+                        placeholder='https://example.com'
                         className='rounded-l-none'
                         {...field}
                         value={field.value || ''}
@@ -282,7 +282,7 @@ export function ContactInfoForm({ initialData }: ContactInfoFormProps) {
                         <Twitter className='h-4 w-4 text-muted-foreground' />
                       </div>
                       <Input
-                        placeholder='https://twitter.com/username'
+                        placeholder='https://example.com'
                         className='rounded-l-none'
                         {...field}
                         value={field.value || ''}

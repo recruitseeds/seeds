@@ -643,10 +643,10 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c: any) => {
 		const insertData = {
 			...body,
 			organization_id: organizationId,
-			created_by: "", // Temporarily set, will be updated below
+			created_by: "", 
 		} as Database["public"]["Tables"]["job_postings"]["Insert"];
 
-		// Use userId if it's a valid UUID, otherwise use a fallback
+		
 		const UUID_REGEX =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 		const TEST_USER_ID = "test-user";
@@ -654,8 +654,8 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c: any) => {
 		if (userId && userId !== TEST_USER_ID && UUID_REGEX.test(userId)) {
 			insertData.created_by = userId;
 		} else {
-			// For test user, we need to get a valid organization_user ID
-			// First, try to find an existing organization_user for this organization
+			
+			
 			const { data: existingUser } = await supabase
 				.from("organization_users")
 				.select("id")
@@ -666,7 +666,7 @@ publicJobManagementRoutes.openapi(createJobRoute, async (c: any) => {
 			if (existingUser) {
 				insertData.created_by = existingUser.id;
 			} else {
-				// If no user exists, try to get created_by from an existing job
+				
 				const { data: existingJob } = await supabase
 					.from("job_postings")
 					.select("created_by")
@@ -803,13 +803,13 @@ publicJobManagementRoutes.openapi(updateJobRoute, async (c: any) => {
 			updates: Object.keys(body),
 		});
 
-		// Prepare update data
+		
 		const updateData: any = {
 			...body,
 			updated_at: new Date().toISOString(),
 		};
 
-		// If status is being changed to "published", set published_at
+		
 		if (body.status === "published") {
 			updateData.published_at = new Date().toISOString();
 		}

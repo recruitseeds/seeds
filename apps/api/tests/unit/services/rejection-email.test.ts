@@ -48,7 +48,7 @@ describe("EmailService - Rejection Emails", () => {
 
 			expect(result).toBe("test-email-id");
 			expect(global.fetch).toHaveBeenCalledWith(
-				"https://api.resend.com/emails",
+				"https:
 				expect.objectContaining({
 					method: "POST",
 					headers: expect.objectContaining({

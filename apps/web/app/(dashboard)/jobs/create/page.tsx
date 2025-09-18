@@ -21,7 +21,7 @@ export default function Page() {
       onSuccess: async (data) => {
         await queryClient.invalidateQueries(trpcClient.organization.listJobPostings.queryFilter())
         toast.success('Job posting saved successfully!')
-        // Redirect to jobs list after successful creation
+        
         router.push('/jobs')
       },
       onError: (error: TRPCClientErrorLike<any>) => {

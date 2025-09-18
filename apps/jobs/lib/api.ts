@@ -335,6 +335,14 @@ export type {
   SavedJobResponse,
 }
 
+// Export additional types that were in the duplicate export
+export type {
+  JobsApiError,
+  ResumeParseResponse,
+  ParsedResumeData,
+  CandidateScore,
+}
+
 export function formatSalary(
   salaryMin: number | null,
   salaryMax: number | null,
@@ -677,4 +685,3 @@ export async function parseResumeAndScore(
   }
 }
 
-export type { JobPosting, JobPostingDetail, JobListingResponse, CompanyJobsResponse, JobsApiError, ApplicationRequest, ApplicationResponse, ResumeParseRequest, ResumeParseResponse, ParsedResumeData, CandidateScore }

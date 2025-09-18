@@ -75,7 +75,7 @@ export default function Page() {
   const [bluetoothEnabled, setBluetoothEnabled] = useState(false)
   const [airplaneMode, setAirplaneMode] = useState(false)
 
-  // State for radio items
+  
   const [position, setPosition] = useState('top')
   return (
     <div className='mx-8'>

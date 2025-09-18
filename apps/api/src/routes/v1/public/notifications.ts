@@ -198,13 +198,13 @@ const validateEmailPermissions = async (c: Context) => {
 publicNotificationsRoutes.openapi(
 	sendApplicationEmailRoute,
 	async (c: Context): Promise<any> => {
-		// Validate request
+		
 		try {
 			const body = await c.req.json();
 			const validatedData = SendApplicationEmailRequestSchema.parse({ body });
 			c.set("validatedData", validatedData);
 
-			// Business validation
+			
 			const { permissions } = c.get("apiKeyMeta") || { permissions: [] };
 
 			if (!permissions.includes("notifications:send")) {

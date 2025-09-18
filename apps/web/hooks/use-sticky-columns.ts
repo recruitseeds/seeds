@@ -12,7 +12,7 @@ export function useStickyColumns<TData = unknown>(options: UseStickyColumnsOptio
   const { table, columnVisibility } = options
 
   const getStickyStyle = (columnId: string) => {
-    const stickyColumns = ['select', 'title'] // Define which columns are sticky
+    const stickyColumns = ['select', 'title'] 
     const index = stickyColumns.indexOf(columnId)
 
     if (index === -1) return {}

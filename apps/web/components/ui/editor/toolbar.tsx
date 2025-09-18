@@ -148,7 +148,7 @@ const useToolbarVisibility = (ref: React.RefObject<HTMLDivElement | null>): bool
     const toolbar = ref.current
     if (!toolbar) return
 
-    // Check if any group has visible children
+    
     const hasVisibleChildren = Array.from(toolbar.children).some((child) => {
       if (!(child instanceof HTMLElement)) return false
       if (child.getAttribute('role') === 'group') {

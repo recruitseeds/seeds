@@ -81,21 +81,21 @@ export function useCursorVisibility({
 
       if (!view.hasFocus()) return
 
-      // Get current cursor position coordinates
+      
       const { from } = state.selection
       const cursorCoords = view.coordsAtPos(from)
 
       if (windowHeight < rect.height) {
         if (cursorCoords) {
-          // Check if there's enough space between cursor and bottom of window
+          
           const availableSpace =
             windowHeight - cursorCoords.top - overlayHeight > 0
 
-          // If not enough space, scroll to position cursor in the middle of viewport
+          
           if (!availableSpace) {
             const targetScrollY =
-              // TODO: Needed?
-              //   window.scrollY + (cursorCoords.top - windowHeight / 2)
+              
+              
               cursorCoords.top - windowHeight / 2
 
             window.scrollTo({

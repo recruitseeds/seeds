@@ -222,7 +222,7 @@ describe("EmailService", () => {
 				jobTitle: "Product Manager",
 				companyName: "InnovateCorp",
 				applicationId: "app-456",
-				portalUrl: "https://portal.example.com/app-456",
+				portalUrl: "https:
 				contactEmail: "hiring@innovatecorp.com",
 			};
 
@@ -239,7 +239,7 @@ describe("EmailService", () => {
 			expect(sentEmail.html).toContain("Jane Smith");
 			expect(sentEmail.html).toContain("Product Manager");
 			expect(sentEmail.html).toContain("InnovateCorp");
-			expect(sentEmail.html).toContain("https://portal.example.com/app-456");
+			expect(sentEmail.html).toContain("https:
 			expect(sentEmail.html).toContain("hiring@innovatecorp.com");
 			expect(sentEmail.text).toContain("Jane Smith");
 			expect(sentEmail.text).toContain("Product Manager");
@@ -287,8 +287,8 @@ describe("EmailService", () => {
 				jobTitle: "Senior Engineer",
 				companyName: "TechStartup",
 				applicationId: "app-789",
-				portalUrl: "https://portal.techstartup.com/app-789",
-				companyLogo: "https://cdn.techstartup.com/logo.png",
+				portalUrl: "https:
+				companyLogo: "https:
 				contactEmail: "jobs@techstartup.com",
 			};
 
@@ -315,9 +315,9 @@ describe("EmailService", () => {
 			expect(sentEmail.html).toContain("Senior Engineer");
 			expect(sentEmail.html).toContain("TechStartup");
 			expect(sentEmail.html).toContain(
-				"https://portal.techstartup.com/app-789",
+				"https:
 			);
-			expect(sentEmail.html).toContain("https://cdn.techstartup.com/logo.png");
+			expect(sentEmail.html).toContain("https:
 			expect(sentEmail.html).toContain("jobs@techstartup.com");
 			expect(sentEmail.tags).toEqual([
 				{ name: "template", value: "application-received" },

@@ -58,15 +58,15 @@ function DropdownMenuItem({
       data-variant={variant}
       className={cn(
         "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        // Add a transparent border by default to prevent layout shift when focused
+        
         'border border-transparent',
-        // Shadow styling for default variant focus
+        
         'focus:shadow-[inset_0px_0px_0px_0.5px_rgb(255_255_255_/_0.02),inset_0px_0.5px_0px_rgb(255_255_255_/_0.04),_inset_0px_0px_0px_1px_rgb(255_255_255_/_0.02),_0px_0px_0px_0.5px_rgb(0_0_0_/_0.24)]',
-        // Destructive variant styling
+        
         'data-[variant=destructive]:text-destructive-vibrant data-[variant=destructive]:bg-destructive-subtle',
-        // Make SVG icons inherit the destructive color
+        
         'data-[variant=destructive]:[&_svg]:text-destructive-vibrant',
-        // Change the border color on focus instead of adding a new border
+        
         'focus:data-[variant=destructive]:border-destructive-border focus:data-[variant=destructive]:shadow-none',
         className
       )}

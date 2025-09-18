@@ -55,8 +55,8 @@ describe("Public Notifications API", () => {
 			jobTitle: "Software Engineer",
 			companyName: "TechCorp",
 			applicationId: "app-789",
-			portalUrl: "https://portal.techcorp.com/app-789",
-			companyLogo: "https://cdn.techcorp.com/logo.png",
+			portalUrl: "https:
+			companyLogo: "https:
 			contactEmail: "hiring@techcorp.com",
 		};
 
@@ -92,8 +92,8 @@ describe("Public Notifications API", () => {
 					jobTitle: "Software Engineer",
 					companyName: "TechCorp",
 					applicationId: "app-789",
-					portalUrl: "https://portal.techcorp.com/app-789",
-					companyLogo: "https://cdn.techcorp.com/logo.png",
+					portalUrl: "https:
+					companyLogo: "https:
 					contactEmail: "hiring@techcorp.com",
 				}),
 				expect.objectContaining({

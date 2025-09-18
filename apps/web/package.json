@@ -96,6 +96,7 @@
     "posthog-js": "^1.245.2",
     "pusher-js": "^8.4.0",
     "react": "^19.0.0",
+    "react-aria-components": "^1.11.0",
     "react-device-detect": "^2.2.3",
     "react-doc-viewer": "^0.1.14",
     "react-dom": "^19.0.0",

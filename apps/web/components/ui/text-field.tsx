@@ -38,9 +38,9 @@ interface Props {
   required?: boolean
   minLength?: number
   maxLength?: number
-  // only applicable to multiline inputs
+  
   minRows?: number
-  // only applicable to multiline inputs
+  
   maxRows?: number
   autoComplete?: string
   autoFocus?: boolean
@@ -201,9 +201,9 @@ export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
       <span className='absolute right-px top-px'>
         <Button
           variant='default'
-          // iconOnly={<ClipboardIcon />}
+          
           onClick={handleCopyClick}
-          // accessibilityLabel='Copy to clipboard'
+          
         />
       </span>
     </Tooltip>
@@ -288,7 +288,7 @@ export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
         inputRef.current = value
       }}
       disabled={disabled}
-      // no reason for 1Password to interact with in-product text fields
+      
       data-1p-ignore
     />
   )

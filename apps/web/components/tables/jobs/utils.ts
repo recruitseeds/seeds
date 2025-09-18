@@ -8,7 +8,7 @@ export function formatDisplayText(text: string | null | undefined): string {
 }
 
 export function getEffectiveStatus(status: string, publishedAt: string | null | undefined): string {
-  // If status is published but no published_at timestamp, treat as staged
+  
   if (status === "published" && !publishedAt) {
     return "staged";
   }

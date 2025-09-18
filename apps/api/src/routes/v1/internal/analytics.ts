@@ -132,7 +132,7 @@ const validateAnalyticsPermissions = async (c: Context) => {
 internalAnalyticsRoutes.openapi(
 	dashboardRoute,
 	async (c: Context): Promise<any> => {
-		// Validate permissions inline
+		
 		const permissions = c.get("permissions");
 		const role = c.get("role");
 

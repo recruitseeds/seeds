@@ -7,13 +7,13 @@ import * as React from 'react'
 
 const toggleVariants = cva(
   [
-    // Base styles
+    
     'inline-flex items-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-50 relative',
 
-    // Remove default focus styles and add the same focus styling as buttons
+    
     'focus:!outline-none focus:!ring-0 active:!outline-none active:!ring-0',
 
-    // Pseudo-element for focus styling (matching button component)
+    
     'after:pointer-events-none after:absolute after:-inset-[3px] after:rounded-full after:border after:opacity-0 after:ring-2 after:ring-brand/20 after:transition-opacity focus-visible:after:opacity-100 active:after:opacity-0 after:border-brand',
   ],
   {

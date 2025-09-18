@@ -1,4 +1,4 @@
-// apps/web/app/(dashboard)/jobs/settings/locations/page.tsx
+
 'use client'
 
 import { LocationCombobox } from '@/components/location/location-combobox'
@@ -23,7 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { Building, Copy, Edit2, Globe, Home, MapPin, MoreVertical, Plus, Star, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-// Mock data for templates
+
 const mockTemplates = [
   {
     id: '1',
@@ -81,7 +81,7 @@ export default function LocationTemplatesPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<any>(null)
 
-  // Form state for new/edit template
+  
   const [templateName, setTemplateName] = useState('')
   const [locationType, setLocationType] = useState<LocationType>('onsite')
   const [locationData, setLocationData] = useState<any>(null)
@@ -115,7 +115,7 @@ export default function LocationTemplatesPage() {
   }
 
   const handleSaveTemplate = () => {
-    // Build template data based on type
+    
     const newTemplate = {
       id: Date.now().toString(),
       name: templateName,
@@ -126,7 +126,7 @@ export default function LocationTemplatesPage() {
       usage_count: 0,
     }
 
-    // Set display and config based on type
+    
     if (locationType === 'remote') {
       const labels: Record<string, string> = {
         anywhere: 'Remote (Anywhere)',
@@ -145,7 +145,7 @@ export default function LocationTemplatesPage() {
         type: 'hybrid',
         office: {
           name: locationData?.place_name,
-          // Extract city, state, country from context
+          
         },
         days_in_office: parseInt(hybridDays),
       }
@@ -155,7 +155,7 @@ export default function LocationTemplatesPage() {
         type: 'onsite',
         office: {
           name: locationData?.place_name,
-          // Extract city, state, country from context
+          
         },
       }
     }

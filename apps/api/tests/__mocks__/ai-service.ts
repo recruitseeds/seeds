@@ -7,8 +7,8 @@ export const mockParsedResumeData: ParsedResumeData = {
 		email: "jane.smith@email.com",
 		phone: "+1-555-0123",
 		location: "San Francisco, CA",
-		linkedinUrl: "https://linkedin.com/in/janesmith",
-		githubUrl: "https://github.com/janesmith",
+		linkedinUrl: "https:
+		githubUrl: "https:
 	},
 	summary:
 		"Senior software engineer with 5+ years of experience in full-stack development",
@@ -38,7 +38,7 @@ export const mockParsedResumeData: ParsedResumeData = {
 			name: "E-commerce Platform",
 			description: "Built a full-stack e-commerce platform",
 			technologies: ["React", "Node.js", "PostgreSQL"],
-			githubUrl: "https://github.com/janesmith/ecommerce",
+			githubUrl: "https:
 		},
 	],
 	certifications: [

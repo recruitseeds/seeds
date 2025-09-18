@@ -13,7 +13,7 @@ export default async function InvitationAcceptPage({ params }: InvitationAcceptP
   const { token } = await params
 
   try {
-    // Validate the invitation token on the server
+    
     const caller = await getServerTRPCCaller()
     const invitation = await caller.invitation.getInvitationByToken({ token })
 

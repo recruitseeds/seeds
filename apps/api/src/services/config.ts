@@ -75,7 +75,7 @@ export class ConfigService {
 			nodeEnv: process.env.NODE_ENV || "development",
 			sentryDsn: process.env.SENTRY_DSN,
 			posthogApiKey: process.env.POSTHOG_API_KEY,
-			posthogHost: process.env.POSTHOG_HOST || "https://us.i.posthog.com",
+			posthogHost: process.env.POSTHOG_HOST || "https://app.posthog.com",
 			unkeyApiKey: process.env.UNKEY_API_KEY,
 			unkeyAppId: process.env.UNKEY_APP_ID,
 			resendApiKey: process.env.RESEND_API_KEY,

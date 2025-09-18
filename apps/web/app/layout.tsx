@@ -2,7 +2,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { getAllFontsClassName, getFontByName } from '@/lib/font-loader'
 import { getUserFont } from '@/lib/get-user-font'
 import type { Metadata } from 'next'
-// import { NuqsAdapter } from 'nuqs/adapters/next/app'
+
 import '../styles/globals.css'
 import { Providers } from './providers'
 
@@ -32,7 +32,7 @@ export default async function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <body className={`${allFontsClassName} ${userFont.className} antialiased`}>
         <Providers>
-          {/* <NuqsAdapter>{children}</NuqsAdapter> */}
+          {}
           {children}
         </Providers>
         <Toaster />

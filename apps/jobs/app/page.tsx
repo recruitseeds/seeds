@@ -5,6 +5,8 @@ import { HeroSection } from '../components/hero-section'
 import { JobsSection } from '../components/jobs-section'
 import { createFallbackJobsResponse, getJobsServerSide } from '../lib/server-api'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   let jobsData
   try {

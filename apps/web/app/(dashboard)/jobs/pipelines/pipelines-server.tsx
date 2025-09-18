@@ -7,7 +7,7 @@ async function getPipelines() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  // Get user's organization
+  
   const { data: orgUser } = await supabase
     .from('organization_users')
     .select('organization_id')
@@ -16,7 +16,7 @@ async function getPipelines() {
 
   if (!orgUser) return []
 
-  // Fetch pipelines
+  
   const { data: pipelines, error } = await supabase
     .from('hiring_pipelines')
     .select(`

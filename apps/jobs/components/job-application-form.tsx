@@ -1,9 +1,5 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { api } from '@/lib/api'
+import { Alert, AlertDescription, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@seeds/ui'
+import { submitJobApplication } from '@/lib/api'
 import { AlertCircle, CheckCircle, Loader2, Upload } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
@@ -167,7 +163,7 @@ export function ApplicationForm({ jobId, onSuccess, onError, className }: Applic
         },
       })
 
-      const response = await api.jobs.apply(jobId, {
+      const response = await submitJobApplication(jobId, {
         candidateData: formData,
         resumeFile: resumeFileData,
       })

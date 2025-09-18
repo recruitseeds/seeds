@@ -1,6 +1,6 @@
 import { Inter, Geist, Poppins, Roboto, Open_Sans } from 'next/font/google'
 
-// Load all fonts with Next.js optimization
+
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',

@@ -416,7 +416,7 @@ publicPipelinesRoutes.openapi(createPipelineRoute, async (c): Promise<any> => {
       organization_id: organizationId,
     };
     
-    // Only add created_by if userId is provided and is a valid UUID
+    
     if (userId && userId !== 'test-user') {
       insertData.created_by = userId;
     }

@@ -228,7 +228,7 @@ export class FileUploadService {
 	async deleteFile(fileId: string): Promise<void> {
 		this.logger.info("Starting file deletion", { fileId });
 
-		// First, get the file record to get storage path
+		
 		const { data: fileRecord, error: fetchError } = await this.supabase
 			.from("candidate_files")
 			.select("storage_path, file_name")
@@ -243,7 +243,7 @@ export class FileUploadService {
 			throw new Error("File not found");
 		}
 
-		// Delete from Cloudflare R2
+		
 		try {
 			await this.s3Client.send(
 				new DeleteObjectCommand({
@@ -262,10 +262,10 @@ export class FileUploadService {
 				storagePath: fileRecord.storage_path,
 				error: error instanceof Error ? error.message : "Unknown error",
 			});
-			// Continue with database deletion even if R2 deletion fails
+			
 		}
 
-		// Delete from database
+		
 		const { error: deleteError } = await this.supabase
 			.from("candidate_files")
 			.delete()
@@ -285,7 +285,7 @@ export class FileUploadService {
 	async deleteFilesByCandidate(candidateId: string): Promise<number> {
 		this.logger.info("Starting bulk file deletion for candidate", { candidateId });
 
-		// Get all files for the candidate
+		
 		const { data: fileRecords, error: fetchError } = await this.supabase
 			.from("candidate_files")
 			.select("id, storage_path, file_name")
@@ -307,7 +307,7 @@ export class FileUploadService {
 		let deletedCount = 0;
 		const errors: string[] = [];
 
-		// Delete each file from R2
+		
 		for (const file of fileRecords) {
 			try {
 				await this.s3Client.send(
@@ -328,7 +328,7 @@ export class FileUploadService {
 			}
 		}
 
-		// Delete all file records from database in one operation
+		
 		const { error: bulkDeleteError } = await this.supabase
 			.from("candidate_files")
 			.delete()

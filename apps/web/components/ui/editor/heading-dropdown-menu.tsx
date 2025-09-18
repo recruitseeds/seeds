@@ -161,7 +161,7 @@ export function HeadingDropdownMenu({
                 editor={editor}
                 level={level}
                 text={getFormattedHeadingName(level)}
-                // @ts-expect-error - We don't need a tooltip for the heading dropdown menu
+                
                 tooltip={""}
                 unstyled={true}
                 showShortcut={true}

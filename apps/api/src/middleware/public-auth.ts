@@ -34,14 +34,14 @@ export const publicAuth = () => {
 			);
 		}
 
-		// Check for test API key only in development or when explicitly configured
+		
 		if (apiKey === process.env.TEST_API_KEY && process.env.TEST_ORG_ID) {
 			const TEST_USER_ID = "test-user";
 			const testUserId = TEST_USER_ID;
 			c.set("apiKeyOwner", testUserId);
 			c.set("apiKeyMeta", {
 				tier: "enterprise" as const,
-				companyId: process.env.TEST_ORG_ID, // Set via TEST_ORG_ID env var
+				companyId: process.env.TEST_ORG_ID, 
 				permissions: ["read", "write"],
 			});
 			return next();

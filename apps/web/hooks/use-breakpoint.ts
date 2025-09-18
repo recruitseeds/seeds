@@ -37,7 +37,7 @@ export function useBreakpoint(
     }
 
     window.addEventListener('resize', handleResize)
-    handleResize() // Check initial breakpoint
+    handleResize() 
 
     return () => {
       window.removeEventListener('resize', handleResize)

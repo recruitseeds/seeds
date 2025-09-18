@@ -92,7 +92,7 @@ export function Tooltip({
             sideOffset={8}
             className={cn(
               "flex items-center gap-2 px-2.5 py-1 bg-foreground border border-border/20 rounded-lg shadow-xs z-[999]",
-              !title && shortcut && "px-1.5 gap-0.5", // Tighter spacing for shortcut-only
+              !title && shortcut && "px-1.5 gap-0.5", 
               className,
             )}
           >

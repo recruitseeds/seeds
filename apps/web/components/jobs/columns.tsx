@@ -61,7 +61,7 @@ export const columns: ColumnDef<JobPost>[] = [
     cell: ({ row }) => {
       const status = row.getValue('status') as string | undefined
 
-      // Check if status exists before trying to use toLowerCase()
+      
       if (!status) {
         return <span className='status-badge unknown'>Unknown</span>
       }
@@ -111,28 +111,28 @@ export const columns: ColumnDef<JobPost>[] = [
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => console.log(`Edit job: ${job.id}`)} // Placeholder for Edit Job action
+              onClick={() => console.log(`Edit job: ${job.id}`)} 
             >
               Edit Job
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => console.log(`View applicants for job: ${job.id}`)} // Placeholder for View Applicants action
+              onClick={() => console.log(`View applicants for job: ${job.id}`)} 
             >
               View Applicants
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => console.log(`Close job: ${job.id}`)} // Placeholder for Close Job action
+              onClick={() => console.log(`Close job: ${job.id}`)} 
             >
               Close Job
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => console.log(`Duplicate job: ${job.id}`)} // Placeholder for Duplicate Job action
+              onClick={() => console.log(`Duplicate job: ${job.id}`)} 
             >
               Duplicate Job
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => console.log(`Share job: ${job.id}`)} // Placeholder for Share Job action
+              onClick={() => console.log(`Share job: ${job.id}`)} 
             >
               Share Job
             </DropdownMenuItem>

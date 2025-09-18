@@ -148,11 +148,11 @@ interface Context {
   filter: () => boolean
   label: string
   getDisablePointerSelection: () => boolean
-  // Ids
+  
   listId: string
   labelId: string
   inputId: string | undefined
-  // Refs
+  
   listInnerRef: React.RefObject<HTMLDivElement | null>
 }
 interface State {
@@ -185,7 +185,7 @@ export interface CommandRef {
   prevGroup: () => void
   first: () => void
   last: () => void
-  // returns true if an item was selected
+  
   onSelect: () => boolean
   bounce: () => void
 }
@@ -237,13 +237,13 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
       groups: new Set(),
     },
   }))
-  const allItems = useLazyRef<Set<string>>(() => new Set()) // [...itemIds]
-  const allGroups = useLazyRef<Map<string, Set<string>>>(() => new Map()) // groupId → [...itemIds]
+  const allItems = useLazyRef<Set<string>>(() => new Set()) 
+  const allGroups = useLazyRef<Map<string, Set<string>>>(() => new Map()) 
   const ids = useLazyRef<
     Map<string, { value: string; keywords?: string[]; modifier?: number }>
-  >(() => new Map()) // id → { value, keywords, modifier }
+  >(() => new Map()) 
   const inputId = useLazyRef<string | undefined>(() => undefined)
-  const listeners = useLazyRef<Set<() => void>>(() => new Set()) // [...rerenders]
+  const listeners = useLazyRef<Set<() => void>>(() => new Set()) 
   const {
     label,
     value,
@@ -254,7 +254,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
     disableAutoSelect = false,
     manualInputs = false,
     minScore = -1,
-    // prevent prop spreading invalid attributes
+    
     shouldFilter: _shouldFilter,
     filter: _filter,
     onValueChange: _onValueChange,
@@ -287,22 +287,22 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
         state.current[key] = value
 
         if (key === 'search') {
-          // Filter synchronously before emitting back to children
+          
           filterItems()
           sort()
 
           schedule('select-first-item', selectFirstItem)
         } else if (key === 'value') {
-          // opts is a boolean referring to whether it should NOT be scrolled into view
+          
           if (!opts) {
-            // Scroll the selected item into view
+            
             schedule(
               'value-change-scroll-selected-into-view',
               scrollSelectedIntoView
             )
           }
           if (propsRef.current?.value !== undefined) {
-            // If controlled, just call the callback instead of updating state internally
+            
             const newValue = (value ?? '') as string
 
             propsRef.current.onValueChange?.(newValue, event)
@@ -314,19 +314,19 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           schedule('focus-selected', focusSelected)
         }
 
-        // Notify subscribers that state has changed
+        
         store.emit()
       },
       emit: () => {
         listeners.current.forEach((l) => l())
       },
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   const context: Context = React.useMemo(
     () => ({
-      // Keep id → {value, keywords} mapping up-to-date
+      
       value: (id, value, keywords, modifier) => {
         if (value !== ids.current.get(id)?.value) {
           ids.current.set(id, { value, keywords, modifier })
@@ -337,11 +337,11 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           })
         }
       },
-      // Track item lifecycle (mount, unmount)
+      
       item: (id, groupId) => {
         allItems.current.add(id)
 
-        // Track this item within the group
+        
         if (groupId) {
           if (!allGroups.current.has(groupId)) {
             allGroups.current.set(groupId, new Set([id]))
@@ -350,13 +350,13 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           }
         }
 
-        // Batch this, multiple items can mount in one pass
-        // and we should not be filtering/sorting/emitting each time
+        
+        
         schedule('item-register-filter-sort', () => {
           filterItems()
           sort()
 
-          // Could be initial mount, select the first item if none already selected
+          
           if (!state.current.value && !disableAutoSelect) {
             selectFirstItem()
           }
@@ -370,12 +370,12 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           state.current.filtered.items.delete(id)
           const selectedItem = getSelectedItem()
 
-          // Batch this, multiple items could be removed in one pass
+          
           schedule('unmount', () => {
             filterItems()
 
-            // The item removed have been the selected one,
-            // so selection should be moved to the first
+            
+            
             if (selectedItem?.getAttribute('id') === id) {
               selectFirstItem()
             }
@@ -384,7 +384,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           })
         }
       },
-      // Track group lifecycle (mount, unmount)
+      
       group: (id) => {
         if (!allGroups.current.has(id)) {
           allGroups.current.set(id, new Set())
@@ -416,7 +416,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
       labelId,
       listInnerRef,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
     []
   )
 
@@ -438,7 +438,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
   function sort() {
     if (
       !state.current.search ||
-      // Explicitly false, because true | undefined is the default
+      
       propsRef.current.shouldFilter === false
     ) {
       return
@@ -446,13 +446,13 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
 
     const scores = state.current.filtered.items
 
-    // Sort the groups
+    
     const groups: [string, number][] = []
 
     state.current.filtered.groups.forEach((value) => {
       const items = allGroups.current.get(value)
 
-      // Get the maximum score of the group's items
+      
       let max = 0
 
       items?.forEach((item) => {
@@ -464,12 +464,12 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
       groups.push([value, max])
     })
 
-    // Sort items within groups to bottom
-    // Sort items outside of groups
-    // Sort groups to bottom (pushes all non-grouped items to the top)
+    
+    
+    
     const listInsertionElement = listInnerRef.current
 
-    // Sort the items
+    
     getValidItems()
       .sort((a, b) => {
         const valueA = a.getAttribute('id') ?? ''
@@ -481,7 +481,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
         const group = item.closest(GROUP_ITEMS_SELECTOR)
 
         if (group) {
-          // @ts-ignore
+          
           group.appendChild(
             item.parentElement === group
               ? item
@@ -489,7 +489,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           )
         } else {
           listInsertionElement?.appendChild(
-            // @ts-ignore
+            
             item.parentElement === listInsertionElement
               ? item
               : item.closest(`${GROUP_ITEMS_SELECTOR} > *`)
@@ -524,19 +524,19 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
   function filterItems() {
     if (
       !state.current.search ||
-      // Explicitly false, because true | undefined is the default
+      
       propsRef.current.shouldFilter === false
     ) {
       state.current.filtered.count = allItems.current.size
-      // Do nothing, each item will know to show itself because search is empty
+      
       return
     }
 
-    // Reset the groups
+    
     state.current.filtered.groups = new Set()
     let itemCount = 0
 
-    // Check which items should be included
+    
     for (const id of Array.from(allItems.current)) {
       const value = ids.current.get(id)?.value ?? ''
       const keywords = ids.current.get(id)?.keywords ?? []
@@ -547,7 +547,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
       if (rank > 0) itemCount++
     }
 
-    // Check which groups have at least 1 item shown
+    
     for (const [groupId, group] of Array.from(allGroups.current)) {
       for (const itemId of Array.from(group)) {
         if (state.current.filtered.items.get(itemId) ?? 0 > 0) {
@@ -565,14 +565,14 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
 
     if (item) {
       if (item.parentElement?.firstChild === item) {
-        // First item in Group, ensure heading is in view
+        
         item
           .closest(GROUP_SELECTOR)
           ?.querySelector(GROUP_HEADING_SELECTOR)
           ?.scrollIntoView({ block: 'nearest' })
       }
 
-      // Ensure the item is always in view
+      
       item.scrollIntoView({ block: 'nearest' })
     }
   }
@@ -612,7 +612,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
     const items = getValidItems()
     const index = items.findIndex((item) => item === selected)
 
-    // Get item at this index
+    
     let newValue = items[index + change]?.getAttribute(VALUE_ATTR)
 
     if (propsRef.current?.loop) {
@@ -666,13 +666,13 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
     e.preventDefault()
 
     if (mod === 'meta') {
-      // Last item
+      
       last()
     } else if (mod === 'alt') {
-      // Next group
+      
       updateSelectedByGroup(1)
     } else {
-      // Next item
+      
       updateSelectedByItem(1)
     }
   }
@@ -683,13 +683,13 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
     e.preventDefault()
 
     if (mod === 'meta') {
-      // First item
+      
       updateSelectedToIndex(0)
     } else if (mod === 'alt') {
-      // Previous group
+      
       updateSelectedByGroup(-1)
     } else {
-      // Previous item
+      
       updateSelectedByItem(-1)
     }
   }
@@ -731,13 +731,13 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
       },
     }),
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
     []
   )
 
   useLayoutEffect(() => {
     schedule('initial-scroll-selected-into-view', scrollSelectedIntoView)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   /** Controlled mode `value` handling. */
@@ -753,14 +753,14 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
        * we risk running into a race condition where the `scrollSelectedIntoView`
        * runs before the DOM is updated with the new selected item.
        *
-       * @see https://github.com/campsite/campsite/pull/10272
+       * @see https://github.com/ariakit/ariakit/issues/1179
        */
       schedule(
         'controlled-value-change-scroll-selected-into-view',
         scrollSelectedIntoView
       )
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [value])
 
   return (
@@ -864,7 +864,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           if (!eventTargetIsCmdkInput(e)) return
 
           if (!e.isComposing && e.keyCode !== 229) {
-            // Trigger item onSelect
+            
             e.preventDefault()
             const item = getSelectedItem()
 
@@ -887,7 +887,7 @@ const Command = React.forwardRef<CommandRef, CommandProps>(function Command(
           cmdk-label=''
           htmlFor={context.inputId}
           id={context.labelId}
-          // Screen reader only
+          
           style={srOnlyStyles}>
           {label}
         </label>
@@ -923,7 +923,7 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>(function Item(
     if (!forceMount) {
       return context.item(id, groupContext?.id)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [forceMount])
 
   const value = useValue(
@@ -960,7 +960,7 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>(function Item(
 
     element.addEventListener(SELECT_EVENT, onSelect)
     return () => element.removeEventListener(SELECT_EVENT, onSelect)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [render, props.onSelect, props.disabled])
 
   function select(
@@ -1002,7 +1002,7 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>(function Item(
     <div
       ref={mergeRefs([ref, forwardedRef])}
       {...etc}
-      // must still mount a DOM element as getValidItems() uses mounted elements for filtering and sorting
+      
       data-render={render}
       style={{ ...style, display: render ? undefined : 'none' }}
       id={id}
@@ -1019,7 +1019,7 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>(function Item(
       onFocus={
         disabled ||
         context.getDisablePointerSelection() ||
-        // prevent re-entrant selection
+        
         selected
           ? undefined
           : () => select()
@@ -1062,12 +1062,12 @@ const Group = React.forwardRef<HTMLDivElement, GroupProps>(function Group(
 
   useLayoutEffect(() => {
     return context.group(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   useValue(id, ref, [props.value, props.heading, headingRef])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   const contextValue = React.useMemo(() => ({ id, forceMount }), [forceMount])
 
   return (
@@ -1142,19 +1142,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
     )
 
     return item?.getAttribute('id')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   React.useEffect(() => {
     if (props.value != null) {
       store.setState('search', props.value)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [props.value])
 
   useLayoutEffect(() => {
     return context.input(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   return (
@@ -1322,9 +1322,9 @@ export function useLazyRef<T>(fn: () => T) {
   return ref as React.MutableRefObject<T>
 }
 
-// ESM is still a nightmare with Next.js so I'm just gonna copy the package code in
-// https://github.com/gregberge/react-merge-refs
-// Copyright (c) 2020 Greg Bergé
+
+
+
 function mergeRefs<T = any>(
   refs: Array<React.MutableRefObject<T> | React.LegacyRef<T>>
 ): React.RefCallback<T> {
@@ -1393,7 +1393,7 @@ const useScheduleLayoutEffect = () => {
   useLayoutEffect(() => {
     fns.current.forEach((f) => f())
     fns.current = new Map()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [s])
 
   return (id: string | number, cb: () => void) => {
@@ -1404,12 +1404,12 @@ const useScheduleLayoutEffect = () => {
 
 function renderChildren(children: React.ReactElement) {
   const childrenType = children.type as any
-  // The children is a component
+  
 
   if (typeof childrenType === 'function') return childrenType(children.props)
-  // The children is a component with `forwardRef`
+  
   else if ('render' in childrenType) return childrenType.render(children.props)
-  // It's a string, boolean, etc.
+  
   else return children
 }
 

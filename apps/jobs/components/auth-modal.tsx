@@ -112,7 +112,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, mode = 'login' }: Au
   }
 
   const handleMainAppRedirect = () => {
-    const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.recruitseeds.com'
+    const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://localhost:3000'
     const returnUrl = encodeURIComponent(window.location.href)
     window.location.href = `${mainAppUrl}/login?returnUrl=${returnUrl}`
   }
@@ -131,7 +131,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess, mode = 'login' }: Au
             </Alert>
           )}
 
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className='w-full'>
+          <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'login' | 'signup')} className='w-full'>
             <TabsList className='grid w-full grid-cols-2'>
               <TabsTrigger value='login'>Sign In</TabsTrigger>
               <TabsTrigger value='signup'>Sign Up</TabsTrigger>

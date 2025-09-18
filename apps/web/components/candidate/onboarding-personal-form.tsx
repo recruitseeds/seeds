@@ -276,7 +276,7 @@ export function PersonalInfoForm({
                   </div>
                   <FormControl>
                     <Input
-                      placeholder='https://yourwebsite.com'
+                      placeholder='https://example.com'
                       className={inputClass}
                       {...field}
                       value={field.value ?? ''}
@@ -302,7 +302,7 @@ export function PersonalInfoForm({
                   </div>
                   <FormControl>
                     <Input
-                      placeholder='https://linkedin.com/in/username'
+                      placeholder='https://example.com'
                       className={inputClass}
                       {...field}
                       value={field.value ?? ''}
@@ -328,7 +328,7 @@ export function PersonalInfoForm({
                   </div>
                   <FormControl>
                     <Input
-                      placeholder='https://github.com/username'
+                      placeholder='https://example.com'
                       className={inputClass}
                       {...field}
                       value={field.value ?? ''}
@@ -354,7 +354,7 @@ export function PersonalInfoForm({
                   </div>
                   <FormControl>
                     <Input
-                      placeholder='https://twitter.com/username'
+                      placeholder='https://example.com'
                       className={inputClass}
                       {...field}
                       value={field.value ?? ''}

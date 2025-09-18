@@ -33,7 +33,7 @@ app.route("/api/v1", v1Routes);
 app.route("/api/v1/public", publicRoutes);
 app.route("/api/v1/internal", internalRoutes);
 
-// Test routes without authentication for e2e testing
+
 app.route("/test/v1", testRoutes);
 
 addSwaggerUI(app);
@@ -69,7 +69,7 @@ serve({
 
 logger.info("🚀 API server running", {
 	url: `http://localhost:${config.port}`,
-	healthCheckUrl: `http://localhost:${config.port}/api/v1/health`,
+	healthCheckUrl: `http://localhost:${config.port}/health`,
 	docsUrl: `http://localhost:${config.port}/docs`,
 	openApiSpecUrl: `http://localhost:${config.port}/openapi.json`,
 });

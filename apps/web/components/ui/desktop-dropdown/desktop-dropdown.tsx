@@ -190,9 +190,9 @@ export function DesktopDropdownMenu({
           align={align}
           side={side}
           collisionPadding={8}
-          // Do not let pointer move events escape the dropdown. Other controls like Command rely on onPointerMove while
-          // embedding the dropdown in the component. This results in a flickering effect when the pointer is moved in
-          // the dropdown.
+          
+          
+          
           onPointerMove={(e) => e.stopPropagation()}
           className={cn(
             'focus:outline-none',

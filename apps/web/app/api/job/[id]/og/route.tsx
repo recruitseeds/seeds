@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-import { getServerTRPCCaller } from "@/trpc/server";
+import { getServerTRPCCaller } from "@/trpc/server-edge";
 
 export const runtime = "edge";
 
@@ -12,14 +12,14 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const jobId = params.id;
 
-    // Parse options from query params
+    
     const includeTitle = searchParams.get("title") !== "false";
     const includeCompany = searchParams.get("company") === "true";
     const includeSalary = searchParams.get("salary") === "true";
     const includeLocation = searchParams.get("location") === "true";
     const template = searchParams.get("template") || "modern";
 
-    // Fetch job data using your tRPC setup
+    
     const caller = await getServerTRPCCaller();
     const job = await caller.organization.getJobPosting({ id: jobId });
 
@@ -27,7 +27,7 @@ export async function GET(
       return new Response("Job not found", { status: 404 });
     }
 
-    // Define template styles
+    
     const templateStyles = {
       modern: {
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -53,7 +53,7 @@ export async function GET(
       templateStyles[template as keyof typeof templateStyles] ||
       templateStyles.modern;
 
-    // Format salary for display
+    
     const formatSalary = () => {
       if (job.salary_min && job.salary_max) {
         return `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`;
@@ -80,7 +80,7 @@ export async function GET(
             position: "relative",
           }}
         >
-          {/* Main content container */}
+          {}
           <div
             style={{
               display: "flex",
@@ -91,7 +91,7 @@ export async function GET(
               zIndex: 1,
             }}
           >
-            {/* Job Title */}
+            {}
             {includeTitle && (
               <div
                 style={{
@@ -108,7 +108,7 @@ export async function GET(
               </div>
             )}
 
-            {/* Company Name */}
+            {}
             {includeCompany && (
               <div
                 style={{
@@ -118,12 +118,12 @@ export async function GET(
                   marginBottom: 20,
                 }}
               >
-                {/* You might want to get company name from organization data */}
+                {}
                 Your Company Name
               </div>
             )}
 
-            {/* Location and Salary Container */}
+            {}
             <div
               style={{
                 display: "flex",
@@ -134,7 +134,7 @@ export async function GET(
                 marginTop: 8,
               }}
             >
-              {/* Location */}
+              {}
               {includeLocation && (
                 <div
                   style={{
@@ -147,11 +147,11 @@ export async function GET(
                   }}
                 >
                   <div style={{ fontSize: 24 }}>📍</div>
-                  Remote {/* You can make this dynamic based on job data */}
+                  Remote {}
                 </div>
               )}
 
-              {/* Salary */}
+              {}
               {includeSalary && salaryDisplay && (
                 <div
                   style={{
@@ -169,7 +169,7 @@ export async function GET(
               )}
             </div>
 
-            {/* Job Type Badge */}
+            {}
             {job.job_type && (
               <div
                 style={{
@@ -191,7 +191,7 @@ export async function GET(
             )}
           </div>
 
-          {/* Branding Footer */}
+          {}
           <div
             style={{
               position: "absolute",
@@ -206,7 +206,7 @@ export async function GET(
             seeds-ats.com
           </div>
 
-          {/* Decorative Elements for Modern Template */}
+          {}
           {template === "modern" && (
             <>
               <div
@@ -236,7 +236,7 @@ export async function GET(
             </>
           )}
 
-          {/* Grid Pattern for Corporate Template */}
+          {}
           {template === "corporate" && (
             <div
               style={{
@@ -259,7 +259,7 @@ export async function GET(
       {
         width: 1200,
         height: 630,
-        // Enable debugging to see what's happening
+        
         debug: false,
       },
     );

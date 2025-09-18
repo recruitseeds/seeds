@@ -81,11 +81,11 @@ Authorization: Bearer uk_your_api_key_here
 
 ## Support
 
-For API support, visit our [documentation](https://docs.recruitseeds.com) or contact support@recruitseeds.com.
+For API support, visit our [documentation](https://docs.recruitseeds.com).
       `,
 			contact: {
 				name: "API Support",
-				url: "https://docs.recruitseeds.com",
+				url: "https://recruitseeds.com/support",
 				email: "support@recruitseeds.com",
 			},
 			license: {
@@ -96,7 +96,7 @@ For API support, visit our [documentation](https://docs.recruitseeds.com) or con
 		},
 		servers: [
 			{
-				url: "http://localhost:3001",
+				url: "http://localhost:3000",
 				description: "Development server",
 			},
 			{

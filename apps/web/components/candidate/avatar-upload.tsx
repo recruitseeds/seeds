@@ -8,7 +8,7 @@ import { Loader2, Upload } from 'lucide-react'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-// TODO: Make this faster, set better defaults, set limits, optimize image type
+
 
 interface ClientAvatarUploadProps {
   userId: string

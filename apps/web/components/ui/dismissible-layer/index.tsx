@@ -10,7 +10,7 @@ import React, {
 
 const rootLayerId = 'root'
 
-// Update the initial state of layersAtom to include the type
+
 export const layersAtom = atom([rootLayerId])
 
 const addLayerAtom = atom(null, (get, set, layer: string) => {

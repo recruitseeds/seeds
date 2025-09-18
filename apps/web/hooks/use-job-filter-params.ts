@@ -31,13 +31,13 @@ export function useJobFilterParams() {
       const params = new URLSearchParams(searchParams.toString())
 
       if (!newFilter) {
-        // Clear all filters
+        
         params.delete('q')
         params.delete('status')
         params.delete('department')
         params.delete('job_type')
       } else {
-        // Set individual filters
+        
         Object.entries(newFilter).forEach(([key, value]) => {
           if (value) {
             params.set(key, value)

@@ -1170,7 +1170,7 @@ testJobsRoutes.openapi(applyToJobTestRoute, async (c: Context): Promise<any> => 
 
           const baseUrl = c.req.header('host')
             ? `${c.req.header('x-forwarded-proto') || 'http'}://${c.req.header('host')}`
-            : 'http://localhost:3001'
+            : 'http://localhost:3000'
 
           const controller = new AbortController()
           const timeoutId = setTimeout(() => controller.abort(), 30000)

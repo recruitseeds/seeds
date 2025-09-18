@@ -366,7 +366,7 @@ export const organizationRouter = createTRPCRouter({
         })
       }
 
-      // First get current settings
+      
       const { data: currentData, error: fetchError } = await ctx.supabase
         .from('organization_users')
         .select('settings')
@@ -381,12 +381,12 @@ export const organizationRouter = createTRPCRouter({
         })
       }
 
-      // Merge the new value into existing settings
+      
       const currentSettings = (currentData?.settings as Record<string, unknown>) || {}
       const pathParts = input.path.split('.')
       let target = currentSettings
 
-      // Navigate to the parent of the target property
+      
       for (let i = 0; i < pathParts.length - 1; i++) {
         if (!(pathParts[i] in target)) {
           target[pathParts[i]] = {}
@@ -394,10 +394,10 @@ export const organizationRouter = createTRPCRouter({
         target = target[pathParts[i]] as Record<string, unknown>
       }
 
-      // Set the value
+      
       target[pathParts[pathParts.length - 1]] = input.value
 
-      // Update the database
+      
       const { data, error } = await ctx.supabase
         .from('organization_users')
         .update({ settings: currentSettings as Json })
@@ -416,7 +416,7 @@ export const organizationRouter = createTRPCRouter({
       return data?.settings || null
     }),
 
-  // Pipeline Management
+  
   createPipeline: organizationProcedure
     .input(
       z.object({
@@ -550,8 +550,8 @@ export const organizationRouter = createTRPCRouter({
     return data
   }),
 
-  // Updated mutation handlers for pipeline steps in your organization router
-  // Add these updated mutations to replace the existing ones:
+  
+  
 
   createPipelineStep: organizationProcedure
     .input(
@@ -565,7 +565,7 @@ export const organizationRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // First create the step
+      
       const { data, error } = await ctx.supabase
         .from('pipeline_steps')
         .insert(input)
@@ -612,7 +612,7 @@ export const organizationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input
 
-      // Update and return with relations
+      
       const { data, error } = await ctx.supabase
         .from('pipeline_steps')
         .update(updateData)
@@ -649,7 +649,7 @@ export const organizationRouter = createTRPCRouter({
   deletePipelineStep: organizationProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      // Get the step data before deleting (for optimistic update rollback)
+      
       const { data: stepToDelete } = await ctx.supabase.from('pipeline_steps').select('*').eq('id', input.id).single()
 
       const { error } = await ctx.supabase.from('pipeline_steps').delete().eq('id', input.id)
@@ -661,7 +661,7 @@ export const organizationRouter = createTRPCRouter({
         })
       }
 
-      // Return the deleted step info
+      
       return { success: true, deletedStep: stepToDelete }
     }),
 
@@ -674,7 +674,7 @@ export const organizationRouter = createTRPCRouter({
       })
     }
 
-    // First delete all pipeline steps
+    
     const { error: stepsError } = await ctx.supabase.from('pipeline_steps').delete().eq('pipeline_id', input.id)
 
     if (stepsError) {
@@ -684,7 +684,7 @@ export const organizationRouter = createTRPCRouter({
       })
     }
 
-    // Then delete the pipeline
+    
     const { error } = await ctx.supabase
       .from('hiring_pipelines')
       .delete()

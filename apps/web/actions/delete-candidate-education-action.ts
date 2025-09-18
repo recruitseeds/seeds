@@ -1,18 +1,18 @@
-// actions/delete-candidate-education-action.ts
+
 'use server'
 
 import { deleteCandidateEducation } from '@seeds/supabase/mutations'
 import { revalidateTag } from 'next/cache'
 import { authActionClient } from './safe-action'
-import { deleteCandidateEducationSchema } from './schema' // Import the schema
+import { deleteCandidateEducationSchema } from './schema' 
 
-// REMOVE the schema definition from here:
-// export const deleteCandidateEducationSchema = z.object({
-//   id: z.string().uuid('Invalid education ID format.'),
-// })
+
+
+
+
 
 export const deleteCandidateEducationAction = authActionClient
-  .schema(deleteCandidateEducationSchema) // Use the imported schema
+  .schema(deleteCandidateEducationSchema) 
   .metadata({
     name: 'delete-candidate-education',
   })

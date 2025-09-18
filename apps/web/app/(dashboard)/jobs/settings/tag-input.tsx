@@ -29,7 +29,7 @@ interface TagsInputContextType {
   tagRefs: TagRefs
 }
 
-// Context to share state and handlers
+
 const TagsInputContext = createContext<TagsInputContextType | null>(null)
 
 const useTagsInputContext = (): TagsInputContextType => {
@@ -42,7 +42,7 @@ const useTagsInputContext = (): TagsInputContextType => {
   return context
 }
 
-// Root Component
+
 interface RootProps {
   children: ReactNode
   value?: string[]
@@ -69,18 +69,18 @@ const Root: ForwardRefExoticComponent<
     inputRef.current?.focus()
   }
 
-  // Modified removeTag to accept an optional keepInputFocus parameter
+  
   const removeTag = (index: number, keepInputFocus: boolean = false): void => {
     const newTags = controlledTags.filter((_: string, i: number) => i !== index)
     setTags(newTags)
     onChange?.(newTags)
 
     if (keepInputFocus) {
-      // When called from input, keep focus in input
+      
       setFocusedTagIndex(-1)
       inputRef.current?.focus()
     } else {
-      // Normal tag navigation behavior
+      
       if (index >= newTags.length) {
         if (newTags.length > 0) {
           setFocusedTagIndex(newTags.length - 1)
@@ -130,7 +130,7 @@ const Root: ForwardRefExoticComponent<
       case 'Backspace':
       case 'Delete':
         e.preventDefault()
-        removeTag(index) // Normal removal from tag, not input
+        removeTag(index) 
         break
     }
   }
@@ -179,7 +179,7 @@ interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
   children: ReactNode
 }
 
-// Label Component
+
 const Label = forwardRef<HTMLLabelElement, LabelProps>(
   ({ children, ...props }, ref) => {
     return (
@@ -196,7 +196,7 @@ interface ControlProps
   children: ((context: TagsInputContextType) => ReactNode) | ReactNode
 }
 
-// Control Component
+
 const Control = forwardRef<HTMLDivElement, ControlProps>(
   ({ children, ...props }, ref) => {
     const context = useTagsInputContext()
@@ -213,7 +213,7 @@ const Control = forwardRef<HTMLDivElement, ControlProps>(
 )
 Control.displayName = 'TagsInput.Control'
 
-// Input Component
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value?: string
   onChange?: (value: string) => void
@@ -264,7 +264,7 @@ const Input: ForwardRefExoticComponent<
       }
     } else if (e.key === 'Backspace' && tags.length > 0 && inputValue === '') {
       e.preventDefault()
-      removeTag(tags.length - 1, true) // Tell removeTag to keep focus in input
+      removeTag(tags.length - 1, true) 
     } else if (e.key === 'ArrowLeft' && tags.length > 0) {
       const cursorPosition = (e.target as HTMLInputElement).selectionStart
       if (cursorPosition === 0) {
@@ -305,16 +305,16 @@ const Input: ForwardRefExoticComponent<
 })
 Input.displayName = 'TagsInput.Input'
 
-// Tag Component
+
 interface TagTextProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: ReactNode
 }
 
-// Tag Component
+
 interface TagProps {
   index: number
   children: ReactNode
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   [key: string]: any
 }
 
@@ -371,10 +371,10 @@ const Tag: ForwardRefExoticComponent<
 })
 Tag.displayName = 'TagsInput.Tag'
 
-// TagText Component
+
 interface TagTextProps {
   children: ReactNode
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   [key: string]: any
 }
 
@@ -389,10 +389,10 @@ const TagText: ForwardRefExoticComponent<
 })
 TagText.displayName = 'TagsInput.TagText'
 
-// TagDeleteTrigger Component
+
 interface TagDeleteTriggerProps {
   index: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   [key: string]: any
 }
 
@@ -418,9 +418,9 @@ const TagDeleteTrigger: ForwardRefExoticComponent<
 })
 TagDeleteTrigger.displayName = 'TagsInput.TagDeleteTrigger'
 
-// ClearTrigger Component
+
 interface ClearTriggerProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   [key: string]: any
 }
 
@@ -437,7 +437,7 @@ const ClearTrigger: ForwardRefExoticComponent<
 })
 ClearTrigger.displayName = 'TagsInput.ClearTrigger'
 
-// TagList Component
+
 interface TagListProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: ReactNode
 }

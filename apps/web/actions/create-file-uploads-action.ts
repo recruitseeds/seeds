@@ -3,13 +3,13 @@
 import { authActionClient } from '@/actions/safe-action'
 import {
   uploadFileToR2AndRecord,
-  type CandidateUploadedFileMetadata, // Keep this type for the mutation's return value
-} from '@seeds/supabase/mutations' // Assuming mutations/index.ts exports it
+  type CandidateUploadedFileMetadata, 
+} from '@seeds/supabase/mutations' 
 import type { Database } from '@seeds/supabase/types/db'
 import { S3Client } from '@aws-sdk/client-s3'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 
-// R2 Configuration - Remains the same
+
 const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
 const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!
 const R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!
@@ -36,27 +36,27 @@ if (
   )
 }
 
-// Removed extractTextFromFile and related imports (mammoth, pdf-parse)
-// Removed AI SDK imports (openai, generateObject, ai)
-// Removed resumeSchema import
 
-// Context type remains the same
+
+
+
+
 interface ActionContextWithOriginalInput {
   user: User
   supabase: SupabaseClient<Database>
   originalClientInput?: unknown
 }
 
-// Simplified result interface - no AI fields
+
 export interface ProcessedFileUploadResult
   extends CandidateUploadedFileMetadata {
-  originalClientKey: string // Keep track of which input field it came from
+  originalClientKey: string 
 }
 
-// Action result interface remains structurally similar, but 'results' type changes
+
 export interface CandidateFileUploadsActionResult {
   success: boolean
-  results?: ProcessedFileUploadResult[] // Uses the simplified result type
+  results?: ProcessedFileUploadResult[] 
   error?: {
     code: string
     message: string
@@ -69,14 +69,14 @@ export const handleCandidateFileUploadsAction = authActionClient
   .action(
     async (args: {
       ctx: ActionContextWithOriginalInput
-      parsedInput: undefined // Expect FormData via originalClientInput
+      parsedInput: undefined 
     }): Promise<CandidateFileUploadsActionResult> => {
       const { ctx } = args
       const { user, supabase, originalClientInput } = ctx
 
       if (!s3ClientInstance) {
         const errorMsg = 'File storage service is not configured on the server.'
-        console.error(`[Action:handleCandidateFileUploadsAction] ${errorMsg}`)
+        console.error(`[Action]: ${errorMsg}`)
         return {
           success: false,
           error: { code: 'STORAGE_CONFIG_ERROR', message: errorMsg },
@@ -101,7 +101,7 @@ export const handleCandidateFileUploadsAction = authActionClient
       const fieldErrors: { fileKeyOrName: string; message: string }[] = []
       const fileProcessingPromises: Promise<void>[] = []
 
-      // Simplified processEntry - no AI logic
+      
       const processEntry = async (
         fileFromFormData: File | null,
         clientKey: string,
@@ -123,7 +123,7 @@ export const handleCandidateFileUploadsAction = authActionClient
         }
 
         try {
-          // Call the mutation to upload to R2 and record in DB
+          
           const uploadedMetadata = await uploadFileToR2AndRecord(
             supabase,
             s3ClientInstance!,
@@ -134,7 +134,7 @@ export const handleCandidateFileUploadsAction = authActionClient
             dbFileType
           )
 
-          // Push the result (without AI fields)
+          
           processedFileResults.push({
             ...uploadedMetadata,
             originalClientKey: clientKey,
@@ -154,7 +154,7 @@ export const handleCandidateFileUploadsAction = authActionClient
         }
       }
 
-      // --- Processing logic remains the same, calling the simplified processEntry ---
+      
 
       const resumeFile = formData.get('resume') as File | null
       if (resumeFile) {
@@ -163,7 +163,7 @@ export const handleCandidateFileUploadsAction = authActionClient
             resumeFile,
             'resume',
             'resume',
-            'resume' as Database['public']['Enums']['candidate_file_type'] // Ensure 'resume' matches your enum
+            'resume' as Database['public']['Enums']['candidate_file_type'] 
           )
         )
       }
@@ -175,7 +175,7 @@ export const handleCandidateFileUploadsAction = authActionClient
             coverLetterFile,
             'coverLetter',
             'cover_letter',
-            'cover_letter' as Database['public']['Enums']['candidate_file_type'] // Ensure 'cover_letter' matches your enum
+            'cover_letter' as Database['public']['Enums']['candidate_file_type'] 
           )
         )
       }
@@ -187,7 +187,7 @@ export const handleCandidateFileUploadsAction = authActionClient
             transcriptFile,
             'transcript',
             'transcript',
-            'transcript' as Database['public']['Enums']['candidate_file_type'] // Ensure 'transcript' matches your enum
+            'transcript' as Database['public']['Enums']['candidate_file_type'] 
           )
         )
       }
@@ -200,7 +200,7 @@ export const handleCandidateFileUploadsAction = authActionClient
               fileValue,
               `otherFiles[${index}]`,
               'other',
-              'other' as Database['public']['Enums']['candidate_file_type'] // Ensure 'other' matches your enum
+              'other' as Database['public']['Enums']['candidate_file_type'] 
             )
           )
         } else {
@@ -213,11 +213,11 @@ export const handleCandidateFileUploadsAction = authActionClient
 
       await Promise.all(fileProcessingPromises)
 
-      // --- Return logic remains the same ---
+      
 
       if (fieldErrors.length > 0) {
         return {
-          success: processedFileResults.length > 0, // Partial success
+          success: processedFileResults.length > 0, 
           results:
             processedFileResults.length > 0 ? processedFileResults : undefined,
           error: {
@@ -242,7 +242,7 @@ export const handleCandidateFileUploadsAction = authActionClient
       console.log(
         `[Action] File processing completed for User ID: ${user.id}. Results: ${processedFileResults.length}, Errors: ${fieldErrors.length}`
       )
-      // Return the simplified results array
+      
       return { success: true, results: processedFileResults }
     }
   )

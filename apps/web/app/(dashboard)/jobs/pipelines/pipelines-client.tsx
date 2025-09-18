@@ -51,7 +51,7 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   
-  // Use live query with initial data for optimistic updates
+  
   const { data: livePipelines } = useQuery({
     ...trpc.organization.listPipelines.queryOptions(),
     initialData: initialPipelines,
@@ -66,21 +66,21 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
   const [pipelineToDelete, setPipelineToDelete] = useState<Pipeline | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
 
-  // Delete pipeline mutation
+  
   const deletePipelineMutation = useMutation(
     trpc.organization.deletePipeline.mutationOptions({
       onMutate: async (variables) => {
-        // Cancel any outgoing refetches
+        
         await queryClient.cancelQueries(
           trpc.organization.listPipelines.queryOptions()
         )
 
-        // Snapshot the previous value
+        
         const previousPipelines = queryClient.getQueryData(
           trpc.organization.listPipelines.queryOptions().queryKey
         )
 
-        // Optimistically remove the pipeline
+        
         if (previousPipelines) {
           queryClient.setQueryData(
             trpc.organization.listPipelines.queryOptions().queryKey,
@@ -91,7 +91,7 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
         return { previousPipelines }
       },
       onError: (error, variables, context) => {
-        // Rollback on error
+        
         if (context?.previousPipelines) {
           queryClient.setQueryData(
             trpc.organization.listPipelines.queryOptions().queryKey,
@@ -101,7 +101,7 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
         console.error('Failed to delete pipeline:', error.message)
       },
       onSuccess: () => {
-        // Pipeline deleted successfully
+        
         setShowDeleteDialog(false)
         setPipelineToDelete(null)
       },
@@ -109,9 +109,9 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
   )
 
 
-  // Process and filter pipelines
+  
   const processedPipelines = (livePipelines || []).map((pipeline: Pipeline) => {
-    // For now, extract department from pipeline name or use 'General'
+    
     const department = pipeline.name.includes('Engineer')
       ? 'Engineering'
       : pipeline.name.includes('Designer')
@@ -126,15 +126,15 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
       ...pipeline,
       department,
       stages: pipeline.pipeline_steps?.length || 0,
-      activeJobs: 0, // TODO: Calculate from job_postings
-      activeCandidates: 0, // TODO: Calculate from applications
+      activeJobs: 0, 
+      activeCandidates: 0, 
       lastUpdated: new Date(pipeline.updated_at || pipeline.created_at).toLocaleDateString(),
     }
   })
 
-  // Filter pipelines based on search
+  
   const filteredPipelines = processedPipelines.filter((pipeline) => {
-    // Search filter
+    
     const searchMatch = searchQuery === '' || 
       pipeline.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (pipeline.description && pipeline.description.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -142,7 +142,7 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
     return searchMatch
   })
 
-  // Group filtered pipelines by department
+  
   const groupedPipelines = filteredPipelines.reduce((acc: Record<string, any[]>, pipeline) => {
     if (!acc[pipeline.department]) {
       acc[pipeline.department] = []
@@ -153,18 +153,18 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
 
   const departments = Object.keys(groupedPipelines)
 
-  // Add default departments if no pipelines exist, plus "All Departments"
+  
   const allDepartments =
     departments.length > 0
       ? ['All Departments', ...departments]
       : ['All Departments', 'Engineering', 'Design', 'Sales', 'Marketing']
 
-  // Set initial active department
+  
   if (!activeDepartment && allDepartments.length > 0) {
     setActiveDepartment(allDepartments[0])
   }
 
-  // Get pipelines for current department
+  
   const currentPipelines =
     activeDepartment === 'All Departments' ? filteredPipelines : groupedPipelines[activeDepartment] || []
 
@@ -506,7 +506,7 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
               variant='outline'
               className='gap-2 flex-1 bg-transparent'
               onClick={() => {
-                // TODO: Navigate to jobs using this pipeline
+                
                 console.log('View jobs for pipeline:', selectedPipeline!.id)
               }}>
               <Briefcase className='w-4 h-4' />
@@ -516,7 +516,7 @@ export function PipelineListingClient({ initialPipelines }: PipelineListingClien
               variant='outline'
               className='gap-2 flex-1 bg-transparent'
               onClick={() => {
-                // TODO: Navigate to candidates in this pipeline
+                
                 console.log('View candidates for pipeline:', selectedPipeline!.id)
               }}>
               <Users className='w-4 h-4' />

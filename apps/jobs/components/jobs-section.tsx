@@ -337,11 +337,27 @@ export function JobsSection({
     hasFilters,
   }
 
-  const formatJobType = (jobType: string): string => {
-    return jobType
+  const formatJobType = (jobType: string): 'Full-time' | 'Part-time' | 'Contract' | 'Internship' => {
+    const formatted = jobType
       .split('_')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')
+
+    // Ensure we return one of the valid union types
+    switch (formatted) {
+      case 'Full Time':
+      case 'Full-time':
+        return 'Full-time'
+      case 'Part Time':
+      case 'Part-time':
+        return 'Part-time'
+      case 'Contract':
+        return 'Contract'
+      case 'Internship':
+        return 'Internship'
+      default:
+        return 'Full-time' // fallback
+    }
   }
 
   const formatText = (text: string): string => {
@@ -364,7 +380,7 @@ export function JobsSection({
       location: 'Remote/Hybrid',
       type: formattedType,
       salary: formatSalary(job.salary_min, job.salary_max, job.salary_type),
-      remote: 'Hybrid',
+      remote: 'Hybrid' as 'Remote' | 'Hybrid' | 'On-site',
       posted: job.published_at ? getTimeAgo(job.published_at) : 'recently',
       tags: uniqueTags,
     }
@@ -492,7 +508,7 @@ export function JobsSection({
 
           <div className='flex-1 min-w-0'>
             <div className='border rounded-lg overflow-hidden'>
-              {jobs.map((job, index) => (
+              {jobs.map((job: JobPosting, index: number) => (
                 <div key={job.id}>
                   <JobCard job={transformJobForCard(job)} onAuthRequired={onAuthRequired} />
                   {index < jobs.length - 1 && <div className='border-b border-border' />}

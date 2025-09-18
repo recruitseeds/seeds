@@ -63,7 +63,7 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ initialSettings }: ProfileFormProps) {
-  // Use server-provided data or empty strings as fallback
+  
   const profile = initialSettings?.profile as Record<string, unknown> || {}
   
   const defaultValues: Partial<ProfileFormValues> = {
@@ -152,7 +152,7 @@ export function ProfileForm({ initialSettings }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>GitHub URL</FormLabel>
                 <FormControl>
-                  <Input placeholder='https://github.com/username' {...field} />
+                  <Input placeholder='https://example.com' {...field} />
                 </FormControl>
                 <FormDescription>Your GitHub profile (optional)</FormDescription>
                 <FormMessage />
@@ -167,7 +167,7 @@ export function ProfileForm({ initialSettings }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>LinkedIn URL</FormLabel>
                 <FormControl>
-                  <Input placeholder='https://linkedin.com/in/username' {...field} />
+                  <Input placeholder='https://example.com' {...field} />
                 </FormControl>
                 <FormDescription>Your LinkedIn profile (optional)</FormDescription>
                 <FormMessage />
@@ -182,7 +182,7 @@ export function ProfileForm({ initialSettings }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>Twitter URL</FormLabel>
                 <FormControl>
-                  <Input placeholder='https://x.com/username' {...field} />
+                  <Input placeholder='https://example.com' {...field} />
                 </FormControl>
                 <FormDescription>Your X (Twitter) profile (optional)</FormDescription>
                 <FormMessage />
@@ -197,7 +197,7 @@ export function ProfileForm({ initialSettings }: ProfileFormProps) {
               <FormItem>
                 <FormLabel>Website URL</FormLabel>
                 <FormControl>
-                  <Input placeholder='https://yourwebsite.com' {...field} />
+                  <Input placeholder='https://example.com' {...field} />
                 </FormControl>
                 <FormDescription>Your personal website or portfolio (optional)</FormDescription>
                 <FormMessage />

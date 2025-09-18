@@ -1,23 +1,23 @@
 'use server'
 
-import { updateCandidateWorkExperience } from '@seeds/supabase/mutations' // Adjust path
+import { updateCandidateWorkExperience } from '@seeds/supabase/mutations' 
 import type {
   CandidateWorkExperience,
-  UpdateCandidateWorkExperienceParams, // Assuming this is exported from mutations or types
-} from '@seeds/supabase/queries' // Or from mutations/types if defined there. Ensure this matches what mutation expects/returns.
-import type { TablesUpdate } from '@seeds/supabase/types/db' // Adjust path
+  UpdateCandidateWorkExperienceParams, 
+} from '@seeds/supabase/queries' 
+import type { TablesUpdate } from '@seeds/supabase/types/db' 
 import { revalidateTag } from 'next/cache'
-import { authActionClient } from './safe-action' // Adjust path
-import { updateCandidateWorkExperienceSchema } from './schema' // Adjust path
+import { authActionClient } from './safe-action' 
+import { updateCandidateWorkExperienceSchema } from './schema' 
 
-// This interface is for the `finalUpdateFields` internal to the action.
+
 interface WorkExperienceUpdatePayload
   extends Omit<
     TablesUpdate<'candidate_work_experiences'>,
     'id' | 'candidate_id' | 'created_at' | 'updated_at'
   > {
-  // is_current should be part of TablesUpdate<'candidate_work_experiences'>
-  // if your Supabase types are up-to-date after adding the column.
+  
+  
 }
 
 export const updateCandidateWorkExperienceAction = authActionClient
@@ -71,16 +71,16 @@ export const updateCandidateWorkExperienceAction = authActionClient
             finalUpdateFields.description = null
           } else {
             try {
-              // If description is stored as JSON in DB and input is a string that *might* be JSON
+              
               JSON.parse(updateFieldsFromSchema.description)
               finalUpdateFields.description = updateFieldsFromSchema.description
             } catch {
-              // If input string is not JSON, and DB expects a specific JSON structure like {text: "..."}
+              
               finalUpdateFields.description = {
                 text: updateFieldsFromSchema.description,
               }
-              // If DB column for description is just TEXT, then:
-              // finalUpdateFields.description = updateFieldsFromSchema.description;
+              
+              
             }
           }
         } else {
@@ -109,9 +109,9 @@ export const updateCandidateWorkExperienceAction = authActionClient
         }
       } else if (updateFieldsFromSchema.is_current === false) {
         finalUpdateFields.is_current = false
-        // end_date might be undefined here, which is fine if it's nullable and not being changed.
+        
       }
-      // If both is_current and end_date are undefined in parsedInput, they won't be in finalUpdateFields.
+      
 
       console.log(
         `[Action: update-candidate-work-experience] Processed finalUpdateFields for ID ${id}:`,
@@ -132,20 +132,20 @@ export const updateCandidateWorkExperienceAction = authActionClient
               .single()
 
             if (fetchError) {
-              throw fetchError // Propagate to outer catch
+              throw fetchError 
             }
 
             if (existingData) {
               actionReturnValue = {
-                success: true, // Still success, but indicate no changes
+                success: true, 
                 data: existingData as CandidateWorkExperience,
-                // It's better practice for success:true to not have an error object,
-                // but a message can be useful. Or, use a specific code in data.
-                // For client handling, it might be better to have a distinct 'status' or 'code'
-                // in the 'data' or alongside 'data'.
-                // For now, let's keep it simple and align with previous logic.
+                
+                
+                
+                
+                
                 error: {
-                  // This is a bit unconventional for success:true
+                  
                   code: 'NO_CHANGES_NEEDED',
                   message: 'No fields to update, existing data returned.',
                 },
@@ -156,7 +156,7 @@ export const updateCandidateWorkExperienceAction = authActionClient
               )
               return actionReturnValue
             } else {
-              // Should not happen if ID is valid and owned, but handle defensively
+              
               throw new Error('No changes and existing record not found.')
             }
           } catch (errorInNoChangesBranch) {
@@ -191,7 +191,7 @@ export const updateCandidateWorkExperienceAction = authActionClient
         const mutationParams: UpdateCandidateWorkExperienceParams = {
           id,
           ...finalUpdateFields,
-        } as UpdateCandidateWorkExperienceParams // Cast might be needed if finalUpdateFields is too broad
+        } as UpdateCandidateWorkExperienceParams 
 
         const updatedRecord = await updateCandidateWorkExperience(
           supabase,
@@ -238,7 +238,7 @@ export const updateCandidateWorkExperienceAction = authActionClient
 
         if (error instanceof Error) {
           errorMessage = error.message
-          // Attempt to get more details if they exist (e.g., from Supabase errors)
+          
           if ((error as any).details) errorDetails = (error as any).details
           if ((error as any).code)
             errorDetails = {

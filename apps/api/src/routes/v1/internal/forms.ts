@@ -9,7 +9,7 @@ import { Logger } from "../../../services/logger.js";
 const internalFormsRoutes = new Hono<InternalAuthContext>();
 internalFormsRoutes.use("*", internalAuth());
 
-// Validation schemas
+
 const CreateFormSchema = z.object({
 	organization_id: z.string().uuid(),
 	name: z.string().min(1).max(200),
@@ -43,7 +43,7 @@ const ListFormsQuerySchema = z.object({
 	limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
-// POST /forms - Create form template
+
 internalFormsRoutes.post("/", async (c) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId") as string,
@@ -67,7 +67,7 @@ internalFormsRoutes.post("/", async (c) => {
 			name: body.name,
 		});
 
-		// Handle default template logic
+		
 		if (body.is_default) {
 			await supabase
 				.from("application_form_templates")
@@ -139,7 +139,7 @@ internalFormsRoutes.post("/", async (c) => {
 	}
 });
 
-// GET /forms/:id - Get form template by ID
+
 internalFormsRoutes.get("/:id", async (c) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId") as string,
@@ -231,7 +231,7 @@ internalFormsRoutes.get("/:id", async (c) => {
 	}
 });
 
-// GET /forms - List form templates for organization
+
 internalFormsRoutes.get("/", async (c) => {
 	const logger = new Logger({
 		correlationId: c.get("correlationId") as string,

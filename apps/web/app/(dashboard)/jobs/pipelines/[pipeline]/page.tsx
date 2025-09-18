@@ -1,40 +1,40 @@
 'use client'
 
-// Core React and Hooks
-import React, { useCallback, useEffect, useMemo, useState } from 'react' // useRef kept *only* if needed by MiniMap/Controls implicitly, can often be removed
 
-// React Flow Imports
+import React, { useCallback, useEffect, useMemo, useState } from 'react' 
+
+
 import ReactFlow, {
   addEdge,
-  applyNodeChanges, // Helper
+  applyNodeChanges, 
   Background,
   BackgroundVariant,
   type Connection,
   Controls,
   type Edge,
-  Handle, // Import Handle
-  MarkerType, // Import MarkerType for markerEnd
+  Handle, 
+  MarkerType, 
   MiniMap,
   type Node,
-  type NodeChange, // For specific updates
-  type NodeProps, // Use NodeProps type
-  Position, // Import Position
-  type ReactFlowInstance, // For fitView
+  type NodeChange, 
+  type NodeProps, 
+  Position, 
+  type ReactFlowInstance, 
   useEdgesState,
   useNodesState,
 } from 'reactflow'
-import 'reactflow/dist/style.css' // Import React Flow CSS
+import 'reactflow/dist/style.css' 
 
-// Shadcn/ui and Utils
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { cn } from '@/components/ui/lib/utils' // Assuming your cn utility is here
-import { ArrowLeft, ArrowRight, PlusCircle, Trash2 } from 'lucide-react' // Icons
+import { cn } from '@/components/ui/lib/utils' 
+import { ArrowLeft, ArrowRight, PlusCircle, Trash2 } from 'lucide-react' 
 
-// --- Constants ---
+
 const PREDEFINED_STAGE_TYPES = [
   'Application Review',
   'Recruiter Screen',
@@ -74,7 +74,7 @@ const NODE_HEIGHT = 70
 const HORIZONTAL_GAP = 60
 const START_Y = 50
 
-// --- Types ---
+
 interface StageData {
   text: string
   description?: string
@@ -83,7 +83,7 @@ interface StageData {
   automationTriggers?: string
 }
 
-// --- Custom Node Component ---
+
 const PipelineStageNode = React.memo(({ data, selected }: NodeProps<StageData>) => {
   const nodeColor = useMemo(() => STAGE_COLORS[data.text] || 'bg-card', [data.text])
   return (
@@ -116,13 +116,13 @@ PipelineStageNode.displayName = 'PipelineStageNode'
 
 const nodeTypes = { pipelineStage: PipelineStageNode }
 
-// --- Helper function to create an edge ---
+
 const createEdge = (sourceId: string, targetId: string): Edge => ({
   id: `e-${sourceId}-${targetId}`,
   source: sourceId,
   target: targetId,
   type: 'smoothstep',
-  style: { stroke: '#333', strokeWidth: 2 }, // Using hardcoded dark gray
+  style: { stroke: '#333', strokeWidth: 2 }, 
   markerEnd: {
     type: MarkerType.ArrowClosed,
     color: '#333',
@@ -131,7 +131,7 @@ const createEdge = (sourceId: string, targetId: string): Edge => ({
   },
 })
 
-// --- Initial State ---
+
 const initialNodesData: Node<StageData>[] = [
   {
     id: '1',
@@ -157,7 +157,7 @@ const initialNodesData: Node<StageData>[] = [
 ]
 const initialEdgesData: Edge[] = [createEdge('1', '2'), createEdge('2', '3')]
 
-// --- Main Component ---
+
 export default function StructuredPipelineReactFlow() {
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [nodes, setNodes, onNodesChange] = useNodesState<StageData>(initialNodesData)
@@ -168,15 +168,15 @@ export default function StructuredPipelineReactFlow() {
   const [selectedStageType, setSelectedStageType] = useState<string>(PREDEFINED_STAGE_TYPES[0])
   const [hasChanges, setHasChanges] = useState(false)
 
-  // --- Effects ---
+  
   useEffect(() => {
-    // If selected node is deleted, select the first node or null
+    
     if (selectedStageId && !nodes.find((n) => n.id === selectedStageId)) {
       setSelectedStageId(nodes.length > 0 ? nodes[0].id : null)
     }
   }, [nodes, selectedStageId])
 
-  // --- Event Handlers ---
+  
   const onNodesChangeCustom = useCallback(
     (changes: NodeChange[]) => {
       setNodes((nds) => applyNodeChanges(changes, nds))
@@ -191,8 +191,8 @@ export default function StructuredPipelineReactFlow() {
     [setNodes]
   )
 
-  // onConnect is kept in case it's needed for programmatic connections,
-  // but manual UI connections will be disabled via props below.
+  
+  
   const onConnect = useCallback(
     (params: Connection) => {
       if (params.source === params.target || !params.source || !params.target) return
@@ -215,7 +215,7 @@ export default function StructuredPipelineReactFlow() {
 
   const getNextId = useCallback(() => (Math.max(0, ...nodes.map((n) => Number.parseInt(n.id))) + 1).toString(), [nodes])
 
-  // --- Add Node Handler ---
+  
   const handleAddNode = useCallback(
     (position: 'before' | 'after' | 'end') => {
       if (!selectedStageType) return
@@ -259,7 +259,7 @@ export default function StructuredPipelineReactFlow() {
             }
             currentEdges.push(createEdge(newNodeId, selectedStageId))
           } else {
-            // after
+            
             insertionIndex = selectedNodeIndex + 1
             newNodePosition = {
               x: selectedNode.position.x + NODE_WIDTH + HORIZONTAL_GAP,
@@ -296,7 +296,7 @@ export default function StructuredPipelineReactFlow() {
     [nodes, edges, selectedStageId, selectedStageType, setNodes, setEdges, getNextId, reactFlowInstance]
   )
 
-  // --- Delete Handler ---
+  
   const handleDeleteStage = useCallback(() => {
     if (selectedStageId === null) return
     try {
@@ -319,7 +319,7 @@ export default function StructuredPipelineReactFlow() {
     }
   }, [nodes, edges, selectedStageId, setNodes, setEdges, reactFlowInstance])
 
-  // --- Update, Save, Cancel Handlers ---
+  
   const handleUpdateStageData = useCallback(
     (field: keyof StageData, value: string | number) => {
       if (selectedStageId === null) return
@@ -327,14 +327,14 @@ export default function StructuredPipelineReactFlow() {
         nds.map((node) => (node.id === selectedStageId ? { ...node, data: { ...node.data, [field]: value } } : node))
       )
       setHasChanges(true)
-      if (field === 'text' && typeof value === 'string') setSelectedStageType(value) // Keep dropdown in sync
+      if (field === 'text' && typeof value === 'string') setSelectedStageType(value) 
     },
     [selectedStageId, setNodes]
   )
 
   const handleSave = useCallback(() => {
     setHasChanges(false)
-    alert('Pipeline Saved (Check Console)') // Placeholder
+    alert('Pipeline Saved (Check Console)') 
   }, [nodes, edges])
 
   const handleCancel = useCallback(() => {
@@ -350,7 +350,7 @@ export default function StructuredPipelineReactFlow() {
     [nodes, selectedStageId]
   )
 
-  // --- JSX ---
+  
   return (
     <div className='flex flex-col p-4 md:p-8'>
       {/* Header and Save/Cancel */}
@@ -430,20 +430,20 @@ export default function StructuredPipelineReactFlow() {
           edges={edges}
           onNodesChange={onNodesChangeCustom}
           onEdgesChange={onEdgesChange}
-          onConnect={onConnect} // Keep handler if needed programmatically
+          onConnect={onConnect} 
           nodeTypes={nodeTypes}
           snapToGrid={true}
           snapGrid={[15, 15]}
           fitView
-          fitViewOptions={{ padding: 0.3 }} // Slightly more padding
+          fitViewOptions={{ padding: 0.3 }} 
           minZoom={0.3}
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
           onInit={setReactFlowInstance}
           nodesDraggable={true}
-          nodesConnectable={false} // *** Disable manual connections via UI ***
+          nodesConnectable={false} 
           elementsSelectable={true}
-          //    connectionMode={ConnectionMode.Loose} // Or Strict
+          
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
           <Controls />

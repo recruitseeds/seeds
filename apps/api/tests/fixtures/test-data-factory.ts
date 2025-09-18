@@ -45,8 +45,8 @@ export const TestDataFactory = {
 				email: "sarah.johnson@email.com",
 				phone: "+1-555-0123",
 				location: "San Francisco, CA",
-				linkedinUrl: "https://linkedin.com/in/sarahjohnson",
-				githubUrl: "https://github.com/sarahjohnson",
+				linkedinUrl: "https:
+				githubUrl: "https:
 			},
 			summary:
 				"Senior full-stack engineer with 6+ years of experience building scalable web applications using modern JavaScript frameworks and cloud technologies.",
@@ -121,14 +121,14 @@ export const TestDataFactory = {
 					description:
 						"Built a collaborative task management app with real-time updates",
 					technologies: ["React", "Socket.io", "Node.js", "PostgreSQL"],
-					githubUrl: "https://github.com/sarahjohnson/task-manager",
-					url: "https://taskmanager.sarahjohnson.dev",
+					githubUrl: "https:
+					url: "https:
 				},
 				{
 					name: "E-commerce Analytics Dashboard",
 					description: "Real-time analytics dashboard for e-commerce platforms",
 					technologies: ["TypeScript", "D3.js", "Express.js", "Redis"],
-					githubUrl: "https://github.com/sarahjohnson/analytics-dashboard",
+					githubUrl: "https:
 				},
 			],
 			certifications: [
@@ -183,7 +183,7 @@ export const TestDataFactory = {
           SARAH JOHNSON
           Senior Software Engineer
           Email: sarah.johnson@email.com | Phone: +1-555-0123
-          GitHub: https://github.com/sarahjohnson | LinkedIn: https://linkedin.com/in/sarahjohnson
+          GitHub: https:
 
           EXPERIENCE
           Senior Software Engineer | Tech Unicorn Inc | Mar 2021 - Jan 2024

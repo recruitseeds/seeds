@@ -22,7 +22,7 @@ v1Routes.openapi(healthRoute, (c) => {
 	});
 });
 
-// Apply API key auth only to public routes and candidates
+
 v1Routes.use("/candidates/*", apiKeyAuth());
 v1Routes.use("/public/*", apiKeyAuth());
 

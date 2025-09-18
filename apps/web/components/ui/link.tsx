@@ -1,9 +1,9 @@
 import { forwardRef } from 'react'
-// eslint-disable-next-line no-restricted-imports
+
 import NextLink from 'next/link'
 
-// import { WEB_URL } from '@campsite/config'
-const WEB_URL = 'http://localhost:3000'
+
+const WEB_URL = 'http://localhost:3000';
 
 import { cn } from './lib/utils'
 import { linkType } from './utils'
@@ -57,7 +57,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>((props, ref) => {
            * Desktop app windows. The safest thing to do until that bug is resolved is to open all links,
            * including internal links, in browser windows.
            *
-           * https://campsite-software.slack.com/archives/C04R260LUMV/p1723751345237139
+           * https://github.com/vercel/next.js/issues/49387
            */
           e.preventDefault()
           os.openURL(hrefString)

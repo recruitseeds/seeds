@@ -100,16 +100,16 @@ const PopoverTrigger = React.forwardRef<
       ref={ref}
       {...props}
       onPointerDown={(e) => {
-        // Not all browsers focus buttons when clicked, particularly Safari and some mobile browsers. For consistency,
-        // we prevent default on the emulated mouse event and handle focusing the element ourselves.
-        // https://react-spectrum.adobe.com/blog/building-a-button-part-3.html#ensuring-consistent-focus-behavior
+        
+        
+        
         if (!props.disabled) {
           e.preventDefault()
           e.currentTarget.focus()
         }
       }}
       onKeyDownCapture={(evt) => {
-        // If the trigger is focused and the popover is open, close the popover on escape
+        
         if (!evt.defaultPrevented && evt.key === 'Escape' && context.open) {
           evt.preventDefault()
           evt.stopPropagation()
@@ -163,7 +163,7 @@ const PopoverContent = React.forwardRef<
           condition={addDismissibleLayer}
           wrap={(children) => <DismissibleLayer>{children}</DismissibleLayer>}>
           <Content
-            // must be an empty value to work
+            
             disable-escape-layered-hotkeys=''
             ref={ref}
             align={align}

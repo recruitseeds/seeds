@@ -1,3 +1,5 @@
+import React from 'react'
+
 interface TipTapNode {
   type: string
   content?: TipTapNode[]
@@ -14,9 +16,9 @@ interface TipTapRendererProps {
   className?: string
 }
 
-function renderNode(node: TipTapNode): JSX.Element | string {
+function renderNode(node: TipTapNode): React.JSX.Element | string {
   if (node.type === 'text') {
-    let text: JSX.Element | string = node.text || ''
+    let text: React.JSX.Element | string = node.text || ''
     
     if (node.marks) {
       for (const mark of node.marks) {
@@ -63,7 +65,7 @@ function renderNode(node: TipTapNode): JSX.Element | string {
     
     case 'heading':
       const level = node.attrs?.level || 1
-      const HeadingTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements
+      const HeadingTag = `h${Math.min(level, 6)}` as keyof React.JSX.IntrinsicElements
       const headingClasses = {
         1: 'text-3xl font-bold mb-6 mt-8 first:mt-0',
         2: 'text-2xl font-semibold mb-4 mt-6 first:mt-0',

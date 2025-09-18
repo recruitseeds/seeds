@@ -67,12 +67,12 @@ export function AppearanceForm({ initialSettings }: AppearanceFormProps) {
   const { data: settings, isLoading } = useQuery(trpc.organization.getUserSettings.queryOptions())
   const updateSettings = useMutation(trpc.organization.updateUserSettingsPartial.mutationOptions())
 
-  // Get initial font preference from server-provided data
+  
   const appearance = initialSettings?.appearance as Record<string, unknown>
   const initialFont = (appearance?.font as 'inter' | 'geist' | 'poppins' | 'roboto' | 'opensans') || 'inter'
 
   useEffect(() => {
-    // Set initial values from server data first
+    
     if (initialSettings) {
       const appearance = initialSettings.appearance as Record<string, unknown>
       if (appearance) {
@@ -86,7 +86,7 @@ export function AppearanceForm({ initialSettings }: AppearanceFormProps) {
       }
     }
 
-    // Update with client-side data when available
+    
     if (settings) {
       const appearance = settings.appearance as Record<string, unknown>
       if (appearance) {

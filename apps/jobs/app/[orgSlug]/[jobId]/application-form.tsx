@@ -153,6 +153,11 @@ export function ApplicationForm({ jobId, orgSlug }: ApplicationFormProps) {
         throw new Error('Please upload your resume or select an existing one')
       }
 
+      // Since resumeFile is required for the API, ensure we have it
+      if (!resumeFile) {
+        throw new Error('Please upload a resume file')
+      }
+
       const allowedTypes = [
         'application/pdf',
         'application/msword',

@@ -1,4 +1,3 @@
-import { randomBytes } from "crypto";
 import { createClient } from "@seeds/supabase/client/server";
 import type { Database } from "@seeds/supabase/types/db";
 
@@ -9,7 +8,12 @@ export interface TokenValidationResult {
 }
 
 export const generateInvitationToken = (): string => {
-	const randomPart = randomBytes(32).toString("hex");
+	// Use Web Crypto API for browser/edge compatibility
+	const array = new Uint8Array(32);
+	globalThis.crypto.getRandomValues(array);
+	const randomPart = Array.from(array)
+		.map(b => b.toString(16).padStart(2, '0'))
+		.join('');
 	return `inv_${randomPart}`;
 };
 

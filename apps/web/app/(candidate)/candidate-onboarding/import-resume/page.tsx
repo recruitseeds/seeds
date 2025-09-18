@@ -1,16 +1,16 @@
-// src/app/(candidate)/import-resume/page.tsx
-import { getCandidateDefaultResumeAction } from '@/actions/get-candidate-default-resume-action' // Import the action
+
+import { getCandidateDefaultResumeAction } from '@/actions/get-candidate-default-resume-action' 
 import { PreOnboardingOptions } from '@/components/candidate/onboarding-options'
-import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations' // Import the type
+import type { CandidateUploadedFileMetadata } from '@seeds/supabase/mutations' 
 
 export default async function ImportResumePage() {
-  // Make the function async
-  // Call the server action
-  const resumeActionResult = await getCandidateDefaultResumeAction() // Pass empty object if action expects one
+  
+  
+  const resumeActionResult = await getCandidateDefaultResumeAction() 
 
   let existingResume: CandidateUploadedFileMetadata | null = null
 
-  // Process the action result (same logic as in files/page.tsx)
+  
   if (!resumeActionResult) {
     console.error(
       '[ImportResumePage] Action result is null or undefined unexpectedly.'
@@ -21,12 +21,12 @@ export default async function ImportResumePage() {
       resumeActionResult.serverError
     )
   } else if (resumeActionResult.data) {
-    const actionHandlerResult = resumeActionResult.data // Access the nested data
+    const actionHandlerResult = resumeActionResult.data 
 
     if (actionHandlerResult.success) {
       if (actionHandlerResult.data) {
         const resumeFile = actionHandlerResult.data
-        // Map to the type expected by the component prop
+        
         existingResume = {
           id: resumeFile.id,
           candidate_id: resumeFile.candidate_id,
@@ -62,7 +62,7 @@ export default async function ImportResumePage() {
 
   return (
     <main>
-      {/* Pass the fetched data as a prop */}
+      {}
       <PreOnboardingOptions existingResume={existingResume} />
     </main>
   )

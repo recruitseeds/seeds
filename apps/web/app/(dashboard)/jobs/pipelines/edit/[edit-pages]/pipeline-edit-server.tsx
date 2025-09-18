@@ -7,7 +7,7 @@ async function getPipelineWithSteps(pipelineId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  // Get user's organization
+  
   const { data: orgUser } = await supabase
     .from('organization_users')
     .select('organization_id')
@@ -16,7 +16,7 @@ async function getPipelineWithSteps(pipelineId: string) {
 
   if (!orgUser) return null
 
-  // Fetch pipeline with steps
+  
   const { data: pipeline, error } = await supabase
     .from('hiring_pipelines')
     .select(`
@@ -55,7 +55,7 @@ async function getOrganizationUsers() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  // Get user's organization
+  
   const { data: orgUser } = await supabase
     .from('organization_users')
     .select('organization_id')
@@ -64,7 +64,7 @@ async function getOrganizationUsers() {
 
   if (!orgUser) return []
 
-  // Fetch organization users
+  
   const { data: users, error } = await supabase
     .from('organization_users')
     .select('id, name, email')

@@ -20,7 +20,7 @@ const publicJobsEnhancedRoutes = createOpenAPIApp();
 publicJobsEnhancedRoutes.use("*", publicAuth());
 publicJobsEnhancedRoutes.use("*", adaptiveRateLimit());
 
-// Enhanced application schema that accepts dynamic form data
+
 const EnhancedApplicationRequestSchema = z
 	.object({
 		formData: z
@@ -185,7 +185,7 @@ publicJobsEnhancedRoutes.openapi(
 				config.supabaseServiceRoleKey,
 			);
 
-			// Step 1: Fetch job with form and pipeline templates
+			
 			const { data: jobData, error: jobError } = await supabase
 				.from("job_postings")
 				.select(`
@@ -213,7 +213,7 @@ publicJobsEnhancedRoutes.openapi(
 				);
 			}
 
-			// Step 2: Validate form data against template
+			
 			const formTemplate = jobData.form_template;
 			const pipelineTemplate = jobData.pipeline_template;
 
@@ -221,13 +221,13 @@ publicJobsEnhancedRoutes.openapi(
 				const validationErrors: string[] = [];
 				const templateFields = formTemplate.fields as any[];
 
-				// Validate each required field
+				
 				for (const field of templateFields) {
 					if (field.required && !formData[field.id]) {
 						validationErrors.push(`${field.name} is required`);
 					}
 
-					// Type-specific validation
+					
 					if (formData[field.id]) {
 						const value = formData[field.id];
 						
@@ -254,7 +254,7 @@ publicJobsEnhancedRoutes.openapi(
 								break;
 						}
 
-						// Custom validation rules
+						
 						if (field.validation) {
 							if (field.validation.min_length && value.length < field.validation.min_length) {
 								validationErrors.push(`${field.name} must be at least ${field.validation.min_length} characters`);
@@ -272,7 +272,7 @@ publicJobsEnhancedRoutes.openapi(
 					}
 				}
 
-				// Check for required file fields
+				
 				const fileFields = templateFields.filter(f => f.type === "file");
 				for (const fileField of fileFields) {
 					if (fileField.required) {
@@ -306,7 +306,7 @@ publicJobsEnhancedRoutes.openapi(
 				}
 			}
 
-			// Step 3: Check for duplicate application
+			
 			const candidateEmail = formData.email || formData.field_4 || formData.field_3;
 			if (!candidateEmail) {
 				return c.json(
@@ -349,12 +349,12 @@ publicJobsEnhancedRoutes.openapi(
 				);
 			}
 
-			// Step 4: Create application with pipeline integration
+			
 			const applicationService = new ApplicationService(supabase, logger);
 			const fileUploadService = new FileUploadService(supabase, logger);
 			const emailService = new EmailService(logger, supabase);
 
-			// Extract candidate data from form fields
+			
 			const candidateName = formData.name || formData.field_2 || formData.field_3 || "Candidate";
 			const candidatePhone = formData.phone || formData.field_5 || formData.field_4 || null;
 
@@ -368,7 +368,7 @@ publicJobsEnhancedRoutes.openapi(
 				resumeFileId: "",
 			});
 
-			// Step 5: Handle file uploads
+			
 			let resumeFileId: string | null = null;
 			if (files?.resume) {
 				const fileContent = Buffer.from(files.resume.content, "base64");
@@ -383,15 +383,15 @@ publicJobsEnhancedRoutes.openapi(
 				resumeFileId = uploadedFile.id;
 			}
 
-			// Step 6: Track pipeline information
+			
 			let pipelineStageId: string | null = null;
 			if (pipelineTemplate && pipelineTemplate.steps) {
 				const steps = pipelineTemplate.steps as any[];
 				const firstStep = steps.find((s: any) => s.order === 1) || steps[0];
 				
 				if (firstStep) {
-					// For now, we'll track the pipeline stage in the current_step_id field
-					// which already exists in the job_applications table
+					
+					
 					const { error: updateError } = await supabase
 						.from("job_applications")
 						.update({
@@ -415,8 +415,8 @@ publicJobsEnhancedRoutes.openapi(
 				}
 			}
 
-			// Step 7: Log form submission data
-			// We'll store this in logs for now, and can create a proper table later
+			
+			
 			if (formTemplate) {
 				logger.info("Form submission received", {
 					applicationId: application.applicationId,
@@ -426,14 +426,14 @@ publicJobsEnhancedRoutes.openapi(
 				});
 			}
 
-			// Step 8: Trigger resume parsing if resume was uploaded
+			
 			let score = null;
 			if (resumeFileId && files?.resume) {
 				try {
 					const resumeText = Buffer.from(files.resume.content, "base64").toString("utf-8");
 					const baseUrl = c.req.header("host")
 						? `${c.req.header("x-forwarded-proto") || "http"}://${c.req.header("host")}`
-						: "http://localhost:3001";
+						: "http://localhost:3000";
 
 					const parseResponse = await fetch(
 						`${baseUrl}/api/v1/candidates/${application.candidateId}/parse-resume`,
@@ -462,7 +462,7 @@ publicJobsEnhancedRoutes.openapi(
 				}
 			}
 
-			// Step 9: Send confirmation email
+			
 			const jobTitle = jobData.title || "Position";
 			const companyName = (jobData.organizations as any)?.name || "Company";
 

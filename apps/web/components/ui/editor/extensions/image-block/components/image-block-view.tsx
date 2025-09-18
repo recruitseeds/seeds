@@ -28,7 +28,7 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
   const isFullWidth = width === '100%'
 
   const wrapperClassName = cn(
-    'relative flex', // Always use flex for consistent layout
+    'relative flex', 
     {
       'justify-start': align === 'left',
       'justify-center': align === 'center',
@@ -37,9 +37,9 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
   )
 
   const imageClassName = cn('block cursor-pointer hover:opacity-90 transition-opacity rounded-md', {
-    // When full width, image should fill the container
+    
     'w-full': isFullWidth,
-    // When not full width, image should size naturally but not exceed container
+    
     'max-w-full h-auto': !isFullWidth,
   })
 
@@ -54,7 +54,7 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
       <div
         className={wrapperClassName}
         style={{
-          width: '100%', // Container always full width
+          width: '100%', 
         }}
         data-drag-handle>
         <div
@@ -62,7 +62,7 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
           ref={imageWrapperRef}
           style={{
             width: isFullWidth ? '100%' : width,
-            transition: 'width 0.2s ease', // Smooth width transitions
+            transition: 'width 0.2s ease', 
           }}>
           <img className={imageClassName} src={src} alt={alt || ''} onClick={onClick} draggable={false} />
         </div>

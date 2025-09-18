@@ -40,12 +40,12 @@ export const sidebarData = {
           isActive: false,
           icon: 'Clipboard',
         },
-        // {
-        //   title: 'Drafts',
-        //   url: '/drafts',
-        //   isActive: false,
-        //   icon: 'UserRoundPen',
-        // },
+        
+        
+        
+        
+        
+        
         {
           title: 'Messages',
           url: '/messages',

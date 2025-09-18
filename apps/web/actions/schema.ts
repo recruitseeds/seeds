@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
-// --- Profile Schema ---
+
 export const updateCandidateProfileSchema = z.object({
-  firstName: z.string().optional(), // Was required
-  lastName: z.string().optional(), // Was required
+  firstName: z.string().optional(), 
+  lastName: z.string().optional(), 
   jobTitle: z.string().optional(),
   phone: z.string().optional(),
-  location: z // Was min(2)
+  location: z 
     .string()
     .optional()
     .refine((val) => !val || val.length >= 2, {
@@ -16,8 +16,8 @@ export const updateCandidateProfileSchema = z.object({
     .string()
     .url({ message: 'Please enter a valid URL if provided.' })
     .optional()
-    .or(z.literal('')) // Allows empty string for form input
-    .nullable(), // Allow null for backend
+    .or(z.literal('')) 
+    .nullable(), 
   linkedin: z
     .string()
     .url({ message: 'Please enter a valid URL if provided.' })
@@ -46,7 +46,7 @@ export const updateCandidateProfileSchema = z.object({
   revalidatePath: z.string().optional(),
 })
 
-// --- Education Schemas ---
+
 export const createCandidateEducationSchema = z.object({
   degree_name: z
     .string()
@@ -85,7 +85,7 @@ export const candidateEducationFormSchema = z.object({
   id: z.string().optional(),
   degree: z
     .string()
-    .optional() // No .min directly, use refine if needed for non-empty
+    .optional() 
     .refine((val) => !val || val.length >= 2, {
       message: 'Degree must be at least 2 characters if provided.',
     }),
@@ -98,7 +98,7 @@ export const candidateEducationFormSchema = z.object({
   location: z.string().optional().nullable(),
   startDate: z
     .string()
-    .optional() // Was min(1)
+    .optional() 
     .refine((val) => !val || /^\d{4}-\d{2}-\d{2}$/.test(val), {
       message: 'Start date must be in YYYY-MM-DD format if provided.',
     }),
@@ -148,9 +148,9 @@ export const updateCandidateEducationSchema = z.object({
   achievements: z.array(z.string()).optional().nullable(),
 })
 
-// --- Resume Schema (Primarily for parsing, less about input requirements) ---
-// This schema already uses .nullable().optional() extensively, which is good for parsed data.
-// Making minimal changes here unless a field is truly fundamental to its object.
+
+
+
 export const resumeSchema = z.object({
   personalInfo: z
     .object({
@@ -160,7 +160,7 @@ export const resumeSchema = z.object({
       linkedin: z.string().nullable().optional(),
       location: z.string().nullable().optional(),
     })
-    .optional() // The whole personalInfo object can be optional
+    .optional() 
     .describe('Personal contact information and details'),
   summary: z
     .string()
@@ -170,8 +170,8 @@ export const resumeSchema = z.object({
   education: z
     .array(
       z.object({
-        institution: z.string().nullable().optional(), // If an education entry might lack this
-        degree: z.string().nullable().optional(), // If an education entry might lack this
+        institution: z.string().nullable().optional(), 
+        degree: z.string().nullable().optional(), 
         fieldOfStudy: z.string().nullable().optional(),
         location: z.string().nullable().optional(),
         startDate: z.string().nullable().optional(),
@@ -183,8 +183,8 @@ export const resumeSchema = z.object({
   workExperience: z
     .array(
       z.object({
-        title: z.string().nullable().optional(), // If a work entry might lack this
-        company: z.string().nullable().optional(), // If a work entry might lack this
+        title: z.string().nullable().optional(), 
+        company: z.string().nullable().optional(), 
         location: z.string().nullable().optional(),
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
@@ -198,7 +198,7 @@ export const resumeSchema = z.object({
 
 export type ResumeData = z.infer<typeof resumeSchema>
 
-// --- Work Experience Schemas ---
+
 export const createCandidateWorkExperienceSchema = z.object({
   job_title: z
     .string()
@@ -322,21 +322,21 @@ export const candidateWorkExperienceFormSchema = z
     description: z.string().optional().nullable(),
   })
   .refine(
-    // This refine should only run if both dates are provided
+    
     (data) => {
       if (
         data.startDate &&
         data.endDate &&
         data.endDate.toUpperCase() !== 'PRESENT'
       ) {
-        // Ensure dates are valid before comparing
+        
         const startDateValid = /^\d{4}-\d{2}-\d{2}$/.test(data.startDate)
         const endDateValid = /^\d{4}-\d{2}-\d{2}$/.test(data.endDate)
         if (startDateValid && endDateValid) {
           try {
             return new Date(data.endDate) >= new Date(data.startDate)
           } catch {
-            return true // Or false, depending on how you want to handle parse errors here
+            return true 
           }
         }
       }
@@ -348,10 +348,10 @@ export const candidateWorkExperienceFormSchema = z
     }
   )
   .refine(
-    // This refine should only run if isCurrent or endDate is provided
+    
     (data) => {
       if (typeof data.isCurrent === 'boolean' || data.endDate) {
-        // Check if relevant fields have values
+        
         if (
           data.isCurrent &&
           data.endDate &&
@@ -363,7 +363,7 @@ export const candidateWorkExperienceFormSchema = z
           data.endDate?.toUpperCase() === 'PRESENT' &&
           data.isCurrent === false
         ) {
-          // Explicitly check if isCurrent is false
+          
           return false
         }
         if (

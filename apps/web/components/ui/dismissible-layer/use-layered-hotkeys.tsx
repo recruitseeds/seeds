@@ -1,6 +1,6 @@
 import { DependencyList } from 'react'
 import { useShortcut } from '@shopify/react-shortcuts'
-// eslint-disable-next-line no-restricted-imports
+
 import { Options, useHotkeys } from 'react-hotkeys-hook'
 import { HotkeyCallback, Keys } from 'react-hotkeys-hook/dist/types'
 
@@ -33,13 +33,13 @@ export function useLayeredHotkeys({
        * Ignore repeated keydown events by default. This helps prevent re-submitting forms
        * and aggresively re-running callbacks for users with short key repeat delay settings.
        *
-       * @see https://github.com/JohannesKlauss/react-hotkeys-hook/issues/327
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/repeat
        */
       if (!repeat && keyboardEvent.repeat) return
 
-      // some components like Radix popovers and dialogs have custom escape key handling
-      // add a custom attribute to prevent global hotkeys from firing alongside
-      // https://github.com/radix-ui/primitives/issues/1299
+      
+      
+      
       if (
         skipEscapeWhenDisabled &&
         keyboardEvent.key === 'Escape' &&
@@ -54,8 +54,8 @@ export function useLayeredHotkeys({
     },
     {
       ...options,
-      // shortcut will always be disabled if the layer is not top layer,
-      // regardless of the enabled option passed into this hook
+      
+      
       enabled: isTopLayer ? options.enabled : false,
     },
     dependencies
@@ -73,8 +73,8 @@ export function useOrderedLayeredHotkeys({
 }) {
   const isTopLayer = useIsTopLayer()
 
-  // shortcut will always be disabled if the layer is not top layer,
-  // regardless of the enabled option passed into this hook
+  
+  
   if (!isTopLayer) {
     options.ignoreInput = false
   }

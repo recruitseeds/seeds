@@ -28,7 +28,7 @@ export function useWindowSize(): WindowSizeState {
 
       const { width = 0, height = 0, offsetTop = 0 } = vp
 
-      // Only update state if values have changed
+      
       setWindowSize((state) => {
         if (
           width === state.width &&

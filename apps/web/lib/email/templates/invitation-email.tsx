@@ -25,7 +25,7 @@ interface InvitationEmailProps {
 }
 
 const companyLogo =
-	"https://pub-e05ee10cfc0b40c59cc080c153ad3da0.r2.dev/logo.jpg";
+	"https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop&crop=entropy&auto=format&q=80";
 
 export const InvitationEmail = ({
 	inviterName,
