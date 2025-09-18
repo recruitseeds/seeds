@@ -2,7 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "echo '@tiptap-pro:registry=https://registry.tiptap.dev/' > .npmrc && echo '//registry.tiptap.dev/:_authToken='$NPM_TOKEN >> .npmrc && npm ci && npm run build --filter=jobs",
+    "buildCommand": "node scripts/pre-install.js && npm ci && node scripts/post-install.js && npm run build --filter=jobs",
     "watchPatterns": [
       "/apps/jobs/**"
     ]
