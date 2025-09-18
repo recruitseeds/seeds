@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "echo '@tiptap-pro:registry=https://registry.tiptap.dev/' > .npmrc && echo '//registry.tiptap.dev/:_authToken='$NPM_TOKEN >> .npmrc",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
