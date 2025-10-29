@@ -2,8 +2,9 @@
 
 import { QueryClient, QueryClientProvider, HydrationBoundary, DehydratedState } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { getBrowserQueryClient } from '../lib/query-client'
+import { queryKeys } from '../lib/query-keys'
 
 interface ProvidersProps {
   children: ReactNode
@@ -24,6 +25,29 @@ export function Providers({ children, dehydratedState }: ProvidersProps) {
   // Create a stable query client instance for the browser
   // This ensures the same client is used across re-renders
   const [queryClient] = useState(() => getBrowserQueryClient())
+
+  // Add debug helpers in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // @ts-ignore - Adding debug helpers to window
+      window.debugCache = {
+        invalidateAllSavedJobs: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.all })
+          console.log('Invalidated all saved jobs cache')
+        },
+        invalidateSavedJob: (jobId: string, email: string) => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.check(jobId, email) })
+          console.log(`Invalidated saved job cache for job ${jobId}, email ${email}`)
+        },
+        clearAllCache: () => {
+          queryClient.clear()
+          console.log('Cleared all cache')
+        },
+        getCache: () => queryClient.getQueryCache().getAll(),
+      }
+      console.log('🔧 Debug cache helpers available at window.debugCache')
+    }
+  }, [queryClient])
 
   return (
     <QueryClientProvider client={queryClient}>

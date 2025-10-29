@@ -23,11 +23,12 @@ export function useJobs(
   page: number = 1,
   limit: number = 20,
   filters: Record<string, any> = {},
+  userEmail?: string,
   options?: Partial<JobListQueryOptions>
 ) {
   return useQuery({
-    queryKey: queryKeys.jobs.list({ page, limit, ...filters }),
-    queryFn: () => getAllJobs(page, limit, filters),
+    queryKey: queryKeys.jobs.list({ page, limit, ...filters, userEmail }),
+    queryFn: () => getAllJobs(page, limit, filters, userEmail),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     ...options,
@@ -55,13 +56,20 @@ export function useJobSearch(
   page: number = 1,
   limit: number = 20,
   filters: Record<string, any> = {},
+  userEmail?: string,
   options?: Partial<JobListQueryOptions>
 ) {
+  // Use jobs.list instead of search.jobs for better cache reuse
+  const queryKey = queryKeys.jobs.list({ ...filters, page, limit, userEmail })
+
   return useQuery({
-    queryKey: queryKeys.search.jobs(filters.query || '', { ...filters, page, limit }),
-    queryFn: () => getAllJobs(page, limit, filters),
-    staleTime: 1 * 60 * 1000, // 1 minute for search results (shorter than regular job lists)
-    gcTime: 3 * 60 * 1000, // 3 minutes
+    queryKey,
+    queryFn: () => getAllJobs(page, limit, filters, userEmail),
+    staleTime: 5 * 60 * 1000, // 5 minutes - longer stale time to prevent unnecessary refetches
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep data longer in cache
+    refetchOnMount: false, // Don't refetch on mount if we have cached data
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnReconnect: false, // Don't refetch on network reconnect
     ...options,
   })
 }
@@ -161,114 +169,49 @@ export function useSubmitApplication(
  */
 export function useSavedJobCheck(
   jobId: string,
+  userEmail?: string,
   options?: Partial<UseQueryOptions<{ success: true; data: { isSaved: boolean } }, Error>>
 ) {
+  const email = userEmail || 'test@example.com' // Fallback for testing
+
   return useQuery({
-    queryKey: queryKeys.savedJobs.check(jobId),
-    queryFn: () => checkSavedJob(jobId),
-    enabled: !!jobId,
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: queryKeys.savedJobs.check(jobId, email),
+    queryFn: () => checkSavedJob(jobId, email),
+    enabled: !!jobId && !!email,
+    staleTime: 0, // No cache - always fresh
+    gcTime: 0, // Don't keep in memory
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     ...options,
   })
 }
 
 /**
- * Save a job with optimistic updates
+ * Save a job - simple implementation with flash
  */
 export function useSaveJob(
+  userEmail?: string,
   options?: UseMutationOptions<SavedJobResponse, Error, string>
 ) {
-  const queryClient = useQueryClient()
-  
+  const email = userEmail || 'test@example.com'
+
   return useMutation({
-    mutationFn: saveJob,
-    
-    // Optimistic update
-    onMutate: async (jobId) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.savedJobs.check(jobId) })
-      
-      // Get current saved state
-      const previousSavedState = queryClient.getQueryData(queryKeys.savedJobs.check(jobId))
-      
-      // Optimistically update to saved
-      queryClient.setQueryData(queryKeys.savedJobs.check(jobId), {
-        success: true,
-        data: { isSaved: true }
-      })
-      
-      return { jobId, previousSavedState }
-    },
-    
-    // Rollback on error
-    onError: (error, jobId, context) => {
-      if (context?.previousSavedState) {
-        queryClient.setQueryData(queryKeys.savedJobs.check(jobId), context.previousSavedState)
-      } else {
-        queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.check(jobId) })
-      }
-    },
-    
-    // Confirm update on success
-    onSuccess: (data, jobId) => {
-      queryClient.setQueryData(queryKeys.savedJobs.check(jobId), {
-        success: true,
-        data: { isSaved: true }
-      })
-      // Invalidate saved jobs list if it exists
-      queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.lists() })
-    },
-    
+    mutationFn: (jobId: string) => saveJob(jobId, email),
     ...options,
   })
 }
 
 /**
- * Unsave a job with optimistic updates
+ * Unsave a job - simple implementation with flash
  */
 export function useUnsaveJob(
+  userEmail?: string,
   options?: UseMutationOptions<{ success: true }, Error, string>
 ) {
-  const queryClient = useQueryClient()
-  
+  const email = userEmail || 'test@example.com'
+
   return useMutation({
-    mutationFn: unsaveJob,
-    
-    // Optimistic update
-    onMutate: async (jobId) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.savedJobs.check(jobId) })
-      
-      // Get current saved state
-      const previousSavedState = queryClient.getQueryData(queryKeys.savedJobs.check(jobId))
-      
-      // Optimistically update to unsaved
-      queryClient.setQueryData(queryKeys.savedJobs.check(jobId), {
-        success: true,
-        data: { isSaved: false }
-      })
-      
-      return { jobId, previousSavedState }
-    },
-    
-    // Rollback on error
-    onError: (error, jobId, context) => {
-      if (context?.previousSavedState) {
-        queryClient.setQueryData(queryKeys.savedJobs.check(jobId), context.previousSavedState)
-      } else {
-        queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.check(jobId) })
-      }
-    },
-    
-    // Confirm update on success
-    onSuccess: (data, jobId) => {
-      queryClient.setQueryData(queryKeys.savedJobs.check(jobId), {
-        success: true,
-        data: { isSaved: false }
-      })
-      // Invalidate saved jobs list if it exists
-      queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.lists() })
-    },
-    
+    mutationFn: (jobId: string) => unsaveJob(jobId, email),
     ...options,
   })
 }
@@ -276,18 +219,13 @@ export function useUnsaveJob(
 /**
  * Toggle save/unsave job based on current state
  */
-export function useToggleSaveJob() {
-  const saveJob = useSaveJob()
-  const unsaveJob = useUnsaveJob()
-  const queryClient = useQueryClient()
-  
+export function useToggleSaveJob(userEmail?: string) {
+  const saveJob = useSaveJob(userEmail)
+  const unsaveJob = useUnsaveJob(userEmail)
+
   return useMutation({
-    mutationFn: async (jobId: string) => {
-      // Get current saved state
-      const currentState = queryClient.getQueryData(queryKeys.savedJobs.check(jobId)) as { data: { isSaved: boolean } } | undefined
-      const isSaved = currentState?.data?.isSaved ?? false
-      
-      if (isSaved) {
+    mutationFn: async ({ jobId, currentSavedState }: { jobId: string; currentSavedState: boolean }) => {
+      if (currentSavedState) {
         return unsaveJob.mutateAsync(jobId)
       } else {
         return saveJob.mutateAsync(jobId)
@@ -310,11 +248,12 @@ export async function prefetchJobs(
   queryClient: any,
   page: number = 1,
   limit: number = 20,
-  filters: Record<string, any> = {}
+  filters: Record<string, any> = {},
+  userEmail?: string
 ) {
   await queryClient.prefetchQuery({
-    queryKey: queryKeys.jobs.list({ page, limit, ...filters }),
-    queryFn: () => getAllJobs(page, limit, filters),
+    queryKey: queryKeys.jobs.list({ page, limit, ...filters, userEmail }),
+    queryFn: () => getAllJobs(page, limit, filters, userEmail),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
@@ -349,6 +288,8 @@ export function useQueryClientHelper() {
     invalidateJobs: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all }),
     invalidateJob: (jobId: string) => queryClient.invalidateQueries({ queryKey: queryKeys.jobs.detail(jobId) }),
     invalidateApplications: () => queryClient.invalidateQueries({ queryKey: queryKeys.applications.all }),
+    invalidateSavedJobs: () => queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.all }),
+    invalidateSavedJob: (jobId: string, email: string) => queryClient.invalidateQueries({ queryKey: queryKeys.savedJobs.check(jobId, email) }),
     
     // Prefetch helpers for client-side prefetching
     prefetchJob: (jobId: string) => queryClient.prefetchQuery({

@@ -1,13 +1,7 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: '12.2.3 (519615d)'
@@ -22,10 +16,10 @@ export type Database = {
     Functions: {
       graphql: {
         Args: {
+          extensions?: Json
           operationName?: string
           query?: string
           variables?: Json
-          extensions?: Json
         }
         Returns: Json
       }
@@ -1627,6 +1621,41 @@ export type Database = {
           },
         ]
       }
+      saved_jobs: {
+        Row: {
+          candidate_email: string
+          created_at: string | null
+          id: string
+          job_id: string
+          saved_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          candidate_email: string
+          created_at?: string | null
+          id?: string
+          job_id: string
+          saved_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          candidate_email?: string
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          saved_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'saved_jobs_job_id_fkey'
+            columns: ['job_id']
+            isOneToOne: false
+            referencedRelation: 'job_postings'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       scheduled_rejection_emails: {
         Row: {
           application_id: string
@@ -1718,7 +1747,7 @@ export type Database = {
     }
     Functions: {
       add_business_days: {
-        Args: { start_date: string; business_days: number }
+        Args: { business_days: number; start_date: string }
         Returns: string
       }
       cleanup_expired_invitations: {
@@ -1732,16 +1761,16 @@ export type Database = {
       get_pending_rejection_emails: {
         Args: Record<PropertyKey, never>
         Returns: {
-          email_id: string
           application_id: string
-          recipient_email: string
           candidate_name: string
-          job_title: string
           company_name: string
+          email_id: string
+          job_title: string
+          recipient_email: string
         }[]
       }
       job_allows_country: {
-        Args: { job_location_config: Json; country_code: string }
+        Args: { country_code: string; job_location_config: Json }
         Returns: boolean
       }
       jobs_within_distance: {
@@ -1780,9 +1809,7 @@ export type Database = {
         Returns: undefined
       }
       mark_rejection_email_sent: {
-        Args:
-          | { p_email_id: string; p_service_id: string }
-          | { p_email_id: string; p_service_id?: string }
+        Args: { p_email_id: string; p_service_id: string } | { p_email_id: string; p_service_id?: string }
         Returns: undefined
       }
       process_uploaded_resume: {
@@ -1791,9 +1818,9 @@ export type Database = {
           p_file_name: string
           p_file_type: Database['public']['Enums']['candidate_file_type']
           p_mime_type: string
-          p_storage_path: string
-          p_size_bytes: number
           p_parsed_resume_data: Json
+          p_size_bytes: number
+          p_storage_path: string
         }
         Returns: undefined
       }
@@ -1801,8 +1828,8 @@ export type Database = {
         Args: {
           p_application_id: string
           p_candidate_email: string
-          p_score?: number
           p_rejection_reason?: string
+          p_score?: number
         }
         Returns: string
       }
@@ -1812,9 +1839,9 @@ export type Database = {
           p_file_name: string
           p_file_type: Database['public']['Enums']['candidate_file_type']
           p_mime_type: string
-          p_storage_path: string
-          p_size_bytes: number
           p_parsed_resume_data: Json
+          p_size_bytes: number
+          p_storage_path: string
         }
         Returns: undefined
       }
@@ -1829,12 +1856,7 @@ export type Database = {
     }
     Enums: {
       candidate_application_source: 'platform' | 'import' | 'manual'
-      candidate_application_status:
-        | 'applied'
-        | 'in-review'
-        | 'interview'
-        | 'rejected'
-        | 'offer'
+      candidate_application_status: 'applied' | 'in-review' | 'interview' | 'rejected' | 'offer'
       candidate_file_type:
         | 'resume'
         | 'cover_letter'
@@ -1874,10 +1896,8 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1885,9 +1905,7 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
-    | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1910,9 +1928,7 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
-    | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1935,9 +1951,7 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
-    | { schema: keyof DatabaseWithoutInternals },
+  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -1975,13 +1989,7 @@ export const Constants = {
   public: {
     Enums: {
       candidate_application_source: ['platform', 'import', 'manual'],
-      candidate_application_status: [
-        'applied',
-        'in-review',
-        'interview',
-        'rejected',
-        'offer',
-      ],
+      candidate_application_status: ['applied', 'in-review', 'interview', 'rejected', 'offer'],
       candidate_file_type: [
         'resume',
         'cover_letter',

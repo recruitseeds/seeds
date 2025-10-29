@@ -2,7 +2,8 @@ import { dehydrate, QueryClient } from '@tanstack/react-query'
 import { getServerQueryClient } from './query-client'
 import { prefetchJobs, prefetchJob } from './queries'
 import { queryKeys } from './query-keys'
-import { getAllJobs, getJobById } from './api'
+import { getAllJobs, getJobById, checkSavedJob } from './api'
+import { createClient } from './supabase/server'
 
 /**
  * Server-Side Query Utilities
@@ -19,27 +20,43 @@ import { getAllJobs, getJobById } from './api'
 export async function getJobsServerSide(
   page: number = 1,
   limit: number = 20,
-  filters: Record<string, any> = {}
+  filters: Record<string, any> = {},
+  userEmail?: string
 ) {
   const queryClient = getServerQueryClient()
-  
+
   try {
-    // Prefetch the jobs data
-    await prefetchJobs(queryClient, page, limit, filters)
-    
+    // Get user email for server-side data fetching if not provided
+    let email = userEmail
+    if (!email) {
+      try {
+        const supabase = await createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        email = session?.user?.email
+      } catch (error) {
+        console.warn('Failed to get user session for jobs prefetch:', error)
+      }
+    }
+
+    // Prefetch the jobs data with user email
+    await prefetchJobs(queryClient, page, limit, filters, email)
+
+    // Also get the data directly for immediate server-side rendering
+    const jobsData = await getAllJobs(page, limit, filters, email)
+
+    // Note: Saved job statuses are now included in the job data itself, no need for separate prefetch
+
     // Return both the raw data and dehydrated state for hydration
     const dehydratedState = dehydrate(queryClient)
-    
-    // Also get the data directly for immediate server-side rendering
-    const jobsData = await getAllJobs(page, limit, filters)
-    
+
     return {
       dehydratedState,
       data: jobsData,
+      userEmail: email, // Return the email so client knows what was used
     }
   } catch (error) {
     console.error('Failed to prefetch jobs:', error)
-    
+
     // Return fallback data structure
     return {
       dehydratedState: dehydrate(queryClient),
@@ -56,6 +73,7 @@ export async function getJobsServerSide(
         },
         error: error instanceof Error ? error.message : 'Failed to load jobs',
       },
+      userEmail: email,
     }
   }
 }
@@ -130,35 +148,52 @@ export async function getSearchResultsServerSide(
   location?: string,
   filters: Record<string, any> = {},
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  userEmail?: string
 ) {
   const queryClient = getServerQueryClient()
-  
+
   try {
     const searchFilters = {
       ...filters,
       query: query || undefined,
       location: location || undefined,
     }
-    
-    // Prefetch search results
+
+    // Get user email for search results if not provided
+    let email = userEmail
+    if (!email) {
+      try {
+        const supabase = await createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        email = session?.user?.email
+      } catch (error) {
+        console.warn('Failed to get user session for search results:', error)
+      }
+    }
+
+    // Prefetch search results with user email
     await queryClient.prefetchQuery({
-      queryKey: queryKeys.search.jobs(query, { location, ...filters, page, limit }),
-      queryFn: () => getAllJobs(page, limit, searchFilters),
+      queryKey: queryKeys.search.jobs(query, { location, ...filters, page, limit, userEmail: email }),
+      queryFn: () => getAllJobs(page, limit, searchFilters, email),
       staleTime: 2 * 60 * 1000, // 2 minutes for search results
     })
-    
+
+    const searchData = await getAllJobs(page, limit, searchFilters, email)
+
+    // Note: Saved job statuses are now included in the job data itself, no need for separate prefetch
+
     const dehydratedState = dehydrate(queryClient)
-    const searchData = await getAllJobs(page, limit, searchFilters)
-    
+
     return {
       dehydratedState,
       data: searchData,
       searchParams: { query, location, filters, page, limit },
+      userEmail: email, // Return the email so client knows what was used
     }
   } catch (error) {
     console.error('Failed to prefetch search results:', error)
-    
+
     return {
       dehydratedState: dehydrate(queryClient),
       data: {
@@ -175,7 +210,33 @@ export async function getSearchResultsServerSide(
         error: error instanceof Error ? error.message : 'Failed to load search results',
       },
       searchParams: { query, location, filters, page, limit },
+      userEmail: email,
     }
+  }
+}
+
+/**
+ * Prefetch saved job statuses for authenticated users
+ */
+async function prefetchSavedJobStatuses(
+  queryClient: QueryClient,
+  jobIds: string[],
+  userEmail: string
+) {
+  try {
+    // Prefetch saved job status for each job
+    await Promise.all(
+      jobIds.map(jobId =>
+        queryClient.prefetchQuery({
+          queryKey: queryKeys.savedJobs.check(jobId, userEmail),
+          queryFn: () => checkSavedJob(jobId, userEmail),
+          staleTime: 30 * 1000, // 30 seconds
+        })
+      )
+    )
+  } catch (error) {
+    console.warn('Failed to prefetch saved job statuses:', error)
+    // Don't throw - this is optional enhancement
   }
 }
 

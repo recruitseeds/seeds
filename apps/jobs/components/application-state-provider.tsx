@@ -2,6 +2,7 @@
 
 import type React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useApplicationCheck } from '../lib/queries'
 import { useAuth } from './auth-provider'
 
 interface ApplicationState {
@@ -21,13 +22,14 @@ const ApplicationStateContext = createContext<ApplicationStateContextType | unde
 
 interface ApplicationStateProviderProps {
   children: React.ReactNode
+  jobId: string
   initialState: {
     hasApplied: boolean
     applicationId: string | null
   }
 }
 
-export function ApplicationStateProvider({ children, initialState }: ApplicationStateProviderProps) {
+export function ApplicationStateProvider({ children, jobId, initialState }: ApplicationStateProviderProps) {
   const { isAuthenticated, user } = useAuth()
 
   const [applicationState, setApplicationState] = useState<ApplicationState>({
@@ -35,6 +37,26 @@ export function ApplicationStateProvider({ children, initialState }: Application
     applicationId: initialState.applicationId,
     isSubmitting: false,
   })
+
+  // Check if user has already applied to this job
+  const { data: applicationCheck, isLoading: isCheckingApplication } = useApplicationCheck(
+    jobId,
+    user?.email || '',
+    {
+      enabled: !!(isAuthenticated && user?.email && jobId),
+    }
+  )
+
+  // Update application state when check completes
+  useEffect(() => {
+    if (applicationCheck && isAuthenticated) {
+      setApplicationState((prev) => ({
+        ...prev,
+        hasApplied: applicationCheck.data.hasApplied,
+        applicationId: applicationCheck.data.applicationId || null,
+      }))
+    }
+  }, [applicationCheck, isAuthenticated])
 
   // Reset application state when user logs out or changes
   useEffect(() => {

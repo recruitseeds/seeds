@@ -1,14 +1,15 @@
-import { HydrationBoundary } from '@tanstack/react-query'
 import { Header } from '../../components/header'
 import { JobsSection } from '../../components/jobs-section'
-import { getSearchResultsServerSide } from '../../lib/server-queries'
+import { createFallbackJobsResponse, getJobsServerSide } from '../../lib/server-api'
+
+export const dynamic = 'force-dynamic'
 
 interface BrowsePageProps {
   searchParams: Promise<{
     q?: string
     location?: string
     job_type?: string
-    remote?: string
+    work_location?: string
     salary?: string
     experience?: string
     department?: string
@@ -22,59 +23,57 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const query = params.q || ''
   const location = params.location || ''
   const page = parseInt(params.page || '1', 10)
-  const limit = 20
 
+  // Convert URL parameters back to proper format for UI
   const filters: Record<string, any> = {}
-  if (params.job_type) filters.jobType = params.job_type
-  if (params.remote) filters.remote = params.remote
-  if (params.department) filters.department = params.department
-  if (params.salary) filters.salary = params.salary
-  if (params.experience) filters.experience = params.experience
-
-  try {
-    const {
-      dehydratedState,
-      data,
-      searchParams: serverSearchParams,
-    } = await getSearchResultsServerSide(query, location, filters, page, limit)
-
-    return (
-      <div className='min-h-screen bg-background'>
-        <Header />
-
-        <main className='container mx-auto px-4 py-8'>
-          <HydrationBoundary state={dehydratedState}>
-            <JobsSection
-              initialJobs={data.success ? data.data : []}
-              initialPagination={data.pagination}
-              searchQuery={query}
-              location={location}
-              initialFilters={filters}
-              showSearch={true}
-              showFilters={true}
-              showTitle={false}
-            />
-          </HydrationBoundary>
-        </main>
-      </div>
-    )
-  } catch (error) {
-    console.error('Failed to load browse page:', error)
-
-    return (
-      <div className='min-h-screen bg-background'>
-        <Header />
-        <main className='container mx-auto px-4 py-8'>
-          <JobsSection
-            searchQuery={query}
-            location={location}
-            initialFilters={filters}
-            showSearch={true}
-            showFilters={true}
-            showTitle={false}
-          />
-        </main>
-      </div>
-    )
+  if (params.job_type) {
+    filters.jobType = params.job_type.split(',').map(type =>
+      type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    ).join(',')
   }
+  if (params.work_location) {
+    filters.remote = params.work_location.split(',').map(workLocation =>
+      workLocation.charAt(0).toUpperCase() + workLocation.slice(1)
+    ).join(',')
+  }
+  if (params.department) {
+    filters.department = params.department.split(',').map(dept =>
+      dept.charAt(0).toUpperCase() + dept.slice(1)
+    ).join(',')
+  }
+  if (params.salary) filters.salary = params.salary
+  if (params.experience) {
+    filters.experience = params.experience.split(',').map(exp =>
+      exp.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    ).join(',')
+  }
+
+  // Fetch jobs server-side for immediate loading (only when no search/filters)
+  let jobsData = null
+  if (!query && !location && Object.keys(filters).length === 0 && page === 1) {
+    try {
+      jobsData = await getJobsServerSide(1, 20)
+    } catch (error) {
+      console.error('Failed to fetch jobs server-side:', error)
+      jobsData = createFallbackJobsResponse(error instanceof Error ? error : new Error('Unknown error'))
+    }
+  }
+
+  return (
+    <div className='min-h-screen bg-background'>
+      <Header />
+      <main className='container mx-auto px-4 py-8'>
+        <JobsSection
+          initialJobs={jobsData?.data || []}
+          initialPagination={jobsData?.pagination}
+          searchQuery={query}
+          location={location}
+          initialFilters={filters}
+          showSearch={true}
+          showFilters={true}
+          showTitle={false}
+        />
+      </main>
+    </div>
+  )
 }

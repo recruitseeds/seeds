@@ -14,9 +14,10 @@ import {
 } from '@seeds/ui/pagination'
 import { ChevronDown, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { formatSalary, getTimeAgo, type JobPosting } from '../lib/api'
 import { useJobSearch } from '../lib/queries'
+import { useAuth } from './auth-provider'
 import { JobCard } from './job-card'
 
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
@@ -213,6 +214,8 @@ export function JobsSection({
 }: JobsSectionProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
+
 
   const currentQuery = searchParams.get('q') || searchQuery
   const currentLocation = searchParams.get('location') || location
@@ -237,29 +240,47 @@ export function JobsSection({
   const currentFilters = {
     query: currentQuery,
     location: currentLocation,
-    jobType: selectedTypes.length ? selectedTypes.join(',') : undefined,
-    remote: selectedRemote.length ? selectedRemote.join(',') : undefined,
-    department: selectedDepartments.length ? selectedDepartments.join(',') : undefined,
-    experience: selectedLevels.length ? selectedLevels.join(',') : undefined,
+    jobType: selectedTypes.length ? selectedTypes.map(t => t.toLowerCase().replace(' ', '_')).join(',') : undefined,
+    workLocation: selectedRemote.length ? selectedRemote.map(r => r.toLowerCase()).join(',') : undefined,
+    department: selectedDepartments.length ? selectedDepartments.map(d => d.toLowerCase()).join(',') : undefined,
+    experience: selectedLevels.length ? selectedLevels.map(e => e.toLowerCase().replace(' ', '_')).join(',') : undefined,
   }
 
-  const { data, error, isLoading, isFetching } = useJobSearch(currentPage, 20, currentFilters, {
-    initialData:
-      initialJobs.length > 0
-        ? {
-            success: true,
-            data: initialJobs,
-            pagination: initialPagination || {
-              page: 1,
-              limit: 20,
-              total: initialJobs.length,
-              totalPages: Math.ceil(initialJobs.length / 20),
-              hasNext: false,
-              hasPrev: false,
-            },
-          }
-        : undefined,
+  // Simple logic: if we have initial data and no active filters, use it directly
+  const hasActiveFilters = currentQuery || currentLocation || selectedTypes.length > 0 || selectedRemote.length > 0 || selectedDepartments.length > 0 || selectedLevels.length > 0
+  const useInitialData = !hasActiveFilters && currentPage === 1 && initialJobs.length > 0
+
+  // Only fetch when we don't have initial data or when filters are applied
+  const { data, error, isLoading, isFetching, isPreviousData, isPlaceholderData } = useJobSearch(currentPage, 20, currentFilters, user?.email, {
+    enabled: !useInitialData,
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true, // Keep previous data while loading new data
+    placeholderData: (previousData) => previousData, // Keep previous data as placeholder
+    notifyOnChangeProps: ['data', 'error'], // Only re-render when data or error changes
+    refetchOnMount: false, // Don't refetch on component mount if we have cached data
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    retry: false, // Don't retry failed requests to avoid loading states
+    retryOnMount: false, // Don't retry when component mounts
   })
+
+  // Use initial data or query data
+  const finalData = useInitialData ? {
+    success: true as const,
+    data: initialJobs,
+    pagination: initialPagination || {
+      page: 1,
+      limit: 20,
+      total: initialJobs.length,
+      totalPages: Math.ceil(initialJobs.length / 20),
+      hasNext: false,
+      hasPrev: false,
+    },
+  } : data
+
+  // Never show loading screen if we have any data available (initial, previous, or placeholder)
+  const finalIsLoading = useInitialData ? false : (isLoading && !data && !isPlaceholderData)
+  const finalIsFetching = useInitialData ? false : isFetching
+
 
   const updateURL = useCallback(
     (params: Record<string, string | number | undefined>) => {
@@ -298,7 +319,7 @@ export function JobsSection({
       q: currentQuery,
       location: currentLocation,
       job_type: selectedTypes.length ? selectedTypes.join(',') : undefined,
-      remote: selectedRemote.length ? selectedRemote.join(',') : undefined,
+      work_location: selectedRemote.length ? selectedRemote.join(',') : undefined,
       department: selectedDepartments.length ? selectedDepartments.join(',') : undefined,
       experience: selectedLevels.length ? selectedLevels.join(',') : undefined,
       page: 1,
@@ -319,10 +340,39 @@ export function JobsSection({
     setSelectedLevels([])
     setSelectedRemote([])
     setSelectedDepartments([])
-  }, [])
+    // Clear filters from URL immediately
+    updateURL({
+      q: currentQuery,
+      location: currentLocation,
+      job_type: undefined,
+      work_location: undefined,
+      department: undefined,
+      experience: undefined,
+      page: 1,
+    })
+  }, [currentQuery, currentLocation, updateURL])
 
-  const hasFilters =
-    selectedTypes.length > 0 || selectedLevels.length > 0 || selectedRemote.length > 0 || selectedDepartments.length > 0
+  // Auto-apply filters when they change (only on browse page)
+  useEffect(() => {
+    // Only update URL if we're on the browse page (have search/filter capability)
+    if (!showSearch && !showFilters) {
+      return // Don't update URL on homepage
+    }
+
+    const timeoutId = setTimeout(() => {
+      updateURL({
+        q: currentQuery,
+        location: currentLocation,
+        job_type: selectedTypes.length ? selectedTypes.map(t => t.toLowerCase().replace(' ', '_')).join(',') : undefined,
+        work_location: selectedRemote.length ? selectedRemote.map(r => r.toLowerCase()).join(',') : undefined,
+        department: selectedDepartments.length ? selectedDepartments.map(d => d.toLowerCase()).join(',') : undefined,
+        experience: selectedLevels.length ? selectedLevels.map(e => e.toLowerCase().replace(' ', '_')).join(',') : undefined,
+        page: 1,
+      })
+    }, 300) // Debounce for 300ms
+
+    return () => clearTimeout(timeoutId)
+  }, [selectedTypes, selectedLevels, selectedRemote, selectedDepartments, currentQuery, currentLocation, updateURL, showSearch, showFilters])
 
   const filterProps = {
     selectedTypes,
@@ -334,7 +384,7 @@ export function JobsSection({
     selectedDepartments,
     setSelectedDepartments,
     clearAll,
-    hasFilters,
+    hasFilters: hasActiveFilters,
   }
 
   const formatJobType = (jobType: string): 'Full-time' | 'Part-time' | 'Contract' | 'Internship' => {
@@ -386,8 +436,8 @@ export function JobsSection({
     }
   }
 
-  const jobs = data?.data || []
-  const pagination = data?.pagination ||
+  const jobs = finalData?.data || []
+  const pagination = finalData?.pagination ||
     initialPagination || {
       page: 1,
       limit: 20,
@@ -397,7 +447,8 @@ export function JobsSection({
       hasPrev: false,
     }
 
-  if (isLoading && !data) {
+  // Only show loading screen on initial load with no data whatsoever
+  if (finalIsLoading && !finalData && !initialJobs.length) {
     return (
       <section className='pb-8'>
         <div className='container mx-auto px-4'>
@@ -415,19 +466,60 @@ export function JobsSection({
     )
   }
 
-  if (error) {
+  if (error && !initialJobs.length) {
     return (
       <section className='pb-8'>
         <div className='container mx-auto px-4'>
+          {showSearch && (
+            <div className='mb-8'>
+              <form onSubmit={handleSearch} className='flex gap-4'>
+                <div className='flex-1'>
+                  <Input
+                    type='text'
+                    placeholder='Search jobs by title, skills, or company...'
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className='w-full'
+                  />
+                </div>
+                <div className='flex-1'>
+                  <Input
+                    type='text'
+                    placeholder='Location'
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    className='w-full'
+                  />
+                </div>
+                <Button type='submit' className='flex items-center gap-2'>
+                  <Search className='h-4 w-4' />
+                  Search
+                </Button>
+              </form>
+            </div>
+          )}
+
           <div className='mb-8'>
-            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>{title || 'Jobs'}</h2>
-            <p className='text-muted-foreground text-red-600'>
-              {error instanceof Error ? error.message : 'Failed to load jobs'}
+            <h2 className='text-2xl sm:text-3xl font-bold mb-2'>Search Unavailable</h2>
+            <p className='text-muted-foreground'>
+              Search is temporarily unavailable.
+              {currentQuery && (
+                <>
+                  {' '}
+                  <Button
+                    variant='link'
+                    className='p-0 h-auto text-primary'
+                    onClick={() => {
+                      setSearchInput('')
+                      updateURL({ q: undefined, location: undefined, page: undefined })
+                    }}
+                  >
+                    Browse all jobs instead
+                  </Button>
+                </>
+              )}
             </p>
           </div>
-          <Button onClick={() => window.location.reload()} variant='outline'>
-            Retry
-          </Button>
         </div>
       </section>
     )
@@ -441,7 +533,7 @@ export function JobsSection({
 
   const getDescription = () => {
     if (description) return description
-    return `${pagination.total} ${pagination.total === 1 ? 'job' : 'jobs'} found${isFetching ? ' • Updating...' : ''}`
+    return `${pagination.total} ${pagination.total === 1 ? 'job' : 'jobs'} found${finalIsFetching ? ' • Updating...' : ''}`
   }
 
   return (
@@ -486,9 +578,9 @@ export function JobsSection({
         {showFilters && (
           <div className='job-filters-mobile-toggle w-full mb-6'>
             <JobFilters {...filterProps} />
-            {hasFilters && (
-              <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
-                Apply Filters
+            {hasActiveFilters && (
+              <Button onClick={clearAll} className='mt-4 w-full' variant='outline'>
+                Clear all filters
               </Button>
             )}
           </div>
@@ -498,9 +590,9 @@ export function JobsSection({
           {showFilters && (
             <aside className='job-filters-sidebar w-64 flex-shrink-0'>
               <JobFilters {...filterProps} />
-              {hasFilters && (
-                <Button onClick={handleApplyFilters} className='mt-4 w-full' variant='default'>
-                  Apply Filters
+              {hasActiveFilters && (
+                <Button onClick={clearAll} className='mt-4 w-full' variant='outline'>
+                  Clear all filters
                 </Button>
               )}
             </aside>

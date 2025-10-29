@@ -50,8 +50,8 @@ export const queryKeys = {
   savedJobs: {
     all: ['savedJobs'] as const,
     lists: () => [...queryKeys.savedJobs.all, 'list'] as const,
-    list: () => [...queryKeys.savedJobs.lists()] as const,
-    check: (jobId: string) => [...queryKeys.savedJobs.all, 'check', jobId] as const,
+    list: (email: string) => [...queryKeys.savedJobs.lists(), email] as const,
+    check: (jobId: string, email: string) => [...queryKeys.savedJobs.all, 'check', jobId, email] as const,
   },
 } as const
 

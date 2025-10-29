@@ -142,6 +142,34 @@ for e2e testing purposes.
         .refine((val) => val >= 1 && val <= 100, 'Limit must be 1-100')
         .default('20')
         .describe('Number of jobs per page'),
+      q: z
+        .string()
+        .optional()
+        .describe('Search query for job title or content'),
+      job_type: z
+        .string()
+        .optional()
+        .describe('Filter by job type (e.g., "Full-time,Part-time")'),
+      department: z
+        .string()
+        .optional()
+        .describe('Filter by department (e.g., "Engineering,Product")'),
+      experience: z
+        .string()
+        .optional()
+        .describe('Filter by experience level (e.g., "Junior,Senior")'),
+      remote: z
+        .string()
+        .optional()
+        .describe('Filter by remote options (e.g., "Remote,Hybrid")'),
+      location: z
+        .string()
+        .optional()
+        .describe('Filter by location'),
+      salary: z
+        .string()
+        .optional()
+        .describe('Filter by salary range'),
     }),
   },
   responses: {
@@ -486,18 +514,33 @@ testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
     const limit = parseInt(c.req.query('limit') || '20', 10)
     const offset = (page - 1) * limit
 
-    logger.info('Fetching job listings (test endpoint)', { page, limit, offset })
+    // Extract filter parameters
+    const searchQuery = c.req.query('q')
+    const jobType = c.req.query('job_type')
+    const department = c.req.query('department')
+    const experience = c.req.query('experience')
+    const remote = c.req.query('remote')
+    const location = c.req.query('location')
+    const salary = c.req.query('salary')
+
+    logger.info('Fetching job listings (test endpoint)', {
+      page,
+      limit,
+      offset,
+      filters: { searchQuery, jobType, department, experience, remote, location, salary }
+    })
 
     const config = ConfigService.getInstance().getConfig()
     const supabase = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey)
 
-    const countQuery = supabase
+    // Build the base query with filters
+    let countQuery = supabase
       .from('job_postings')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'published')
       .not('published_at', 'is', null)
 
-    const dataQuery = supabase
+    let dataQuery = supabase
       .from('job_postings')
       .select(
         `
@@ -512,7 +555,7 @@ testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
 				status,
 				published_at,
 				created_at,
-				organizations!inner (
+				organizations (
 					id,
 					name,
 					domain,
@@ -522,6 +565,74 @@ testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
       )
       .eq('status', 'published')
       .not('published_at', 'is', null)
+
+    // Apply filters to both queries
+    if (searchQuery) {
+      // Only search in title field as content is JSON and can't be searched with ilike
+      countQuery = countQuery.ilike('title', `%${searchQuery}%`)
+      dataQuery = dataQuery.ilike('title', `%${searchQuery}%`)
+    }
+
+    if (jobType) {
+      const jobTypes = jobType.split(',').map(type => {
+        // Convert display format to database format
+        const trimmed = type.trim()
+        switch (trimmed) {
+          case 'Full-time':
+            return 'full_time'
+          case 'Part-time':
+            return 'part_time'
+          case 'Contract':
+            return 'contract'
+          case 'Internship':
+            return 'internship'
+          default:
+            return trimmed.toLowerCase().replace('-', '_')
+        }
+      })
+      countQuery = countQuery.in('job_type', jobTypes)
+      dataQuery = dataQuery.in('job_type', jobTypes)
+    }
+
+    if (department) {
+      const departments = department.split(',').map(dept => dept.trim())
+      countQuery = countQuery.in('department', departments)
+      dataQuery = dataQuery.in('department', departments)
+    }
+
+    if (experience) {
+      const experienceLevels = experience.split(',').map(level => level.trim())
+      countQuery = countQuery.in('experience_level', experienceLevels)
+      dataQuery = dataQuery.in('experience_level', experienceLevels)
+    }
+
+    // Add salary filtering if needed
+    if (salary) {
+      // Assume salary is in format "min-max" or just "min+"
+      const salaryParts = salary.split('-')
+      if (salaryParts.length === 2) {
+        const [minSalary, maxSalary] = salaryParts.map(s => parseInt(s, 10))
+        if (!isNaN(minSalary)) {
+          countQuery = countQuery.gte('salary_min', minSalary)
+          dataQuery = dataQuery.gte('salary_min', minSalary)
+        }
+        if (!isNaN(maxSalary)) {
+          countQuery = countQuery.lte('salary_max', maxSalary)
+          dataQuery = dataQuery.lte('salary_max', maxSalary)
+        }
+      } else if (salary.endsWith('+')) {
+        const minSalary = parseInt(salary.replace('+', ''), 10)
+        if (!isNaN(minSalary)) {
+          countQuery = countQuery.gte('salary_min', minSalary)
+          dataQuery = dataQuery.gte('salary_min', minSalary)
+        }
+      }
+    }
+
+    // Note: remote and location filters would need additional table columns or logic
+    // For now, we'll skip these as they may not be in the current schema
+
+    dataQuery = dataQuery
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -531,16 +642,24 @@ testJobsRoutes.openapi(listJobsTestRoute, async (c: Context): Promise<any> => {
       logger.error('Failed to fetch job count', {
         error: countResult.error.message,
         code: countResult.error.code,
+        details: countResult.error.details,
+        hint: countResult.error.hint,
+        fullError: JSON.stringify(countResult.error, null, 2),
       })
-      throw new Error('Failed to fetch job listings')
+      console.error('🔥 SUPABASE COUNT ERROR:', countResult.error)
+      throw new Error(`Failed to fetch job count: ${countResult.error.message}`)
     }
 
     if (dataResult.error) {
       logger.error('Failed to fetch job data', {
         error: dataResult.error.message,
         code: dataResult.error.code,
+        details: dataResult.error.details,
+        hint: dataResult.error.hint,
+        fullError: JSON.stringify(dataResult.error, null, 2),
       })
-      throw new Error('Failed to fetch job listings')
+      console.error('🔥 SUPABASE DATA ERROR:', dataResult.error)
+      throw new Error(`Failed to fetch job data: ${dataResult.error.message}`)
     }
 
     const total = countResult.count || 0
@@ -642,7 +761,7 @@ testJobsRoutes.openapi(getJobTestRoute, async (c: Context): Promise<any> => {
 				status,
 				published_at,
 				created_at,
-				organizations!inner (
+				organizations (
 					id,
 					name,
 					domain,

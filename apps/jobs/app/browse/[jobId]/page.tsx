@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation'
 import { ApplicationStateProvider } from '../../../components/application-state-provider'
 import { Header } from '../../../components/header'
 import { TipTapRenderer } from '../../../components/tiptap-renderer'
+import { checkExistingApplication } from '../../../lib/api'
 import { getJobServerSide } from '../../../lib/server-queries'
+import { createClient } from '../../../lib/supabase/server'
 import { ApplicationForm } from './application-form'
 import { ApplyButtons } from './apply-buttons'
 
@@ -43,6 +45,26 @@ export default async function JobPage({ params }: JobPageProps) {
     const { dehydratedState, data } = await getJobServerSide(jobId)
     const job = data.data
 
+    // Check application status server-side to prevent flash
+    let initialApplicationState = { hasApplied: false, applicationId: null }
+    try {
+      const supabase = await createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (session?.user?.email) {
+        const applicationCheck = await checkExistingApplication(jobId, session.user.email)
+        if (applicationCheck.success) {
+          initialApplicationState = {
+            hasApplied: applicationCheck.data.hasApplied,
+            applicationId: applicationCheck.data.applicationId || null,
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to check application status server-side:', error)
+      // Continue with default state
+    }
+
     return (
       <div className='min-h-screen bg-background'>
         <Header />
@@ -58,7 +80,7 @@ export default async function JobPage({ params }: JobPageProps) {
 
         <div className='container mx-auto px-4 pb-8'>
           <HydrationBoundary state={dehydratedState}>
-            <ApplicationStateProvider initialState={{ hasApplied: false, applicationId: null }}>
+            <ApplicationStateProvider jobId={jobId} initialState={initialApplicationState}>
               <div className='job-layout-container'>
                 <aside className='job-layout-sidebar'>
                   <div className='job-layout-sidebar-inner'>

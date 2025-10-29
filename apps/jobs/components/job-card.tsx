@@ -4,7 +4,7 @@ import { Badge } from '@seeds/ui/badge'
 import { Button } from '@seeds/ui/button'
 import { Bookmark, Clock, MapPin } from 'lucide-react'
 import Link from 'next/link'
-import { useSavedJobCheck, useToggleSaveJob } from '../lib/queries'
+import { useSavedJobCheck, useSaveJob, useUnsaveJob } from '../lib/queries'
 import { useAuth } from './auth-provider'
 
 interface Job {
@@ -34,27 +34,33 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onAuthRequired }: JobCardProps) {
-  const { isAuthenticated } = useAuth()
-  const { data: savedJobData } = useSavedJobCheck(job.id, {
-    enabled: isAuthenticated, // Only enable when user is authenticated
-  })
-  const toggleSaveJob = useToggleSaveJob()
+  const { isAuthenticated, user } = useAuth()
+  const saveJob = useSaveJob(user?.email)
+  const unsaveJob = useUnsaveJob(user?.email)
 
-  const isSaved = savedJobData?.data?.isSaved ?? false
+  // TODO: Saved jobs feature commented out for now
+  // const { data: savedData } = useSavedJobCheck(job.id, user?.email)
+  const isSaved = false // savedData?.data.isSaved ?? false
 
   const handleSave = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!isAuthenticated && onAuthRequired) {
-      // Show auth dialog if user is not authenticated
-      onAuthRequired()
-    } else if (isAuthenticated) {
-      // Toggle save state with optimistic update
-      try {
-        await toggleSaveJob.mutateAsync(job.id)
-      } catch (error) {
-        console.error('Failed to toggle save job:', error)
-      }
-    }
+    // TODO: Saved jobs feature commented out for now
+    console.log('Save job feature temporarily disabled')
+    // if (!isAuthenticated && onAuthRequired) {
+    //   // Show auth dialog if user is not authenticated
+    //   onAuthRequired()
+    // } else if (isAuthenticated) {
+    //   // Simple save/unsave operations
+    //   try {
+    //     if (isSaved) {
+    //       await unsaveJob.mutateAsync(job.id)
+    //     } else {
+    //       await saveJob.mutateAsync(job.id)
+    //     }
+    //   } catch (error) {
+    //     console.error('Failed to toggle save job:', error)
+    //   }
+    // }
   }
 
   const handleCardClick = () => {
@@ -130,16 +136,17 @@ export function JobCard({ job, onAuthRequired }: JobCardProps) {
 
         {/* Actions */}
         <div className='flex items-center gap-2'>
-          <Button
+          {/* TODO: Saved jobs feature temporarily hidden */}
+          {/* <Button
             variant='ghost'
             size='icon'
             onClick={handleSave}
             className='h-8 w-8'
-            disabled={toggleSaveJob.isPending}>
+            disabled={saveJob.isPending || unsaveJob.isPending}>
             <Bookmark
-              className={`w-4 h-4 ${isSaved ? 'fill-current text-primary' : ''} ${toggleSaveJob.isPending ? 'opacity-50' : ''}`}
+              className={`w-4 h-4 ${isSaved ? 'fill-current text-primary' : ''} ${saveJob.isPending || unsaveJob.isPending ? 'opacity-50' : ''}`}
             />
-          </Button>
+          </Button> */}
 
           <Button asChild variant='outline' size='sm'>
             <Link href={`/browse/${job.id}`}>View</Link>

@@ -187,24 +187,27 @@ async function makeApiRequest<T>(
 }
 
 export async function getAllJobs(
-  page = 1, 
-  limit = 20, 
-  filters: Record<string, any> = {}
+  page = 1,
+  limit = 20,
+  filters: Record<string, any> = {},
+  userEmail?: string
 ): Promise<JobListingResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
   })
-  
+
   // Add filters to query params
   if (filters.query) params.set('q', filters.query)
   if (filters.location) params.set('location', filters.location)
   if (filters.jobType) params.set('job_type', filters.jobType)
-  if (filters.remote) params.set('remote', filters.remote)
+  if (filters.workLocation) params.set('remote', filters.workLocation)
+  if (filters.remote) params.set('remote', filters.remote) // Legacy support
   if (filters.salary) params.set('salary', filters.salary)
   if (filters.experience) params.set('experience', filters.experience)
   if (filters.department) params.set('department', filters.department)
-  
+  if (userEmail) params.set('email', userEmail)
+
   return makeApiRequest<JobListingResponse>(`?${params.toString()}`)
 }
 
@@ -302,24 +305,102 @@ interface SavedJobResponse {
   }
 }
 
+// Helper function for saved jobs API requests (uses different base path)
+async function makeSavedJobsRequest<T>(
+  endpoint: string,
+  options?: {
+    method?: string
+    body?: string
+    headers?: Record<string, string>
+  }
+): Promise<T> {
+  const baseEndpoint = USE_TEST_ENDPOINTS
+    ? `/test/v1/public/saved-jobs${endpoint}`
+    : `/api/v1/public/saved-jobs${endpoint}`
+
+  const url = `${API_BASE_URL}${baseEndpoint}`
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options?.headers,
+  }
+
+  // Only add authorization for production endpoints
+  if (!USE_TEST_ENDPOINTS && API_KEY) {
+    headers['Authorization'] = `Bearer ${API_KEY}`
+  }
+
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Making Saved Jobs API request:', {
+      url,
+      endpoint,
+      baseEndpoint,
+      method: options?.method || 'GET',
+      USE_TEST_ENDPOINTS,
+      hasAuth: !!headers['Authorization'],
+    })
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: options?.method || 'GET',
+      headers,
+      body: options?.body,
+      cache: 'no-store',
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      const errorData = data as ApiErrorResponse
+      throw new JobsApiError(
+        errorData.error?.code || 'UNKNOWN_ERROR',
+        errorData.error?.message || 'An unknown error occurred',
+        response.status
+      )
+    }
+
+    return data as T
+  } catch (error) {
+    if (error instanceof JobsApiError) {
+      throw error
+    }
+
+    if (error instanceof Error && error.name === 'TypeError') {
+      throw new JobsApiError(
+        'NETWORK_ERROR',
+        'Failed to connect to the API. Please check your internet connection.',
+        0
+      )
+    }
+
+    throw new JobsApiError(
+      'UNKNOWN_ERROR',
+      'An unexpected error occurred. Please try again.',
+      500
+    )
+  }
+}
+
 // Save a job (requires authentication)
-export async function saveJob(jobId: string): Promise<SavedJobResponse> {
-  return makeApiRequest<SavedJobResponse>(`/saved-jobs`, {
+export async function saveJob(jobId: string, email: string = 'test@example.com'): Promise<SavedJobResponse> {
+  return makeSavedJobsRequest<SavedJobResponse>('', {
     method: 'POST',
-    body: JSON.stringify({ jobId }),
+    body: JSON.stringify({ jobId, email }),
   })
 }
 
 // Unsave a job
-export async function unsaveJob(jobId: string): Promise<{ success: true }> {
-  return makeApiRequest<{ success: true }>(`/saved-jobs/${jobId}`, {
+export async function unsaveJob(jobId: string, email: string = 'test@example.com'): Promise<{ success: true }> {
+  return makeSavedJobsRequest<{ success: true }>(`/${jobId}?email=${encodeURIComponent(email)}`, {
     method: 'DELETE',
   })
 }
 
 // Check if job is saved
-export async function checkSavedJob(jobId: string): Promise<{ success: true; data: { isSaved: boolean } }> {
-  return makeApiRequest<{ success: true; data: { isSaved: boolean } }>(`/saved-jobs/${jobId}/check`)
+export async function checkSavedJob(jobId: string, email: string = 'test@example.com'): Promise<{ success: true; data: { isSaved: boolean } }> {
+  return makeSavedJobsRequest<{ success: true; data: { isSaved: boolean } }>(`/${jobId}/check?email=${encodeURIComponent(email)}`)
 }
 
 // Export types for use in other files
